@@ -21,9 +21,6 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
-
-    - name: Install WebDriver Manager
-      run: |
         pip install webdriver-manager
 
     - name: Run tests
