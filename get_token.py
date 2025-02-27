@@ -1,51 +1,45 @@
 import time
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 
-def get_new_token(youtube_url):
-    # Chrome üçün başsız (headless) rejim qururuq
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')  # GUI olmadan işləmək üçün
-    chrome_options.add_argument('--disable-gpu')
-    chrome_options.add_argument('--no-sandbox')
+# Chrome'u başlatmaq üçün konfigurasiya
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Chrome'u başsız rejimdə işə salırıq
+chrome_options.add_argument("--no-sandbox")
 
-    # WebDriver konfiqurasiyası
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+# Selenium ilə WebDriver'i işə salırıq
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # YouTube canlı yayınının URL-sini açırıq
-    driver.get(youtube_url)
+# İstifadə edəcəyiniz veb səhifənin URL-i
+url = 'https://str.yodacdn.net/ictimai/tracks-v1a1/mono.ts.m3u8?token=c5f9a100d0f50adb10857d880bd5c9d2bdd8ac92-cf9b3020cb44ff6cbbfc574f0e977f29-1740699906-1740689106'
 
-    # Tokeni tapmağa çalışırıq
-    try:
-        # Token elementini tapmağa çalışırıq
-        token_element = WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, "//div[@id='token']"))
-        )
-        token = token_element.text
-        print(f"Yeni token: {token}")
-        return token
-    except Exception as e:
-        print(f"Token tapılmadı! Xəta: {e}")
-        driver.quit()
-        return None
+# Səhifəyə keçirik
+driver.get(url)
 
+# Tokeni tapmaq üçün Selenium ilə elementi tapırıq
+# Bu XPath-i düzgün şəkildə təyin etdiyinizdən əmin olun, burada misal olaraq təyin edilmişdir
+try:
+    token_element = driver.find_element(By.XPATH, "//element_xpath_token")  # Burada doğru XPath'ı yazın
+    new_token = token_element.get_attribute('value')  # Tokeni alırıq
+    print(f"Yeni token: {new_token}")
+
+    # M3U faylını yeniləyirik
+    def update_m3u(token):
+        m3u_content = "#EXTM3U\n#EXTINF:-1,İctimai TV\n" + token
+        with open("token.m3u8", "w") as file:
+            file.write(m3u_content)
+        print("M3U faylı yeniləndi!")
+
+    # Tokeni əlavə edirik
+    update_m3u(new_token)
+
+except Exception as e:
+    print("Token tapılmadı:", str(e))
+
+finally:
+    # WebDriver'i bağlayırıq
     driver.quit()
-
-if __name__ == "__main__":
-    # YouTube kanalının canlı yayın linkini əlavə edin
-    youtube_url = "https://www.youtube.com/watch?v=ouuCjEjyKVI"  # Burada kanalın canlı yayın linkini dəyişin
-
-    new_token = get_new_token(youtube_url)
-
-    if new_token:
-        # Tokeni fayla yazırıq
-        with open('token.m3u8', 'w') as f:
-            f.write(f'#EXTM3U\n#EXTINF:0, YouTube Canlı Yayın\n{new_token}\n')
-
-        print("Yeni M3U faylı yaradıldı: token.m3u8")
