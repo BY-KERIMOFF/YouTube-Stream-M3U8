@@ -1,11 +1,22 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 import time
 
-# WebDriver istifadə edərək saytı açırıq
+# WebDriver-i işə salmaq üçün Service və Options istifadə edirik
 def get_new_token():
-    # WebDriver yolu (Ubuntu üçün artıq quraşdırılıb)
-    driver = webdriver.Chrome(executable_path='/usr/lib/chromium-browser/chromedriver')
+    # WebDriver üçün lazım olan xidmətin qurulması
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')  # GUI olmadan işləmək üçün
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+
+    # ChromeDriver-ın yolunu göstəririk
+    service = Service(executable_path='/usr/lib/chromium-browser/chromedriver')
+
+    # WebDriver-i başlatmaq
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # Tokeni əldə etmək üçün səhifə URL-ni daxil edirik
     driver.get("https://example.com")  # Tokeni aldığınız saytın URL-i
