@@ -23,6 +23,12 @@ jobs:
         pip install -r requirements.txt
         pip install webdriver-manager
 
+    - name: Install dependencies for Chromium
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+        sudo apt-get install -y chromedriver
+
     - name: Run tests
       run: |
         DISPLAY=:99.0 python get_token.py
