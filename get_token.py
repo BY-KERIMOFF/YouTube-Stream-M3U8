@@ -19,7 +19,7 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # 4. M3U8 linkində tokeni tapmaq
 def get_new_token():
-    driver.get("https://str.yodacdn.net/ictimai/tracks-v1a1/mono.ts.m3u8?token=e94ce96ed0bb56a38653e3258d32bddd4800a6be-866797cc0d6dbea82bcd1353aa390e56-1740700536-1740689736")
+    driver.get("https://str.yodacdn.net/ictimai/tracks-v1a1/mono.ts.m3u8?token=39546e619c1c1afe6826bbea78fcd7dbcc8e97d0-11c9b759a05a4132917de2f36f267b2a-1740704082-1740693282")
     time.sleep(5)  # Sayfa yüklənsin
 
     # Tokeni tapırıq
