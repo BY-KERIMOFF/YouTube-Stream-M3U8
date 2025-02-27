@@ -1,0 +1,31 @@
+name: Token Update Workflow
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Bu, hər saatda bir dəfə skriptin işə düşməsini təmin edəcək
+  workflow_dispatch:  # Bu, əl ilə workflow-u işə salmağa imkan verəcək
+
+jobs:
+  update_token:
+    runs-on: ubuntu-latest  # GitHub Actions üçün Ubuntu mühiti
+    steps:
+      # 1. Repozitoriyanı çəkmək
+      - uses: actions/checkout@v2
+      
+      # 2. Python mühitini qurmaq
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      # 3. Selenium və digər asılılıqları quraşdırmaq
+      - name: Install dependencies
+        run: |
+          pip install selenium
+          sudo apt-get install -y chromium-chromedriver
+          sudo apt install -y python3-selenium
+
+      # 4. Selenium skriptini işə salmaq
+      - name: Run token update script
+        run: |
+          DISPLAY=:99.0 python get_token.py  # Skriptinizi burada işə salırıq
