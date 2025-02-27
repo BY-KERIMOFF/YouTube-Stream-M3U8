@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
 import time
 
 # Chrome-u başsız rejimdə işə salmaq üçün parametrlər
@@ -23,7 +24,7 @@ def get_new_token():
     time.sleep(5)  # Sayfanın yüklənməsini gözləyirik
 
     # Tokeni tapırıq
-    token_element = driver.find_element_by_xpath("//div[@id='token']")
+    token_element = driver.find_element(By.XPATH, "//div[@id='token']")
     token = token_element.text
     return token
 
