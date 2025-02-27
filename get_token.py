@@ -25,14 +25,21 @@ def get_new_token():
     driver.get("https://str.yodacdn.net/ictimai/tracks-v1a1/mono.ts.m3u8?token=e94ce96ed0bb56a38653e3258d32bddd4800a6be-866797cc0d6dbea82bcd1353aa390e56-1740700536-1740689736")
     time.sleep(5)  # Sayfa yüklənsin
 
-    # Tokeni tapırıq (Bu kodun yerinə siz öz elementin XPath-ını düzəldə bilərsiniz)
-    token_element = driver.find_element(By.XPATH, "//div[@id='token']")  # Tokenin olduğu yer
-    token = token_element.text
-    return token
+    try:
+        # Tokeni tapırıq (XPath dəyişə bilər)
+        token_element = driver.find_element(By.XPATH, "//div[@id='token']")
+        token = token_element.text
+        return token
+    except Exception as e:
+        print(f"Error finding token: {e}")
+        return None
 
 # Tokeni alırıq
 token = get_new_token()
-print(f"Alınan token: {token}")
+if token:
+    print(f"Alınan token: {token}")
+else:
+    print("Token tapılmadı!")
 
 # 4. GitHub reposuna M3U8 linkini əlavə etmək
 def update_github_repo(token):
@@ -56,7 +63,8 @@ def update_github_repo(token):
         repo.create_file(file_path, "Added new m3u8 link", content)
 
 # 5. GitHub reposuna əlavə edirik
-update_github_repo(token)
+if token:
+    update_github_repo(token)
 
 # Browserı bağlayırıq
 driver.quit()
