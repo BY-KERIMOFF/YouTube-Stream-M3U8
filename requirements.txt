@@ -2,6 +2,7 @@ PyGithub
 selenium
 requests
 attrs==23.2.0
+PyGithub==1.56
 certifi==2023.11.17
 charset-normalizer==3.3.2
 exceptiongroup==1.2.0
