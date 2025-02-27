@@ -20,7 +20,7 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # Tokeni alma funksiyası
 def get_new_token():
-    driver.get("https://str.yodacdn.net/ictimai/tracks-v1a1/mono.ts.m3u8?token=e94ce96ed0bb56a38653e3258d32bddd4800a6be-866797cc0d6dbea82bcd1353aa390e56-1740700536-1740689736")
+    driver.get("https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=MJigiZ_zvPgTtZXSETrnfA&tms=1740703239")
     time.sleep(5)  # Sayfanın yüklənməsini gözləyirik
 
     # Tokeni tapırıq
