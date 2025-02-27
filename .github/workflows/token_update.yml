@@ -2,36 +2,34 @@ name: Python CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main  # main branch-ı seçin (və ya hansı branch-da işləyirsinizsə)
   pull_request:
-    branches: [main]
+    branches:
+      - main  # main branch-ı seçin (və ya hansı branch-da işləyirsinizsə)
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-latest  # Ubuntu son versiyası üzərində işləyəcək
+
     steps:
-    - name: Checkout repository
+    # 1. Repo-ya git-klonlama
+    - name: Checkout code
       uses: actions/checkout@v2
 
+    # 2. Python-nın quraşdırılması
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.9  # Python versiyasını uyğunlaşdırın
+        python-version: 3.9  # Python versiyası (istədiyiniz versiyanı seçə bilərsiniz)
 
+    # 3. Tələblərin quraşdırılması
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install selenium requests github
+        pip install -r requirements.txt  # requirements.txt-də olan bütün asılılıqları quraşdırır
 
-    - name: Install Chromium and Chromedriver
-      run: |
-        sudo apt update
-        sudo apt install -y chromium-browser
-        wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip
-        unzip chromedriver_linux64.zip
-        sudo mv chromedriver /usr/local/bin/
-
+    # 4. Python skriptinin işə salınması
     - name: Run the script
       run: |
         DISPLAY=:99.0 python get_token.py  # Skriptinizi burada işə salırıq
