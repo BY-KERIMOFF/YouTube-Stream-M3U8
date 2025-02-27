@@ -1,52 +1,51 @@
+import time
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
+from webdriver_manager.chrome import ChromeDriverManager
 
-# Tokeni alacaq funksiya
-def get_new_token():
+def get_new_token(youtube_url):
+    # Chrome üçün başsız (headless) rejim qururuq
     chrome_options = Options()
     chrome_options.add_argument('--headless')  # GUI olmadan işləmək üçün
+    chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
 
-    # ChromeDriver-ın yolunu göstəririk
-    service = Service(executable_path='/usr/lib/chromium-browser/chromedriver')
-
-    # WebDriver-i başlatmaq
+    # WebDriver konfiqurasiyası
+    service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # Tokeni əldə etmək üçün səhifə URL-ni daxil edirik
-    driver.get("https://example.com")  # Tokeni aldığınız saytın URL-i
+    # YouTube canlı yayınının URL-sini açırıq
+    driver.get(youtube_url)
 
+    # Tokeni tapmağa çalışırıq
     try:
-        # Token elementinin mövcudluğunu gözləyirik (10 saniyə gözləyəcək)
-        token_element = WebDriverWait(driver, 10).until(
+        # Token elementini tapmağa çalışırıq
+        token_element = WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.XPATH, "//div[@id='token']"))
         )
         token = token_element.text
-    except:
-        print("Token tapılmadı!")
+        print(f"Yeni token: {token}")
+        return token
+    except Exception as e:
+        print(f"Token tapılmadı! Xəta: {e}")
         driver.quit()
         return None
 
-    driver.quit()  # WebDriver-u bağlayırıq
+    driver.quit()
 
-    return token
+if __name__ == "__main__":
+    # YouTube kanalının canlı yayın linkini əlavə edin
+    youtube_url = "https://www.youtube.com/watch?v=ouuCjEjyKVI"  # Burada kanalın canlı yayın linkini dəyişin
 
-# Yeni tokeni alırıq
-new_token = get_new_token()
+    new_token = get_new_token(youtube_url)
 
-if new_token:
-    # Yeni tokenlə linki yaradıb çıxarırıq
-    link = f"https://ecanlitv3.etvserver.com/tv8.m3u8?tkn={new_token}&tms=1740695213"
-    print(f"Yeni link: {link}")
+    if new_token:
+        # Tokeni fayla yazırıq
+        with open('token.m3u8', 'w') as f:
+            f.write(f'#EXTM3U\n#EXTINF:0, YouTube Canlı Yayın\n{new_token}\n')
 
-    # Yeni tokenlə M3U faylını yaradırıq
-    m3u_content = f"#EXTM3U\n#EXTINF:-1, YouTube Live Stream\nhttps://ecanlitv3.etvserver.com/tv8.m3u8?tkn={new_token}&tms=1740695213\n"
-    with open("playlist.m3u", "w") as file:
-        file.write(m3u_content)
-    print("M3U faylı yaradıldı: playlist.m3u")
+        print("Yeni M3U faylı yaradıldı: token.m3u8")
