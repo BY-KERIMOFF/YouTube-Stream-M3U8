@@ -1,45 +1,99 @@
 import time
+import requests
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from dotenv import load_dotenv
+import os
+from selenium.webdriver.common.action_chains import ActionChains
 
-# Chrome'u başlatmaq üçün konfigurasiya
+# .env faylını yükləyirik
+load_dotenv()
+
+# URL və digər parametrləri oxuyuruq
+M3U_TOKEN_URL = os.getenv("M3U_TOKEN_URL")
+
+# GitHub parametrləri
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
+REPO_NAME = os.getenv("REPO_NAME")
+
+# Chrome parametrləri
 chrome_options = Options()
-chrome_options.add_argument("--headless")  # Chrome'u başsız rejimdə işə salırıq
+chrome_options.add_argument("--headless")  # Gizli rejimdə işləməyi təmin edirik
 chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
 
-# Selenium ilə WebDriver'i işə salırıq
-service = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service, options=chrome_options)
+# Chrome xidmətini yaratmaq
+service = Service('/usr/lib/chromium-browser/chromedriver')
 
-# İstifadə edəcəyiniz veb səhifənin URL-i
-url = 'https://str.yodacdn.net/ictimai/tracks-v1a1/mono.ts.m3u8?token=c5f9a100d0f50adb10857d880bd5c9d2bdd8ac92-cf9b3020cb44ff6cbbfc574f0e977f29-1740699906-1740689106'
+# Yeni token əldə etmək üçün funksiya
+def get_new_token():
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    try:
+        # İstədiyiniz səhifəni açın
+        driver.get(M3U_TOKEN_URL)
+        
+        # Səhifə yüklənməsini gözləyirik
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='token']"))  # Tokenin olduğu elementi gözləyirik
+        )
 
-# Səhifəyə keçirik
-driver.get(url)
+        # Tokeni tapırıq
+        token_element = driver.find_element(By.XPATH, "//div[@id='token']")
+        token = token_element.text
+        return token
+    except Exception as e:
+        print(f"Token tapılmadı: {str(e)}")
+        return None
+    finally:
+        driver.quit()
 
-# Tokeni tapmaq üçün Selenium ilə elementi tapırıq
-# Bu XPath-i düzgün şəkildə təyin etdiyinizdən əmin olun, burada misal olaraq təyin edilmişdir
-try:
-    token_element = driver.find_element(By.XPATH, "//element_xpath_token")  # Burada doğru XPath'ı yazın
-    new_token = token_element.get_attribute('value')  # Tokeni alırıq
-    print(f"Yeni token: {new_token}")
+# M3U faylını yeniləmək
+def update_m3u(token):
+    m3u_content = f"#EXTM3U\n#EXTINF:-1,İctimai TV\n{M3U_TOKEN_URL}?token={token}"
+    with open("token.m3u8", "w") as file:
+        file.write(m3u_content)
+    print("M3U faylı yeniləndi!")
 
-    # M3U faylını yeniləyirik
-    def update_m3u(token):
-        m3u_content = "#EXTM3U\n#EXTINF:-1,İctimai TV\n" + token
-        with open("token.m3u8", "w") as file:
-            file.write(m3u_content)
-        print("M3U faylı yeniləndi!")
+# GitHub-a yükləmək üçün funksiya
+def upload_to_github():
+    # GitHub API vasitəsilə faylı yükləmək üçün URL
+    api_url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{REPO_NAME}/contents/token.m3u8"
+    
+    # Faylın məzmununu oxuyuruq
+    with open("token.m3u8", "r") as file:
+        content = file.read()
 
-    # Tokeni əlavə edirik
-    update_m3u(new_token)
+    # GitHub-a yükləmək üçün payload
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Content-Type": "application/json"
+    }
 
-except Exception as e:
-    print("Token tapılmadı:", str(e))
+    data = {
+        "message": "M3U faylı yeniləndi",
+        "content": content.encode("utf-8").decode("utf-8")  # Base64 formatında göndəririk
+    }
 
-finally:
-    # WebDriver'i bağlayırıq
-    driver.quit()
+    response = requests.put(api_url, json=data, headers=headers)
+    if response.status_code == 201:
+        print("Fayl GitHub-a uğurla yükləndi!")
+    else:
+        print(f"Xəta baş verdi: {response.status_code}, {response.text}")
+
+# Əsas işə salma
+if __name__ == "__main__":
+    try:
+        while True:
+            new_token = get_new_token()
+            if new_token:
+                update_m3u(new_token)
+                upload_to_github()
+            time.sleep(3600)  # Hər 1 saatda bir yeniləyirik
+    except KeyboardInterrupt:
+        print("Proses dayandırıldı.")
