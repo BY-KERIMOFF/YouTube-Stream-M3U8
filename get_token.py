@@ -2,6 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 # WebDriver-i işə salmaq üçün Service və Options istifadə edirik
@@ -21,12 +23,16 @@ def get_new_token():
     # Tokeni əldə etmək üçün səhifə URL-ni daxil edirik
     driver.get("https://example.com")  # Tokeni aldığınız saytın URL-i
 
-    # Sayfanın tam yüklənməsini gözləyirik
-    time.sleep(5)  # Sayfanın yüklənməsini gözləyirik
-
-    # Tokeni tapırıq (tokeni tapmaq üçün doğru elementin XPath-ini bilmək lazımdır)
-    token_element = driver.find_element(By.XPATH, "//div[@id='token']")  # Tokenin olduğu yeri doğru şəkildə tapın
-    token = token_element.text
+    try:
+        # Token elementinin mövcudluğunu gözləyirik (10 saniyə gözləyəcək)
+        token_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@id='token']"))
+        )
+        token = token_element.text
+    except:
+        print("Token tapılmadı!")
+        driver.quit()
+        return None
 
     driver.quit()  # WebDriver-u bağlayırıq
 
