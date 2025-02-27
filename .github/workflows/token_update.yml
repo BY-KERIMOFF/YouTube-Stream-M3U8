@@ -1,13 +1,3 @@
-name: Python CI
-
-on:
-  push:
-    branches:
-      - main  # main branch-ı seçin (və ya hansı branch-da işləyirsinizsə)
-  pull_request:
-    branches:
-      - main  # main branch-ı seçin (və ya hansı branch-da işləyirsinizsə)
-
 jobs:
   build:
     runs-on: ubuntu-latest  # Ubuntu son versiyası üzərində işləyəcək
@@ -29,7 +19,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt  # requirements.txt-də olan bütün asılılıqları quraşdırır
 
-    # 4. Python skriptinin işə salınması
+    # 4. Chromedriver-in quraşdırılması
+    - name: Set up ChromeDriver
+      uses: elgalu/gh-action-chromedriver@v3
+      with:
+        chromedriver-version: 'latest'  # Son versiyanı yükləyirik
+        chrome-version: 'latest'  # Həmçinin Chrome-un son versiyasını quraşdırırıq
+
+    # 5. Python skriptinin işə salınması
     - name: Run the script
       run: |
         DISPLAY=:99.0 python get_token.py  # Skriptinizi burada işə salırıq
