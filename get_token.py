@@ -5,7 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from github import Github
+from github import Github  # Burada PyGithub istifadə edirik
 
 # 1. Chrome binary və chromedriver quraşdırılması
 chrome_binary_path = "/usr/bin/chromium-browser"  # Bu yol sizə uyğun olmalıdır
