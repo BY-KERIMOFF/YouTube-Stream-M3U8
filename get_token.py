@@ -1,20 +1,17 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 import time
-import os
 
 # 1. Chrome binary və chromedriver quraşdırılması
-chrome_binary_path = "/usr/bin/chromium-browser"  # Bu yol sizə uyğun olmalıdır
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Başsız rejim
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.binary_location = chrome_binary_path
 
-# 2. `chromedriver`-in doğru yolunu göstəririk (GitHub Actions üçün əl ilə)
-driver_path = "/usr/local/bin/chromedriver"  # `chromedriver` faylının tam yolu
+# 2. WebDriver Manager istifadə edərək `chromedriver`-i yükləyirik
+driver_path = ChromeDriverManager().install()
 
 # 3. WebDriver ilə Chrome-u işə salırıq
 service = Service(driver_path)
@@ -26,7 +23,7 @@ def get_new_token():
     time.sleep(5)  # Sayfa yüklənsin
 
     # Tokeni tapırıq
-    token_element = driver.find_element(By.XPATH, "//div[@id='token']")
+    token_element = driver.find_element_by_xpath("//div[@id='token']")
     token = token_element.text
     return token
 
