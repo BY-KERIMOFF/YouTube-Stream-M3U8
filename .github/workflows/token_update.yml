@@ -1,32 +1,36 @@
+
+name: run main.py
+
+on:
+  schedule:
+    - cron: '0 */2 * * *' # Runs in every 3 hours
+  pull_request:
+      branches:
+        - main
+
 jobs:
   build:
-    runs-on: ubuntu-latest  # Ubuntu son versiyası üzərində işləyəcək
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: '3.x' 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          
+          pip3 install -r requirements.txt
+      - name: execute py script 
+        run: python main.py config.json
+      - name: commit and push files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "updated streams"
+          git push
 
-    steps:
-    # 1. Repo-ya git-klonlama
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    # 2. Python-nın quraşdırılması
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.9  # Python versiyası (istədiyiniz versiyanı seçə bilərsiniz)
-
-    # 3. Tələblərin quraşdırılması
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt  # requirements.txt-də olan bütün asılılıqları quraşdırır
-
-    # 4. Chromedriver-in quraşdırılması
-    - name: Set up ChromeDriver
-      uses: elgalu/gh-action-chromedriver@v3
-      with:
-        chromedriver-version: 'latest'  # Son versiyanı yükləyirik
-        chrome-version: 'latest'  # Həmçinin Chrome-un son versiyasını quraşdırırıq
-
-    # 5. Python skriptinin işə salınması
-    - name: Run the script
-      run: |
-        DISPLAY=:99.0 python get_token.py  # Skriptinizi burada işə salırıq
+        
+        
