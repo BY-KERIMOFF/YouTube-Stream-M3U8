@@ -23,11 +23,10 @@ jobs:
         pip install -r requirements.txt
         pip install webdriver-manager
 
-    - name: Install dependencies for Chromium
+    - name: Install Chromium dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y chromium-browser
-        sudo apt-get install -y chromedriver
 
     - name: Run tests
       run: |
