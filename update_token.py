@@ -7,6 +7,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import re
 
 def get_m3u8_link():
     options = Options()
@@ -36,6 +37,13 @@ def get_m3u8_link():
     
     driver.quit()
     return m3u8_link
+
+def update_token_in_url(url, new_token):
+    # URL-dəki tokeni dəyişdirmək üçün regex istifadə edirik
+    pattern = r"tkn=[^&]*"
+    updated_url = re.sub(pattern, f"tkn={new_token}", url)
+    print(f"Yeni M3U8 linki: {updated_url}")
+    return updated_url
 
 def update_github_repo(token, m3u8_link):
     if m3u8_link is None:
@@ -82,12 +90,15 @@ def update_github_repo(token, m3u8_link):
 def main():
     m3u8_link = get_m3u8_link()
     if m3u8_link:
-        print(f"M3U8 Linki: {m3u8_link}")
+        # Tokeni yeni bir dəyərlə dəyişirik
+        new_token = "yF0UPaB0OPrxx6tWOVGFVw"  # Bu tokeni buraya əlavə edin
+        updated_m3u8_link = update_token_in_url(m3u8_link, new_token)
+        print(f"Güncellenmiş M3U8 linki: {updated_m3u8_link}")
     else:
         print("M3U8 linki tapılmadı.")
     
-    github_token = 'YOUR_GITHUB_TOKEN'  # GitHub tokeninizi buraya əlavə edin
-    result = update_github_repo(github_token, m3u8_link)
+    github_token = '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'  # GitHub tokeninizi buraya əlavə edin
+    result = update_github_repo(github_token, updated_m3u8_link)
     print(result)
 
 if __name__ == "__main__":
