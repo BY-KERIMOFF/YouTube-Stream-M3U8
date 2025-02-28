@@ -41,8 +41,8 @@ def get_m3u8_link():
     
     # M3U8 linkini tap
     try:
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//source[contains(@src, 'm3u8')]")))
-        m3u8_element = driver.find_element(By.XPATH, "//source[contains(@src, 'm3u8')]")
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//video/source[contains(@src, 'm3u8')]")))
+        m3u8_element = driver.find_element(By.XPATH, "//video/source[contains(@src, 'm3u8')]")
         m3u8_link = m3u8_element.get_attribute('src')
         print(f"M3U8 linki tapıldı: {m3u8_link}")
     except Exception as e:
