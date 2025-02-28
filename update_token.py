@@ -1,36 +1,39 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
+name: Update M3U8 Link
 
-# Chrome options (GitHub Actions mühitinə uyğunlaşdırmaq)
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # GUI olmadan işlətmək
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.binary_location = "/usr/bin/chromium-browser"  # GitHub Actions üçün uyğun Chrome
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Hər 5 dəqiqədən bir
+  workflow_dispatch:  # Manual başlatma üçün əlavə et
 
-# WebDriver ilə browser açılır
-driver = webdriver.Chrome(options=chrome_options)
+jobs:
+  update:
+    runs-on: ubuntu-latest
 
-# Tokenin olduğu səhifə URL-si
-url = "SƏHİFƏ_URL"  # Tokeni tapacağın səhifənin URL-si
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
 
-# Səhifəni aç
-driver.get(url)
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
 
-# Tokeni tapmaq üçün XPath ilə elementə çatmaq
-token_element = driver.find_element(By.XPATH, 'TOKEN_ELEMENT_XPATH')  # XPath yerinə doğru elementi yazmalısan
-token = token_element.get_attribute("value")  # Əgər token bir input sahəsindədirsə
+    - name: Install dependencies
+      run: |
+        pip install selenium requests
 
-# Tokeni çap et (və ya istifadə et)
-print(token)
+    - name: Install Chromium and ChromeDriver
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+        sudo apt-get install -y chromium-chromedriver
+        sudo apt-get install -y libnss3 libgdk-pixbuf2.0-0 libxss1 libatk-bridge2.0-0 libatk1.0-0 libgbm-dev
+        sudo apt-get install -y libgconf-2-4 || echo "libgconf-2-4 not found"
 
-# Bağlantını bağla
-driver.quit()
+    - name: Set Chrome options
+      run: |
+        echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
 
-# M3U8 linkini yeniləyək
-m3u8_url = f"https://live.cdn-canlitv.com/aztv2.m3u8?anahtar={token}&sure"
-
-# M3U8 faylını aç və yeni linki yaz
-with open("aztv2.m3u8", "w") as file:
-    file.write(m3u8_url)  # Yeni M3U8 URL-sini fayla yaz
+    - name: Run token update script
+      run: |
+        python update_token.py
