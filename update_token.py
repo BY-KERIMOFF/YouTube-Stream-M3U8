@@ -17,7 +17,7 @@ def get_m3u8_link():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
     # Səhifəyə daxil olun
-    url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
+    url = "https://www.ecanlitvizle.app/trt-1-canli-izle-hd-9/"
     driver.get(url)
     
     # Səhifənin tam yüklənməsi üçün gözləyin
