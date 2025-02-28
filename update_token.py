@@ -61,36 +61,37 @@ def update_github_repo(token, m3u8_link):
     github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
     
     headers = {
-        'Authorization': f'token {token}',  # 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
+        'Authorization': f'token {token}',  # GitHub tokeni
         'Content-Type': 'application/json',
     }
     
     # Faylın mövcud olub-olmamasını yoxlayın
     response = requests.get(github_api_url, headers=headers)
     
-    if response.status_code == 404:
-        # Fayl mövcud deyilsə, yeni fayl yaradın
-        content = {
-            "message": "Add M3U8 link",
-            "content": m3u8_link.encode('utf-8').decode('utf-8'),  # Base64 ilə kodlanmış mətn
-        }
-        response = requests.put(github_api_url, json=content, headers=headers)
-        if response.status_code == 201:
-            return "GitHub repo yeniləndi, yeni M3U8 linki əlavə edildi."
-        else:
-            return f"GitHub repo yenilənərkən xəta baş verdi: {response.text}"
+    if response.status_code == 200 and "sha" in response.json():
+        sha = response.json()["sha"]
     else:
+        sha = None
+    
+    if sha:
         # Fayl mövcuddur, onu yeniləyirik
         content = {
             "message": "Update M3U8 link",
             "content": m3u8_link.encode('utf-8').decode('utf-8'),
-            "sha": response.json()["sha"]  # Faylın mövcud SHA kodunu istifadə edirik
+            "sha": sha
         }
-        response = requests.put(github_api_url, json=content, headers=headers)
-        if response.status_code == 200:
-            return "GitHub repo uğurla yeniləndi, yeni M3U8 linki əlavə edildi."
-        else:
-            return f"GitHub repo yenilənərkən xəta baş verdi: {response.text}"
+    else:
+        # Fayl mövcud deyilsə, yeni fayl yaradın
+        content = {
+            "message": "Add M3U8 link",
+            "content": m3u8_link.encode('utf-8').decode('utf-8'),
+        }
+    
+    response = requests.put(github_api_url, json=content, headers=headers)
+    if response.status_code == 200 or response.status_code == 201:
+        return "GitHub repo uğurla yeniləndi, yeni M3U8 linki əlavə edildi."
+    else:
+        return f"GitHub repo yenilənərkən xəta baş verdi: {response.text}"
 
 def main():
     # Yeni tokeni burada təyin edin
@@ -113,7 +114,7 @@ def main():
     print(f"İkinci M3U8 linki: {additional_updated_link}")
     
     # GitHub repo yeniləməsi
-    github_token = 'YOUR_GITHUB_TOKEN'  # GitHub tokeninizi buraya əlavə edin
+    github_token = 'YOUR_GITHUB_TOKEN'  # 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
     if updated_m3u8_link:
         result = update_github_repo(github_token, updated_m3u8_link)
         print(result)
