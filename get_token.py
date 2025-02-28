@@ -1,36 +1,17 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
-import time
+import requests
 
-# Chrome-u başsız rejimdə işə salmaq üçün parametrlər
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Başsız rejim
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
+# Tokenli URL
+url = "https://live.cdn-canlitv.com/aztv2.m3u8?anahtar=QEoJcC_5a3IVTERXetIwJg&sure=1740723511&ip=185.146.115.168"
 
-# WebDriver Manager ilə `chromedriver`-i yükləmək
-driver_path = ChromeDriverManager().install()
-
-# WebDriver ilə Chrome-u işə salırıq
-service = Service(driver_path)
-driver = webdriver.Chrome(service=service, options=chrome_options)
-
-# Tokeni alma funksiyası
 def get_new_token():
-    driver.get("https://live.cdn-canlitv.com/aztv2.m3u8?anahtar=QEoJcC_5a3IVTERXetIwJg&sure=1740723511&ip=185.146.115.168")
-    time.sleep(5)  # Sayfanın yüklənməsini gözləyirik
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        print("Yeni token linki:", response.url)
+        return response.url
+    else:
+        print("Xəta baş verdi, status kodu:", response.status_code)
+        return None
 
-    # Tokeni tapırıq
-    token_element = driver.find_element(By.XPATH, "//div[@id='token']")
-    token = token_element.text
-    return token
-
-# Tokeni alırıq və çap edirik
-token = get_new_token()
-print(f"Alınan token: {token}")
-
-# Chrome browserını bağlayırıq
-driver.quit()
+# Yeni tokeni alırıq
+new_token_url = get_new_token()
