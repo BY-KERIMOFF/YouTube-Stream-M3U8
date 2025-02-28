@@ -1,3 +1,14 @@
+- name: Install dependencies
+  run: |
+    python -m pip install --upgrade pip
+    pip install selenium
+    pip install webdriver-manager
+    sudo apt-get update
+    sudo apt-get install -y chromium-chromedriver
+    sudo apt-get install -y libgdk-pixbuf2.0-0 libxss1
+    sudo apt-get install -y libasound2-dev libxss1 libgdk-pixbuf2.0-0
+    sudo apt-get install -y chromium-browser
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
