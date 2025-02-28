@@ -1,44 +1,41 @@
-import requests
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+import time
 
 def update_token():
-    # Səhifə URL-i
+    # Chrome'u başlatmaq üçün konfiqurasiya
+    options = Options()
+    options.add_argument("--headless")  # Headless rejimində çalışır (ekran olmadan)
+    driver = webdriver.Chrome(options=options)
+    
+    # URL-ni yükləyirik
     url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
+    driver.get(url)
     
-    # Səhifəni açırıq
-    response = requests.get(url)
+    # Səhifənin tam yüklənməsi üçün gözləyirik
+    time.sleep(5)  # 5 saniyə gözləyirik (bunu səhifənin yüklənmə sürətinə görə tənzimləyə bilərsiniz)
     
-    if response.status_code != 200:
-        print("Səhifə açılmadı!")
-        return
-    
-    # HTML-i BeautifulSoup ilə analiz edirik
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    # Token-i tapmaq üçün müvafiq elementi tapırıq
-    token = None
-    
-    # İlk olaraq input elementində tokeni axtarırıq
     try:
-        token = soup.find('input', {'name': 'token'})['value']
-    except TypeError:
-        print("Input elementində token tapılmadı!")
-    
-    # Əgər token tapılmadısa, meta tag-da tokeni yoxlayaq
-    if not token:
-        try:
-            token = soup.find('meta', {'name': 'token'})['content']
-        except TypeError:
-            print("Meta tag-da token tapılmadı!")
-    
-    if not token:
-        print("Token tapılmadı!")
-        return
+        # Token-i tapmağa çalışırıq (burada doğru CSS seçicisini istifadə etməliyik)
+        # Misal üçün: 
+        token_element = driver.find_element(By.CSS_SELECTOR, "input[name='token']")
+        token = token_element.get_attribute('value')
+        
+        # Əgər token tapılarsa, onu ekrana çıxarırıq
+        if token:
+            print(f"Yeni Token: {token}")
+            new_url = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740712041"
+            print(f"Yeni URL: {new_url}")
+        else:
+            print("Token tapılmadı!")
 
-    # Yeni token ilə URL yaratmaq
-    new_url = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740712041"
-    print(f"Yeni URL: {new_url}")
+    except Exception as e:
+        print(f"Səhv: {e}")
 
-# Skripti işə salmaq
+    # Brauzeri bağlayırıq
+    driver.quit()
+
+# Skripti işə salırıq
 if __name__ == "__main__":
     update_token()
