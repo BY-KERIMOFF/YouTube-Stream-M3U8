@@ -5,6 +5,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def get_m3u8_link():
     options = Options()
@@ -18,12 +20,13 @@ def get_m3u8_link():
     url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
     driver.get(url)
     
-    # Sayfa tam yüklənməsini gözləyin
-    time.sleep(5)  # Səhifənin tam yüklənməsi üçün gözləyin
+    # Səhifənin tam yüklənməsi üçün gözləyin
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'a')))
+    time.sleep(5)  # Səhifənin tam yüklənməsi üçün əlavə vaxt
     
     # M3U8 linkini tapın
     try:
-        # Əgər M3U8 linki səhifədə varsa, onu tapın
+        # M3U8 linkini axtarırıq
         m3u8_element = driver.find_element(By.XPATH, "//a[contains(@href, 'm3u8')]")
         m3u8_link = m3u8_element.get_attribute('href')
         print(f"M3U8 linki tapıldı: {m3u8_link}")
