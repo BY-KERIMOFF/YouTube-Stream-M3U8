@@ -1,39 +1,24 @@
-name: Update M3U8 Link
+# update_token.py
+import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-on:
-  schedule:
-    - cron: '*/5 * * * *'  # Hər 5 dəqiqədən bir
-  workflow_dispatch:  # Manual başlatma üçün əlavə et
+def update_token():
+    # M3U8 linki alın
+    url = "https://live.cdn-canlitv.com/aztv2.m3u8?anahtar=YOUR_TOKEN_HERE"
+    
+    # Selenium ilə səhifəni açmaq
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Başsız işlətmək üçün
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
+    
+    # Tokeni dəyişdir
+    new_token = "new_generated_token"
+    updated_url = url.replace("YOUR_TOKEN_HERE", new_token)
+    
+    print("Updated URL:", updated_url)
+    driver.quit()
 
-jobs:
-  update:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-
-    - name: Install dependencies
-      run: |
-        pip install selenium requests
-
-    - name: Install Chromium and ChromeDriver
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y chromium-browser
-        sudo apt-get install -y chromium-chromedriver
-        sudo apt-get install -y libnss3 libgdk-pixbuf2.0-0 libxss1 libatk-bridge2.0-0 libatk1.0-0 libgbm-dev
-        sudo apt-get install -y libgconf-2-4 || echo "libgconf-2-4 not found"
-
-    - name: Set Chrome options
-      run: |
-        echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
-
-    - name: Run token update script
-      run: |
-        python update_token.py
+if __name__ == "__main__":
+    update_token()
