@@ -31,4 +31,4 @@ jobs:
 
     - name: Run tests
       run: |
-        python -m pytest  # Və ya sizin test əmrlərinizi daxil edin
+        pytest  # pytest testləri tapıb işlədir
