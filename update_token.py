@@ -88,12 +88,14 @@ def update_github_repo(token, m3u8_link):
             return f"GitHub repo yenilənərkən xəta baş verdi: {response.text}"
 
 def main():
+    # Yeni tokeni burada təyin edin
+    new_token = "8TrpuFQA8gwPZemNYt3qXA"  # Yeni tokeni buraya əlavə edin
+    
     # Əvvəlki linki əldə et
     m3u8_link = get_m3u8_link()
     
     if m3u8_link:
         # Tokeni yeni bir dəyərlə dəyişirik
-        new_token = "8TrpuFQA8gwPZemNYt3qXA"  # Yeni tokeni buraya əlavə edin
         updated_m3u8_link = update_token_in_url(m3u8_link, new_token)
         print(f"Güncellenmiş M3U8 linki: {updated_m3u8_link}")
     else:
