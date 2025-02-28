@@ -1,33 +1,20 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import time
+import requests
+from bs4 import BeautifulSoup
 
-def update_token():
-    # Chrome üçün başsız rejim əlavə et
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
+# Səhifə URL-i
+url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
 
-    # ChromeDriver ilə əlaqə qur
-    driver = webdriver.Chrome(options=chrome_options)
-    
-    # URL-ni aç
-    url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
-    driver.get(url)
+# Səhifəni açırıq
+response = requests.get(url)
 
-    # Burada tokeni almaq və yeniləmək üçün lazımi kodu əlavə edin
-    # Misal üçün, yeni tokeni alıb istifadə edə bilərsiniz
+# HTML-i BeautifulSoup ilə analiz edirik
+soup = BeautifulSoup(response.text, 'html.parser')
 
-    time.sleep(5)  # Sayfanın yüklənməsi üçün gözləyirik
+# Token-i tapmaq üçün müvafiq elementi tapırıq
+# Burada tokeni göstərən elementi tapmalısınız (misal olaraq, bu, bir input elementidir)
+token = soup.find('input', {'name': 'token'})['value']
 
-    # Yeni tokeni çəkin və işləminizi tamamlayın
-    # driver.find_element_by_id("element_id") və ya digər metodlarla tokeni götürə bilərsiniz.
+# Yeni token ilə URL yaratmaq
+new_url = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740712041"
 
-    print("Token başarıyla alındı!")
-
-    # Web driver-ı bağlayın
-    driver.quit()
-
-if __name__ == "__main__":
-    update_token()
+print(new_url)  # Yeni URL-i ekrana yazdırırıq
