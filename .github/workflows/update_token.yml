@@ -21,6 +21,17 @@ jobs:
       run: |
         pip install selenium requests
 
+    - name: Install Chromium and ChromeDriver
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+        sudo apt-get install -y chromium-chromedriver
+        sudo apt-get install -y libnss3 libgdk-pixbuf2.0-0 libxss1 libgconf-2-4 libatk-bridge2.0-0 libatk1.0-0 libgbm-dev
+
+    - name: Set Chrome options
+      run: |
+        echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
+
     - name: Run token update script
       run: |
-        python update_token.py  # Burada skriptin adını göstər
+        python update_token.py
