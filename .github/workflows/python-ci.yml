@@ -26,6 +26,7 @@ jobs:
         sudo apt-get install -y chromium-chromedriver
         sudo apt-get install -y libgdk-pixbuf2.0-0 libxss1
         sudo apt-get install -y libasound2-dev libxss1 libgdk-pixbuf2.0-0
+        sudo apt-get install -y chromium-browser
 
     - name: Run Python script
       run: python update_token.py
