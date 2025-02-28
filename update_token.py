@@ -114,7 +114,7 @@ def main():
     print(f"İkinci M3U8 linki: {additional_updated_link}")
     
     # GitHub repo yeniləməsi
-    github_token = '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'  # GitHub tokeninizi buraya əlavə edin
+    github_token = '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'  # Burada düzgün tokeni daxil edin
     if updated_m3u8_link:
         result = update_github_repo(github_token, updated_m3u8_link)
         print(result)
