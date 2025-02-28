@@ -1,0 +1,26 @@
+name: Update M3U8 Link
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Hər 30 dəqiqədən bir
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install selenium requests
+
+    - name: Run token update script
+      run: |
+        python update_token.py  # Burada skriptin adını göstər
