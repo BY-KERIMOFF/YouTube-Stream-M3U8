@@ -1,38 +1,41 @@
-name: Update M3U8 Link
+name: Python CI
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'  # Hər 5 dəqiqədən bir
-  workflow_dispatch:  # Manual başlatma üçün əlavə et
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  update:
+  build:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Check out code
+    - name: Checkout repository
       uses: actions/checkout@v2
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
+        python-version: '3.13'
 
     - name: Install dependencies
       run: |
-        pip install selenium requests
-
-    - name: Install Chromium and ChromeDriver
-      run: |
         sudo apt-get update
-        sudo apt-get install -y chromium-browser
-        sudo apt-get install -y chromium-chromedriver
+        sudo apt-get install -y chromium-browser chromium-chromedriver
         sudo apt-get install -y libnss3 libgdk-pixbuf2.0-0 libxss1 libatk-bridge2.0-0 libatk1.0-0 libgbm-dev
+        pip install -r requirements.txt
 
-    - name: Set Chrome options
+    - name: Download the latest chromedriver
       run: |
-        echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
+        CHROME_VERSION=$(google-chrome --version | sed 's/Google Chrome //')
+        DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
+        wget https://chromedriver.storage.googleapis.com/$DRIVER_VERSION/chromedriver_linux64.zip
+        unzip chromedriver_linux64.zip
+        sudo mv chromedriver /usr/local/bin/chromedriver
 
-    - name: Run token update script
+    - name: Run the script to update token
       run: |
         python update_token.py
