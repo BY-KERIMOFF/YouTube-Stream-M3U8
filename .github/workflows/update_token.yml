@@ -28,7 +28,6 @@ jobs:
         sudo apt-get install -y chromium-browser
         sudo apt-get install -y chromium-chromedriver
         sudo apt-get install -y libnss3 libgdk-pixbuf2.0-0 libxss1 libatk-bridge2.0-0 libatk1.0-0 libgbm-dev
-        sudo apt-get install -y libgconf-2-4 || echo "libgconf-2-4 not found"
 
     - name: Set Chrome options
       run: |
