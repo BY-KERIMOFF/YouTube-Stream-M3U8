@@ -16,12 +16,22 @@ def update_token():
     soup = BeautifulSoup(response.text, 'html.parser')
     
     # Token-i tapmaq üçün müvafiq elementi tapırıq
-    # Burada tokenin yerləşdiyi konkret elementi təhlil edirik
     token = None
+    
+    # İlk olaraq input elementində tokeni axtarırıq
     try:
-        # Token elementini tapırıq, məsələn input elementində
         token = soup.find('input', {'name': 'token'})['value']
     except TypeError:
+        print("Input elementində token tapılmadı!")
+    
+    # Əgər token tapılmadısa, meta tag-da tokeni yoxlayaq
+    if not token:
+        try:
+            token = soup.find('meta', {'name': 'token'})['content']
+        except TypeError:
+            print("Meta tag-da token tapılmadı!")
+    
+    if not token:
         print("Token tapılmadı!")
         return
 
