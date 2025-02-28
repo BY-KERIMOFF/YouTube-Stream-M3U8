@@ -24,8 +24,8 @@ jobs:
         pip install selenium
         sudo apt-get update
         sudo apt-get install -y chromium-chromedriver
-        sudo apt-get install -y libgdk-pixbuf2.0-0 libasound2 libxss1
-        # sudo apt-get install -y libgconf-2-4  # Alternativ olaraq
+        sudo apt-get install -y libgdk-pixbuf2.0-0 libxss1
+        sudo apt-get install -y libasound2-dev libxss1 libgdk-pixbuf2.0-0
 
     - name: Run Python script
       run: python update_token.py
