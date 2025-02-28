@@ -20,7 +20,7 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # Tokeni alma funksiyası
 def get_new_token():
-    driver.get("https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=MJigiZ_zvPgTtZXSETrnfA&tms=1740703239")
+    driver.get("https://live.cdn-canlitv.com/aztv2.m3u8?anahtar=QEoJcC_5a3IVTERXetIwJg&sure=1740723511&ip=185.146.115.168")
     time.sleep(5)  # Sayfanın yüklənməsini gözləyirik
 
     # Tokeni tapırıq
