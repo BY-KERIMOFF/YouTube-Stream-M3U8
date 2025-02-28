@@ -3,6 +3,7 @@ name: Update M3U8 Link
 on:
   schedule:
     - cron: '*/5 * * * *'  # Hər 5 dəqiqədən bir
+  workflow_dispatch:  # Manual başlatma üçün əlavə et
 
 jobs:
   update:
