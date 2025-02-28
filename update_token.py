@@ -91,15 +91,16 @@ def main():
     m3u8_link = get_m3u8_link()
     if m3u8_link:
         # Tokeni yeni bir dəyərlə dəyişirik
-        new_token = "yF0UPaB0OPrxx6tWOVGFVw"  # Bu tokeni buraya əlavə edin
+        new_token = "8TrpuFQA8gwPZemNYt3qXA"  # Yeni tokeni buraya əlavə edin
         updated_m3u8_link = update_token_in_url(m3u8_link, new_token)
         print(f"Güncellenmiş M3U8 linki: {updated_m3u8_link}")
+        
+        # GitHub repo yeniləməsi
+        github_token = 'YOUR_GITHUB_TOKEN'  # GitHub tokeninizi buraya əlavə edin
+        result = update_github_repo(github_token, updated_m3u8_link)
+        print(result)
     else:
         print("M3U8 linki tapılmadı.")
-    
-    github_token = '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'  # GitHub tokeninizi buraya əlavə edin
-    result = update_github_repo(github_token, updated_m3u8_link)
-    print(result)
 
 if __name__ == "__main__":
     main()
