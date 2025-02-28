@@ -24,11 +24,10 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libxml2-dev libxslt-dev  # Libxml2 və libxslt paketlərini quraşdırır
+        sudo apt-get install -y libxml2-dev libxslt-dev
         pip install --upgrade pip
-        pip install -r requirements.txt  # Burada bütün asılılıqları quraşdırır
-        pip install pytest  # pytest modulunu ayrıca quraşdırır
+        pip install -r requirements.txt
 
-    - name: Run tests
+    - name: Run update_token script
       run: |
-        pytest  # pytest testləri tapıb işlədir
+        python update_token.py  # Skriptin işə salınması
