@@ -1,10 +1,7 @@
-name: Python CI
+name: Run Python script with Selenium
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -23,11 +20,13 @@ jobs:
 
     - name: Install dependencies
       run: |
+        python -m pip install --upgrade pip
+        pip install selenium
         sudo apt-get update
-        sudo apt-get install -y libxml2-dev libxslt-dev
-        pip install --upgrade pip
-        pip install -r requirements.txt
+        sudo apt-get install -y chromium-chromedriver
+        sudo apt-get install -y libgconf-2-4  # Eğer lazım olarsa
 
-    - name: Run update_token script
-      run: |
-        python update_token.py  # Skriptin işə salınması
+    - name: Run Python script
+      run: python update_token.py
+      env:
+        DISPLAY: :99
