@@ -11,31 +11,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.13'
+        python-version: '3.9'
 
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y chromium-browser chromium-chromedriver
-        sudo apt-get install -y libnss3 libgdk-pixbuf2.0-0 libxss1 libatk-bridge2.0-0 libatk1.0-0 libgbm-dev
-        pip install -r requirements.txt
+        sudo apt-get install -y libxml2-dev libxslt-dev  # Libxml2 və libxslt paketlərini quraşdırır
+        pip install --upgrade pip
+        pip install -r requirements.txt  # Burada bütün asılılıqları quraşdırır
 
-    - name: Download the latest chromedriver
+    - name: Run tests
       run: |
-        CHROME_VERSION=$(google-chrome --version | sed 's/Google Chrome //')
-        DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
-        wget https://chromedriver.storage.googleapis.com/$DRIVER_VERSION/chromedriver_linux64.zip
-        unzip chromedriver_linux64.zip
-        sudo mv chromedriver /usr/local/bin/chromedriver
-
-    - name: Run the script to update token
-      run: |
-        python update_token.py
+        python -m pytest  # Və ya sizin test əmrlərinizi daxil edin
