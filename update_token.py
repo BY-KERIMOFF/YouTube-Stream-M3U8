@@ -88,19 +88,31 @@ def update_github_repo(token, m3u8_link):
             return f"GitHub repo yenilənərkən xəta baş verdi: {response.text}"
 
 def main():
+    # Əvvəlki linki əldə et
     m3u8_link = get_m3u8_link()
+    
     if m3u8_link:
         # Tokeni yeni bir dəyərlə dəyişirik
         new_token = "8TrpuFQA8gwPZemNYt3qXA"  # Yeni tokeni buraya əlavə edin
         updated_m3u8_link = update_token_in_url(m3u8_link, new_token)
         print(f"Güncellenmiş M3U8 linki: {updated_m3u8_link}")
+    else:
+        print("M3U8 linki tapılmadı.")
+        updated_m3u8_link = None
         
-        # GitHub repo yeniləməsi
-        github_token = 'YOUR_GITHUB_TOKEN'  # GitHub tokeninizi buraya əlavə edin
+    # İkinci linki də əlavə edirik
+    additional_link = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=8TrpuFQA8gwPZemNYt3qXA&tms=1740719676"
+    additional_updated_link = update_token_in_url(additional_link, new_token)
+    print(f"İkinci M3U8 linki: {additional_updated_link}")
+    
+    # GitHub repo yeniləməsi
+    github_token = 'YOUR_GITHUB_TOKEN'  # GitHub tokeninizi buraya əlavə edin
+    if updated_m3u8_link:
         result = update_github_repo(github_token, updated_m3u8_link)
         print(result)
     else:
-        print("M3U8 linki tapılmadı.")
+        result = update_github_repo(github_token, additional_updated_link)
+        print(result)
 
 if __name__ == "__main__":
     main()
