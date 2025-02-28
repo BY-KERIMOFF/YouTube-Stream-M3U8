@@ -17,11 +17,11 @@ def get_m3u8_link():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
     # Səhifəyə daxil olun
-    url = "https://www.ecanlitvizle.app/trt-1-canli-izle-hd-9/"
+    url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
     driver.get(url)
     
     # Səhifənin tam yüklənməsi üçün gözləyin
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'a')))
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'a')))
     time.sleep(5)  # Səhifənin tam yüklənməsi üçün əlavə vaxt
     
     # M3U8 linkini tapın
@@ -37,12 +37,28 @@ def get_m3u8_link():
     driver.quit()
     return m3u8_link
 
+def get_token_from_url():
+    # Yeni URL-dəki tokeni əldə etmək
+    url = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=K-_pmWWsTTFsrpRD_zImoQ&tms=1740715815"
+    
+    # Tokeni tapmaq üçün URL-dəki parametrləri işlədirik
+    token_start = url.find("tkn=") + len("tkn=")
+    token_end = url.find("&", token_start)
+    token = url[token_start:token_end] if token_end != -1 else url[token_start:]
+    
+    print(f"Yeni token: {token}")
+    return token
+
 def update_github_repo(token, m3u8_link):
     if m3u8_link is None:
         return "M3U8 linki tapılmadı, repo yenilənmədi."
     
     # GitHub API ilə repo yeniləmək
-    github_api_url = "https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    owner = "YOUR_GITHUB_USERNAME"  # GitHub istifadəçi adınızı buraya daxil edin
+    repo = "YOUR_REPOSITORY_NAME"   # Repo adı
+    path = "m3u8_link.txt"  # Linki saxlayacağımız fayl adı
+    github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    
     headers = {
         'Authorization': f'token {token}',  # GitHub tokeni
         'Content-Type': 'application/json',
@@ -63,10 +79,30 @@ def update_github_repo(token, m3u8_link):
         else:
             return f"GitHub repo yenilənərkən xəta baş verdi: {response.text}"
     else:
-        return "Fayl mövcuddur, amma əlavə etmə əməliyyatı uğursuz oldu."
+        # Fayl mövcuddur, onu yeniləyirik
+        content = {
+            "message": "Update M3U8 link",
+            "content": m3u8_link.encode('utf-8').decode('utf-8'),
+            "sha": response.json()["sha"]  # Faylın mövcud SHA kodunu istifadə edirik
+        }
+        response = requests.put(github_api_url, json=content, headers=headers)
+        if response.status_code == 200:
+            return "GitHub repo uğurla yeniləndi, yeni M3U8 linki əlavə edildi."
+        else:
+            return f"GitHub repo yenilənərkən xəta baş verdi: {response.text}"
 
 def main():
     m3u8_link = get_m3u8_link()
+    if m3u8_link:
+        print(f"M3U8 Linki: {m3u8_link}")
+    else:
+        print("M3U8 linki tapılmadı.")
+    
+    # Yeni tokeni əldə edin
+    token = get_token_from_url()
+    print(f"Yeni token: {token}")
+    
+    # GitHub tokeninizi daxil edin
     github_token = 'YOUR_GITHUB_TOKEN'  # GitHub tokeninizi buraya əlavə edin
     result = update_github_repo(github_token, m3u8_link)
     print(result)
