@@ -66,7 +66,9 @@ def update_github_repo(github_token, m3u8_link):
     owner = "by-kerimoff"
     repo = "YouTube-Stream-M3U8"
     path = "xezer_tv.m3u8"
+    txt_path = "xezer_tv_link.txt"  # Yeni .txt faylının adı
     github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    txt_github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{txt_path}"
 
     headers = {
         'Authorization': f'token {github_token}',
@@ -74,7 +76,7 @@ def update_github_repo(github_token, m3u8_link):
     }
 
     try:
-        # Fayl mövcudluğunu yoxlayırıq
+        # M3U8 faylını yeniləyirik
         response = requests.get(github_api_url, headers=headers)
         if response.status_code == 200:
             sha = response.json().get("sha")
@@ -100,9 +102,23 @@ def update_github_repo(github_token, m3u8_link):
         # PUT sorğusu ilə fayl yenilənir
         response = requests.put(github_api_url, json=data, headers=headers)
         if response.status_code in [200, 201]:
-            return "GitHub repo uğurla yeniləndi."
+            print("GitHub repo M3U8 linki ilə uğurla yeniləndi.")
         else:
             return f"GitHub API sorğusunda xəta: {response.text}"
+
+        # .txt faylında M3U8 linkini qeyd edirik
+        txt_content = base64.b64encode(m3u8_link.encode()).decode()  # Base64 formatında
+        txt_data = {
+            "message": "Add Xezer TV M3U8 link to TXT",
+            "content": txt_content
+        }
+
+        # PUT sorğusu ilə yeni .txt fayl yaradılır və link qeyd olunur
+        response_txt = requests.put(txt_github_api_url, json=txt_data, headers=headers)
+        if response_txt.status_code in [200, 201]:
+            print("GitHub repo-da .txt fayl ilə link uğurla qeyd edildi.")
+        else:
+            return f"GitHub API sorğusunda .txt faylı xətası: {response_txt.text}"
 
     except Exception as e:
         print(f"GitHub yeniləmə xətası: {e}")
