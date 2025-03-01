@@ -5,7 +5,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
@@ -19,14 +18,14 @@ CONFIG = {
 }
 
 # Logging konfiqurasiyası
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 def get_m3u8_from_network(driver):
     try:
         driver.get(CONFIG["url"])
         logging.info(f"Səhifə yükləndi: {CONFIG['url']}")
 
-        # iframe-i gözlə
+        # Iframe-i gözlə
         WebDriverWait(driver, CONFIG["iframe_wait_time"]).until(
             EC.presence_of_element_located((By.TAG_NAME, "iframe"))
         )
@@ -41,8 +40,10 @@ def get_m3u8_from_network(driver):
         )
         logging.info("Video elementi tapıldı.")
 
-        # M3U8 linkini əldə et
-        m3u8_link = driver.execute_script("return document.querySelector('video').src;")
+        # Video elementinin src atributunu əldə et
+        video_element = driver.find_element(By.TAG_NAME, "video")
+        m3u8_link = video_element.get_attribute("src")
+
         if m3u8_link and m3u8_link.startswith("blob:"):
             logging.info("Blob linki tapıldı. Şəbəkə logları təhlil edilir...")
             logs = driver.get_log("performance")
@@ -56,7 +57,7 @@ def get_m3u8_from_network(driver):
                         break
 
         if m3u8_link:
-            logging.info(f"M3U8 linki tapıldı: {m3u8_link}")
+            logging.info(f"M3U8 linki uğurla tapıldı: {m3u8_link}")
             return m3u8_link
 
         logging.warning("M3U8 linki tapılmadı.")
@@ -64,7 +65,6 @@ def get_m3u8_from_network(driver):
 
     except Exception as e:
         logging.error(f"M3U8 linki əldə edilərkən xəta: {e}")
-        logging.error(f"Xəta detalları: {str(e)}")
         return None
 
 def setup_driver():
