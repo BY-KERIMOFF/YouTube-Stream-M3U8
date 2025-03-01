@@ -1,0 +1,38 @@
+2025-03-01 22:55:58,274 - INFO - ====== WebDriver manager ======
+2025-03-01 22:55:58,746 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 22:55:58,785 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 22:55:58,809 - INFO - There is no [linux64] chromedriver "133.0.6943.141" for browser google-chrome "133.0.6943" in cache
+2025-03-01 22:55:58,810 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 22:55:58,877 - INFO - WebDriver version 133.0.6943.141 selected
+2025-03-01 22:55:58,879 - INFO - Modern chrome version https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
+2025-03-01 22:55:58,879 - INFO - About to download new driver from https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
+2025-03-01 22:55:58,905 - INFO - Driver downloading response is 200
+2025-03-01 22:55:58,982 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 22:55:59,121 - INFO - Driver has been saved in cache [/home/runner/.wdm/drivers/chromedriver/linux64/133.0.6943.141]
+2025-03-01 22:56:01,200 - INFO - Səhifə yükləndi: https://www.ecanlitvizle.app/xezer-tv-canli-izle/
+2025-03-01 22:56:01,243 - INFO - Iframe-ə keçid edildi.
+2025-03-01 22:56:16,752 - ERROR - M3U8 linki əldə edilərkən xəta: Message: 
+Stacktrace:
+#0 0x55af0c0bf14a <unknown>
+#1 0x55af0bb5cb80 <unknown>
+#2 0x55af0bbae0e9 <unknown>
+#3 0x55af0bbae271 <unknown>
+#4 0x55af0bbfcde4 <unknown>
+#5 0x55af0bbd3efd <unknown>
+#6 0x55af0bbfa14a <unknown>
+#7 0x55af0bbd3ca3 <unknown>
+#8 0x55af0bb9ff08 <unknown>
+#9 0x55af0bba1071 <unknown>
+#10 0x55af0c088b5b <unknown>
+#11 0x55af0c08cae2 <unknown>
+#12 0x55af0c074967 <unknown>
+#13 0x55af0c08d6d4 <unknown>
+#14 0x55af0c058c7f <unknown>
+#15 0x55af0c0adcd8 <unknown>
+#16 0x55af0c0adea9 <unknown>
+#17 0x55af0c0bdfc6 <unknown>
+#18 0x7f09c589caa4 <unknown>
+#19 0x7f09c5929c3c <unknown>
+
+2025-03-01 22:56:16,753 - WARNING - M3U8 linki tapılmadı, fayl yaradılmadı.
+2025-03-01 22:56:16,921 - INFO - ChromeDriver bağlandı.
