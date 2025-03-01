@@ -70,10 +70,12 @@ def get_m3u8_from_network(driver):
         )
         logging.info("Video elementi tapıldı.")
 
-        # M3U8 linkini əldə et
+        # Video elementini JavaScript ilə al
         m3u8_link = driver.execute_script("return document.querySelector('video').src;")
-        if m3u8_link and m3u8_link.startswith("blob:"):
-            logging.info("Blob linki tapıldı. Şəbəkə logları təhlil edilir...")
+
+        if not m3u8_link:
+            logging.error("M3U8 linki tapılmadı, JavaScript vasitəsilə alınmağa çalışıldı.")
+            # Daha ətraflı loglama
             logs = driver.get_log("performance")
             for entry in logs:
                 log = json.loads(entry["message"])
