@@ -110,5 +110,15 @@ def main():
     driver.quit()
     logging.info("ChromeDriver bağlandı.")
 
+    # Fayl mövcud olub-olmadığını yoxlayırıq
+    if os.path.exists("token.txt") and os.path.getsize("token.txt") > 0:
+        logging.info("token.txt faylı mövcuddur və boş deyil.")
+        os.system("git add token.txt")
+        os.system("git commit -m 'Update token file'")
+        os.system("git push")
+    else:
+        logging.error("token.txt faylı mövcud deyil və ya boşdur!")
+        exit(1)
+
 if __name__ == "__main__":
     main()
