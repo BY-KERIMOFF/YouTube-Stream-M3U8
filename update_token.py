@@ -39,7 +39,9 @@ def get_m3u8_from_network():
         except:
             m3u8_link = None
 
-        if not m3u8_link:
+        # Əgər blob linki tapılıbsa, şəbəkə loglarını təhlil edin
+        if m3u8_link and m3u8_link.startswith("blob:"):
+            print("Blob linki tapıldı. Şəbəkə logları təhlil edilir...")
             logs = driver.get_log("performance")
             for entry in logs:
                 log = json.loads(entry["message"])
