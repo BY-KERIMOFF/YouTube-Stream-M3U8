@@ -1,1 +1,3 @@
-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
+#EXTM3U
+#EXTINF:-1,xezer tv
+https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=w_pDwsrozUzvxbEVwSQNYA&tms=1740865844
