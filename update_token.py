@@ -13,42 +13,50 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # 🔎 M3U8 linkini tapmaq üçün network traffic-i yoxlayan funksiya
 def get_m3u8_from_network():
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    try:
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
-    driver.get(url)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
+        driver.get(url)
 
-    # Sayfanın yüklənməsini gözləyirik
-    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
+        # Sayfanın yüklənməsini gözləyirik
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
 
-    logs = driver.get_log("performance")
-    m3u8_link = None
-    for entry in logs:
-        try:
-            log = json.loads(entry["message"])["message"]
-            if log["method"] == "Network.responseReceived":
-                url = log["params"]["response"]["url"]
-                if "xazartv.m3u8" in url:
-                    m3u8_link = url
-                    break
-        except Exception as e:
-            print(f"Xəta baş verdi: {e}")
-            continue
+        logs = driver.get_log("performance")
+        m3u8_link = None
+        for entry in logs:
+            try:
+                log = json.loads(entry["message"])["message"]
+                if log["method"] == "Network.responseReceived":
+                    url = log["params"]["response"]["url"]
+                    if "xazartv.m3u8" in url:
+                        m3u8_link = url
+                        break
+            except Exception as e:
+                print(f"Xəta baş verdi: {e}")
+                continue
 
-    driver.quit()
-    return m3u8_link
+        driver.quit()
+        return m3u8_link
+    except Exception as e:
+        print(f"Network yaxalama xətası: {e}")
+        return None
 
 # 🔄 Tokeni yeniləyən funksiya
 def update_token_in_url(url, new_token):
-    if not url:
+    try:
+        if not url:
+            return None
+        updated_url = re.sub(r"tkn=[^&]*", f"tkn={new_token}", url)
+        return updated_url
+    except Exception as e:
+        print(f"Token yeniləmək xətası: {e}")
         return None
-    updated_url = re.sub(r"tkn=[^&]*", f"tkn={new_token}", url)
-    return updated_url
 
 # 🔄 GitHub-da M3U8 linkini yeniləyən funksiya
 def update_github_repo(github_token, m3u8_link):
@@ -65,29 +73,38 @@ def update_github_repo(github_token, m3u8_link):
         'Accept': 'application/vnd.github.v3+json'
     }
 
-    response = requests.get(github_api_url, headers=headers)
-    sha = response.json().get("sha") if response.status_code == 200 else None
+    try:
+        # Fayl mövcudluğunu yoxlayırıq
+        response = requests.get(github_api_url, headers=headers)
+        if response.status_code == 200:
+            sha = response.json().get("sha")
+        elif response.status_code == 404:
+            sha = None
+        else:
+            return f"GitHub API səhvi: {response.text}"
 
-    if response.status_code == 404:
-        return "Fayl tapılmadı, yeni fayl yaradılır."
-    elif response.status_code == 500:
-        return "GitHub serverində xəta baş verdi."
+        content = base64.b64encode(m3u8_link.encode()).decode()  # Base64 formatına salırıq
 
-    content = base64.b64encode(m3u8_link.encode()).decode()  # Base64 formatına salırıq
-    data = {
-        "message": "Update Xezer TV M3U8 link",
-        "content": content,
-        "sha": sha
-    } if sha else {
-        "message": "Add Xezer TV M3U8 link",
-        "content": content
-    }
+        # Faylın yenilənməsi və ya yeni fayl yaradılması
+        data = {
+            "message": "Update Xezer TV M3U8 link",
+            "content": content,
+            "sha": sha
+        } if sha else {
+            "message": "Add Xezer TV M3U8 link",
+            "content": content
+        }
 
-    response = requests.put(github_api_url, json=data, headers=headers)
-    if response.status_code in [200, 201]:
-        return "GitHub repo uğurla yeniləndi."
-    else:
-        return f"Xəta: {response.text}"
+        # PUT sorğusu ilə fayl yenilənir
+        response = requests.put(github_api_url, json=data, headers=headers)
+        if response.status_code in [200, 201]:
+            return "GitHub repo uğurla yeniləndi."
+        else:
+            return f"GitHub API sorğusunda xəta: {response.text}"
+
+    except Exception as e:
+        print(f"GitHub yeniləmə xətası: {e}")
+        return f"GitHub-da xəta baş verdi: {e}"
 
 # 🔄 Əsas işləyən funksiya
 def main():
