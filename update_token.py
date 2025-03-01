@@ -146,4 +146,4 @@ def main():
 
 # 🏃‍♂️ Skripti işə sal
 if __name__ == "__main__":
-    main() 
+    main()
