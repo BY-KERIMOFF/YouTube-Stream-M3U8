@@ -6,6 +6,7 @@ on:
       - main
   schedule:
     - cron: '*/30 * * * *'  # Hər 30 dəqiqədən bir işlə
+  workflow_dispatch:  # Əl ilə işə salmaq üçün
 
 jobs:
   update-token:
