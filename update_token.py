@@ -69,19 +69,21 @@ def get_m3u8_from_network(driver):
 
         # M3U8 linkini əldə et
         m3u8_link = driver.execute_script("return document.querySelector('video').src;")
+        if m3u8_link and m3u8_link.startswith("blob:"):
+            logging.info("Blob linki tapıldı. Şəbəkə logları təhlil edilir...")
+            logs = driver.get_log("performance")
+            for entry in logs:
+                log = json.loads(entry["message"])
+                if "method" in log and log["method"] == "Network.responseReceived":
+                    url = log["params"]["response"]["url"]
+                    if "m3u8" in url:
+                        m3u8_link = url
+                        logging.info(f"Şəbəkə loglarından M3U8 linki tapıldı: {m3u8_link}")
+                        break
+
         if m3u8_link:
             logging.info(f"M3U8 linki tapıldı: {m3u8_link}")
             return m3u8_link
-
-        # Şəbəkə loglarından M3U8 linkini axtar
-        logs = driver.get_log("performance")
-        for entry in logs:
-            log = json.loads(entry["message"])
-            if "method" in log and log["method"] == "Network.responseReceived":
-                url = log["params"]["response"]["url"]
-                if "m3u8" in url:
-                    logging.info(f"Şəbəkə loglarından M3U8 linki tapıldı: {url}")
-                    return url
 
         logging.warning("M3U8 linki tapılmadı.")
         return None
