@@ -85,18 +85,17 @@ def update_github_repo(github_token, m3u8_link):
             sha = None
             print("Fayl tapılmadı, yeni fayl yaradılacaq.")
         else:
+            print(f"GitHub API səhvi: {response.text}")
             return f"GitHub API səhvi: {response.text}"
-
-        content = base64.b64encode(m3u8_link.encode()).decode()  # Base64 formatına salırıq
 
         # Faylın yenilənməsi və ya yeni fayl yaradılması
         data = {
             "message": "Update Xezer TV M3U8 link",
-            "content": content,
+            "content": base64.b64encode(m3u8_link.encode()).decode(),  # Base64 formatına salırıq
             "sha": sha
         } if sha else {
             "message": "Add Xezer TV M3U8 link",
-            "content": content
+            "content": base64.b64encode(m3u8_link.encode()).decode()
         }
 
         # PUT sorğusu ilə fayl yenilənir
@@ -104,13 +103,13 @@ def update_github_repo(github_token, m3u8_link):
         if response.status_code in [200, 201]:
             print("GitHub repo M3U8 linki ilə uğurla yeniləndi.")
         else:
+            print(f"GitHub API sorğusunda xəta: {response.text}")
             return f"GitHub API sorğusunda xəta: {response.text}"
 
-        # .txt faylında M3U8 linkini qeyd edirik
-        txt_content = base64.b64encode(m3u8_link.encode()).decode()  # Base64 formatında
+        # .txt faylında M3U8 linkini qeyd edirik (müxtəlif olaraq, burada sadə mətn yazırıq)
         txt_data = {
             "message": "Add Xezer TV M3U8 link to TXT",
-            "content": txt_content
+            "content": m3u8_link  # M3U8 linkini sadə mətn kimi göndəririk
         }
 
         # PUT sorğusu ilə yeni .txt fayl yaradılır və link qeyd olunur
@@ -118,6 +117,7 @@ def update_github_repo(github_token, m3u8_link):
         if response_txt.status_code in [200, 201]:
             print("GitHub repo-da .txt fayl ilə link uğurla qeyd edildi.")
         else:
+            print(f"GitHub API sorğusunda .txt faylı xətası: {response_txt.text}")
             return f"GitHub API sorğusunda .txt faylı xətası: {response_txt.text}"
 
     except Exception as e:
