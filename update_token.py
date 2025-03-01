@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # 🔎 M3U8 linkini tapmaq üçün network traffic-i yoxlayan funksiya
 def get_m3u8_from_network():
@@ -20,10 +22,11 @@ def get_m3u8_from_network():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
     driver.get(url)
-    time.sleep(10)  # Səhifənin tam yüklənməsi üçün gözləyirik
+
+    # Sayfanın yüklənməsini gözləyirik
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
 
     logs = driver.get_log("performance")
-
     m3u8_link = None
     for entry in logs:
         try:
@@ -33,7 +36,8 @@ def get_m3u8_from_network():
                 if "xazartv.m3u8" in url:
                     m3u8_link = url
                     break
-        except:
+        except Exception as e:
+            print(f"Xəta baş verdi: {e}")
             continue
 
     driver.quit()
@@ -64,6 +68,11 @@ def update_github_repo(github_token, m3u8_link):
     response = requests.get(github_api_url, headers=headers)
     sha = response.json().get("sha") if response.status_code == 200 else None
 
+    if response.status_code == 404:
+        return "Fayl tapılmadı, yeni fayl yaradılır."
+    elif response.status_code == 500:
+        return "GitHub serverində xəta baş verdi."
+
     content = base64.b64encode(m3u8_link.encode()).decode()  # Base64 formatına salırıq
     data = {
         "message": "Update Xezer TV M3U8 link",
@@ -75,7 +84,10 @@ def update_github_repo(github_token, m3u8_link):
     }
 
     response = requests.put(github_api_url, json=data, headers=headers)
-    return "GitHub repo uğurla yeniləndi." if response.status_code in [200, 201] else f"Xəta: {response.text}"
+    if response.status_code in [200, 201]:
+        return "GitHub repo uğurla yeniləndi."
+    else:
+        return f"Xəta: {response.text}"
 
 # 🔄 Əsas işləyən funksiya
 def main():
@@ -88,6 +100,7 @@ def main():
 
     if m3u8_link:
         updated_m3u8_link = update_token_in_url(m3u8_link, new_token)
+        print(f"Yeni M3U8 linki: {updated_m3u8_link}")
     else:
         print("M3U8 tapılmadı.")
         return
