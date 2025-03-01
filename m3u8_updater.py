@@ -14,35 +14,39 @@ CONFIG = {
     "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",  # M3U8 linkini tapmaq istədiyiniz saytın URL-si
     "iframe_wait_time": 20,  # Iframe üçün gözləmə vaxtı (saniyə)
     "video_wait_time": 30,  # Video elementinə baxmaq üçün gözləmə vaxtı (saniyə)
-    "log_file": "m3u8_link.txt",  # M3U8 linkinin yazılacağı fayl adı
+    "log_file": "m3u8_links.txt",  # M3U8 linklərinin yazılacağı fayl adı
 }
 
 # Logging konfiqurasiyası
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-def get_m3u8_from_network_logs(driver):
+def get_all_m3u8_links_from_network_logs(driver):
     """
-    Şəbəkə loglarından M3U8 linkini axtarır.
+    Şəbəkə loglarından bütün .m3u8 linklərini axtarır.
     """
     try:
         logs = driver.get_log("performance")
+        m3u8_links = set()  # Unikal linkləri saxlamaq üçün set istifadə edilir
         for entry in logs:
             log = json.loads(entry["message"])
             if "method" in log and log["method"] == "Network.responseReceived":
                 url = log["params"]["response"]["url"]
                 if "m3u8" in url:
                     logging.info(f"Şəbəkə loglarından M3U8 linki tapıldı: {url}")
-                    return url
-        logging.warning("Şəbəkə loglarında M3U8 linki tapılmadı.")
-        return None
+                    m3u8_links.add(url)  # Linkləri unikal olaraq əlavə edirik
+        if m3u8_links:
+            logging.info(f"Toplam {len(m3u8_links)} M3U8 linki tapıldı.")
+        else:
+            logging.warning("M3U8 linki tapılmadı.")
+        return list(m3u8_links)
     except Exception as e:
         logging.error(f"Şəbəkə loglarının analizində xəta: {e}")
-        return None
+        return []
 
 
-def get_m3u8_from_network(driver):
+def get_m3u8_links_from_network(driver):
     """
-    Selenium vasitəsiylə M3U8 linkini tapır.
+    Selenium vasitəsiylə bütün M3U8 linklərini tapır.
     """
     try:
         driver.get(CONFIG["url"])
@@ -67,29 +71,21 @@ def get_m3u8_from_network(driver):
             )
             logging.info("Video elementi tapıldı.")
         except Exception as e:
-            logging.warning("Video elementi tapılmadı, şəbəkə loglarından axtarılır.")
+            logging.warning("Video elementi tapılmadı, yalnız şəbəkə loglarından axtarılır.")
 
-        # Video elementinin src atributunu əldə edir
-        m3u8_link = None
-        try:
-            video_element = driver.find_element(By.TAG_NAME, "video")
-            m3u8_link = video_element.get_attribute("src")
-            if m3u8_link and m3u8_link.startswith("blob:"):
-                logging.info("Blob linki tapıldı. Şəbəkə logları təhlil edilir...")
-                m3u8_link = get_m3u8_from_network_logs(driver)
-        except Exception as e:
-            logging.error(f"Video elementindən M3U8 linki əldə edilərkən xəta: {e}")
+        # Şəbəkə loglarından bütün .m3u8 linklərini axtar
+        m3u8_links = get_all_m3u8_links_from_network_logs(driver)
 
-        if m3u8_link:
-            logging.info(f"M3U8 linki tapıldı: {m3u8_link}")
-            return m3u8_link
+        if m3u8_links:
+            logging.info(f"{len(m3u8_links)} M3U8 linki tapıldı.")
+            return m3u8_links
 
-        logging.warning("M3U8 linki tapılmadı.")
-        return None
+        logging.warning("Heç bir M3U8 linki tapılmadı.")
+        return []
 
     except Exception as e:
-        logging.error(f"M3U8 linki əldə edilərkən xəta: {e}")
-        return None
+        logging.error(f"M3U8 linklərini əldə edilərkən xəta: {e}")
+        return []
 
 
 def setup_driver():
@@ -112,23 +108,53 @@ def setup_driver():
     return driver
 
 
+def update_m3u8_link_if_changed(new_links, file_path):
+    """
+    Yeni linklər varsa, .txt faylını güncəlləyir.
+    """
+    try:
+        # Eski linkləri oxu
+        with open(file_path, "r") as file:
+            old_links = [line.strip() for line in file.readlines()]
+
+        # Yeni linklər ilə müqayisə et
+        if set(new_links) != set(old_links):
+            logging.info("Linklər dəyişib, fayl güncəllənir.")
+            with open(file_path, "w") as file:
+                for link in new_links:
+                    file.write(link + "\n")
+            return True
+        else:
+            logging.info("Linklər dəyişmir, fayl aktualdır.")
+            return False
+    except FileNotFoundError:
+        logging.info("Fayl tapılmadı, yeni linklər fayla yazılmışdır.")
+        with open(file_path, "w") as file:
+            for link in new_links:
+                file.write(link + "\n")
+        return True
+    except Exception as e:
+        logging.error(f"Fayl güncəllənilərkən xəta: {e}")
+        return False
+
+
 def main():
     """
-    Ana funksiya: M3U8 linkini tapır və `.txt` faylına yazır.
+    Ana funksiya: Bütün M3U8 linklərini tapır və `.txt` faylına yazır.
     """
     # ChromeDriver setup
     driver = setup_driver()
 
-    # M3U8 linkini tap
-    m3u8_link = get_m3u8_from_network(driver)
+    # Bütün M3U8 linklərini tap
+    m3u8_links = get_m3u8_links_from_network(driver)
 
-    # Link tapıldısa fayl yaradılacaq
-    if m3u8_link:
-        with open(CONFIG["log_file"], "w") as file:
-            file.write(m3u8_link)
-        logging.info(f"M3U8 linki fayla yazıldı: {CONFIG['log_file']}")
+    # Linklər tapıldısa fayl yaradılacaq
+    if m3u8_links:
+        updated = update_m3u8_link_if_changed(m3u8_links, CONFIG["log_file"])
+        if updated:
+            logging.info(f"{len(m3u8_links)} M3U8 linki fayla yazıldı: {CONFIG['log_file']}")
     else:
-        logging.warning("M3U8 linki tapılmadı, fayl yaradılmadı.")
+        logging.warning("Heç bir M3U8 linki tapılmadı, fayl boşdur.")
 
     # ChromeDriver-ı bağla
     driver.quit()
