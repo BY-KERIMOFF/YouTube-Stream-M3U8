@@ -27,11 +27,19 @@ def get_m3u8_from_network():
         WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
 
         # Iframe-ə keçid edirik
-        iframe = driver.find_element(By.TAG_NAME, "iframe")
-        driver.switch_to.frame(iframe)
+        try:
+            iframe = driver.find_element(By.TAG_NAME, "iframe")
+            driver.switch_to.frame(iframe)
+            print("Iframe-ə keçid edildi.")
+        except Exception as e:
+            print(f"Iframe tapılmadı: {e}")
 
         # Video elementinin yüklənməsini gözləyirik
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "video")))
+        try:
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "video")))
+            print("Video elementi tapıldı.")
+        except Exception as e:
+            print(f"Video elementi tapılmadı: {e}")
 
         # JavaScript ilə M3U8 linkini tapmağa çalışırıq
         try:
