@@ -2,7 +2,7 @@ name: Auto Extract and Push M3U8
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # Hər 30 dəqiqədən bir işə düşür
+    - cron: "*/30 * * * *"
   push:
     branches:
       - main
@@ -15,6 +15,11 @@ jobs:
     steps:
       - name: Repository-ni klonla
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Mövcud faylları yoxla
+        run: ls -la
 
       - name: Python və Chrome quraşdır
         run: |
@@ -26,7 +31,7 @@ jobs:
       - name: Skripti işə sal
         run: python script.py
 
-      - name: Dəyişiklikləri yoxla və yüklə
+      - name: Dəyişiklikləri yoxla və push et
         run: |
           if [[ -s "token.txt" ]]; then
             echo "M3U8 token tapıldı, Git-ə push edilir..."
