@@ -83,7 +83,7 @@ def update_github_repo(github_token, m3u8_link, channel_name):
 def main():
     # Yeni tokeni daxil et
     new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"  # Yenilənməli olan token
-    github_token = "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"  # Burada öz GitHub tokenini yaz
+    github_token = "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"  # Burada öz GitHub tokenini yaz
 
     # Verilən tokenli linklər
     tokenli_linkler = {
