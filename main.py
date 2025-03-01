@@ -63,6 +63,7 @@ def get_m3u8_from_network(driver):
 
     except Exception as e:
         logging.error(f"M3U8 linki əldə edilərkən xəta: {e}")
+        logging.error(f"Xəta detalları: {str(e)}")
         return None
 
 def setup_driver():
@@ -72,6 +73,8 @@ def setup_driver():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--log-level=3")  # Chrome log səviyyəsini azaltmaq
+    options.add_argument("--disable-blink-features=AutomationControlled")  # Bot aşkarlanmasını azaltmaq
+    options.add_argument("--window-size=1920,1080")  # Pəncərə ölçüsü
 
     # ChromeDriver-i avtomatik yüklə və quraşdır
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
