@@ -39,12 +39,17 @@ def get_m3u8_from_network(url, channel_name):
         for entry in logs:
             try:
                 log = json.loads(entry["message"])["message"]
-                if log["method"] == "Network.requestWillBeSent" or log["method"] == "Network.responseReceived":
-                    url = log["params"]["request"].get("url") or log["params"]["response"].get("url")
-                    if url and ".m3u8" in url:
-                        print(f"Tapılan URL: {url}")
-                        m3u8_link = url
-                        break
+                if log["method"] == "Network.requestWillBeSent":
+                    url = log["params"].get("request", {}).get("url", "")
+                elif log["method"] == "Network.responseReceived":
+                    url = log["params"].get("response", {}).get("url", "")
+                else:
+                    continue
+
+                if url and ".m3u8" in url:
+                    print(f"Tapılan URL: {url}")
+                    m3u8_link = url
+                    break
             except Exception as e:
                 print(f"Xəta baş verdi: {e}")
                 continue
@@ -157,7 +162,7 @@ def update_github_repo(github_token, m3u8_link, channel_name):
 def main():
     # Yeni tokeni daxil et
     new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"  # Yenilənməli olan token
-    github_token = "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"  # Burada öz GitHub tokenini yaz
+    github_token = "yeni_token_buraya_yazın"  # Burada öz GitHub tokenini yaz
 
     # Xezer TV üçün M3U8 linkini tap
     xezer_tv_url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
