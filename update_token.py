@@ -79,11 +79,25 @@ def update_github_repo(github_token, m3u8_link, channel_name):
         print(f"GitHub yeniləmə xətası: {e}")
         return f"GitHub-da xəta baş verdi: {e}"
 
+# 🔄 GitHub tokenini fayldan oxuyan funksiya
+def read_github_token():
+    try:
+        with open("token.txt", "r") as file:
+            return file.read().strip()
+    except Exception as e:
+        print(f"Token faylını oxumaq xətası: {e}")
+        return None
+
 # 🔄 Əsas işləyən funksiya
 def main():
     # Yeni tokeni daxil et
     new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"  # Yenilənməli olan token
-    github_token = "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"  # Burada öz GitHub tokenini yaz
+
+    # GitHub tokenini fayldan oxu
+    github_token = read_github_token()
+    if not github_token:
+        print("GitHub tokeni tapılmadı.")
+        return
 
     # Verilən tokenli linklər
     tokenli_linkler = {
