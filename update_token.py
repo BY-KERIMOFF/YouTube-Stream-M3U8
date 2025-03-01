@@ -24,7 +24,14 @@ def get_m3u8_from_network(url, channel_name):
         driver.get(url)
 
         # Sayfanın yüklənməsini gözləyirik (daha uzun gözləmə müddəti)
-        WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
+        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
+
+        # Iframe-ə keçid et
+        iframe = driver.find_element(By.TAG_NAME, "iframe")
+        driver.switch_to.frame(iframe)
+
+        # JavaScript ilə yüklənməni gözlə
+        time.sleep(10)
 
         logs = driver.get_log("performance")
         m3u8_link = None
@@ -32,10 +39,10 @@ def get_m3u8_from_network(url, channel_name):
         for entry in logs:
             try:
                 log = json.loads(entry["message"])["message"]
-                if log["method"] == "Network.responseReceived":
-                    url = log["params"]["response"]["url"]
-                    print(f"Tapılan URL: {url}")  # Logları çap edirik
-                    if ".m3u8" in url:
+                if log["method"] == "Network.requestWillBeSent" or log["method"] == "Network.responseReceived":
+                    url = log["params"]["request"].get("url") or log["params"]["response"].get("url")
+                    if url and ".m3u8" in url:
+                        print(f"Tapılan URL: {url}")
                         m3u8_link = url
                         break
             except Exception as e:
