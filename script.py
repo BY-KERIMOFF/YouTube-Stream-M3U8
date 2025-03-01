@@ -102,8 +102,15 @@ def commit_and_push():
     try:
         if os.path.exists("token.txt") and os.path.getsize("token.txt") > 0:
             logging.info("token.txt faylı mövcuddur və boş deyil.")
+
+            # Git statusunu yoxlayın və dəyişikliklər varsa əlavə edin
+            os.system("git status")
             os.system("git add token.txt")
+            
+            # Dəyişiklikləri commit edin
             os.system("git commit -m 'Auto-update token.txt'")
+
+            # Dəyişiklikləri Git-ə push edin
             os.system("git push")
             logging.info("Fayl uğurla Git-ə yükləndi.")
         else:
