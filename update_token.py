@@ -24,16 +24,18 @@ def get_m3u8_from_network():
         url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
         driver.get(url)
 
-        # Sayfanın yüklənməsini gözləyirik
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
+        # Sayfanın yüklənməsini gözləyirik (daha uzun gözləmə müddəti)
+        WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
 
         logs = driver.get_log("performance")
         m3u8_link = None
+        print("Network logları:")
         for entry in logs:
             try:
                 log = json.loads(entry["message"])["message"]
                 if log["method"] == "Network.responseReceived":
                     url = log["params"]["response"]["url"]
+                    print(f"Tapılan URL: {url}")  # Logları çap edirik
                     if "xazartv.m3u8" in url:
                         m3u8_link = url
                         break
