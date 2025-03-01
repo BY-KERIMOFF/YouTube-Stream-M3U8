@@ -71,17 +71,15 @@ def update_token_in_url(url, new_token):
         print(f"Token yeniləmək xətası: {e}")
         return None
 
-# 🔄 GitHub-da M3U8 linkini yeniləyən funksiya
+# 🔄 GitHub-da kanallar.txt faylını yeniləyən funksiya
 def update_github_repo(github_token, m3u8_link, channel_name):
     if not m3u8_link:
         return f"{channel_name} üçün M3U8 linki tapılmadı, repo yenilənmədi."
 
     owner = "by-kerimoff"
     repo = "YouTube-Stream-M3U8"
-    path = f"{channel_name}.m3u8"  # Fayl adını kanal adına uyğun olaraq dəyişdiririk
-    txt_path = f"{channel_name}_link.txt"  # .txt faylının adı
+    path = "kanallar.txt"  # Fayl adı
     github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-    txt_github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{txt_path}"
 
     headers = {
         'Authorization': f'token {github_token}',
@@ -89,29 +87,32 @@ def update_github_repo(github_token, m3u8_link, channel_name):
     }
 
     try:
-        # M3U8 faylını yeniləyirik
+        # kanallar.txt faylını yoxlayırıq
         response = requests.get(github_api_url, headers=headers)
         if response.status_code == 200:
             sha = response.json().get("sha")
+            existing_content = base64.b64decode(response.json()["content"]).decode()
             print(f"Fayl mövcuddur, SHA: {sha}")
         elif response.status_code == 404:
             sha = None
+            existing_content = ""
             print("Fayl tapılmadı, yeni fayl yaradılacaq.")
         else:
             print(f"GitHub API səhvi: {response.text}")
             return f"GitHub API səhvi: {response.text}"
 
-        # Faylın yenilənməsi və ya yeni fayl yaradılması
-        content = base64.b64encode(m3u8_link.encode()).decode()
-        print(f"Base64 encoded content: {content}")  # Debug üçün
+        # Yeni məzmunu əlavə edirik
+        new_content = f"{existing_content}\n{channel_name}: {m3u8_link}"
+        encoded_content = base64.b64encode(new_content.encode()).decode()
 
+        # Faylın yenilənməsi və ya yeni fayl yaradılması
         data = {
             "message": f"Update {channel_name} M3U8 link",
-            "content": content,
+            "content": encoded_content,
             "sha": sha
         } if sha else {
             "message": f"Add {channel_name} M3U8 link",
-            "content": content
+            "content": encoded_content
         }
 
         # PUT sorğusu ilə fayl yenilənir
@@ -122,37 +123,6 @@ def update_github_repo(github_token, m3u8_link, channel_name):
         else:
             print(f"GitHub API sorğusunda xəta: {response.text}")
             return f"GitHub API sorğusunda xəta: {response.text}"
-
-        # .txt faylı üçün SHA yoxlanılır
-        response_txt = requests.get(txt_github_api_url, headers=headers)
-        if response_txt.status_code == 200:
-            txt_sha = response_txt.json().get("sha")
-            print(f".txt faylı mövcuddur, SHA: {txt_sha}")
-        elif response_txt.status_code == 404:
-            txt_sha = None
-            print(".txt faylı tapılmadı, yeni fayl yaradılacaq.")
-        else:
-            print(f"GitHub API səhvi (.txt faylı): {response_txt.text}")
-            return f"GitHub API səhvi (.txt faylı): {response_txt.text}"
-
-        # .txt faylının yenilənməsi və ya yeni fayl yaradılması
-        txt_data = {
-            "message": f"Add {channel_name} M3U8 link to TXT",
-            "content": content,
-            "sha": txt_sha
-        } if txt_sha else {
-            "message": f"Add {channel_name} M3U8 link to TXT",
-            "content": content
-        }
-
-        # PUT sorğusu ilə .txt fayl yaradılır və ya yenilənir
-        response_txt = requests.put(txt_github_api_url, json=txt_data, headers=headers)
-        print(f"GitHub API cavabı (.txt faylı): {response_txt.status_code}, {response_txt.text}")  # Debug üçün
-        if response_txt.status_code in [200, 201]:
-            print(f"GitHub repo-da {channel_name} .txt fayl ilə link uğurla qeyd edildi.")
-        else:
-            print(f"GitHub API sorğusunda .txt faylı xətası: {response_txt.text}")
-            return f"GitHub API sorğusunda .txt faylı xətası: {response_txt.text}"
 
     except Exception as e:
         print(f"GitHub yeniləmə xətası: {e}")
