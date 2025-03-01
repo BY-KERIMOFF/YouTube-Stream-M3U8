@@ -36,7 +36,7 @@ def get_m3u8_from_network():
         for entry in logs:
             try:
                 log = json.loads(entry["message"])  # Log məlumatını JSON formatında oxu
-                if log["method"] == "Network.responseReceived":
+                if "method" in log and log["method"] == "Network.responseReceived":
                     url = log["params"]["response"]["url"]
                     print(f"Tapılan URL: {url}")
                     if "m3u8" in url:  # M3U8 linkini axtar
