@@ -108,6 +108,56 @@ def update_github_repo(github_token, m3u8_link):
         print(f"GitHub yeniləmə xətası: {e}")
         return f"GitHub-da xəta baş verdi: {e}"
 
+# 🔄 GitHub-da m3u8 faylını əlavə etmək üçün funksiya
+def create_or_update_m3u8_file(github_token, m3u8_link):
+    if not m3u8_link:
+        return "M3U8 linki tapılmadı, repo yenilənmədi."
+
+    owner = "by-kerimoff"
+    repo = "YouTube-Stream-M3U8"
+    path = "m3u8_file.m3u8"  # M3U8 faylının adı
+    github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+
+    headers = {
+        'Authorization': f'token {github_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+
+    try:
+        # Fayl mövcudluğunu yoxlayırıq
+        response = requests.get(github_api_url, headers=headers)
+        if response.status_code == 200:
+            sha = response.json().get("sha")
+            print(f"Fayl mövcuddur, SHA: {sha}")
+        elif response.status_code == 404:
+            sha = None
+            print("Fayl tapılmadı, yeni fayl yaradılacaq.")
+        else:
+            return f"GitHub API səhvi: {response.text}"
+
+        content = base64.b64encode(m3u8_link.encode()).decode()  # Base64 formatına salırıq
+
+        # Faylın yenilənməsi və ya yeni fayl yaradılması
+        data = {
+            "message": "Add/Update m3u8 file",
+            "content": content,
+            "sha": sha
+        } if sha else {
+            "message": "Add m3u8 file",
+            "content": content
+        }
+
+        # PUT sorğusu ilə fayl yenilənir
+        response = requests.put(github_api_url, json=data, headers=headers)
+        if response.status_code in [200, 201]:
+            return "M3U8 faylı GitHub repo uğurla yeniləndi."
+        else:
+            return f"GitHub API sorğusunda xəta: {response.text}"
+
+    except Exception as e:
+        print(f"GitHub yeniləmə xətası: {e}")
+        return f"GitHub-da xəta baş verdi: {e}"
+
 # 🔄 Əsas işləyən funksiya
 def main():
     # Yeni tokeni daxil et
@@ -127,6 +177,10 @@ def main():
     # GitHub repo-nu yenilə
     result = update_github_repo(github_token, updated_m3u8_link)
     print(result)
+
+    # GitHub-da m3u8 faylını əlavə et və ya yenilə
+    m3u8_file_result = create_or_update_m3u8_file(github_token, updated_m3u8_link)
+    print(m3u8_file_result)
 
 # 🏃‍♂️ Skripti işə sal
 if __name__ == "__main__":
