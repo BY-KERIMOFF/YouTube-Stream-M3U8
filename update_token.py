@@ -18,7 +18,7 @@ def get_m3u8_link():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
     # Səhifəyə daxil olun
-    url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
+    url = "https://tr.canlitv.digital/now-tv-izle"
     driver.get(url)
     
     # Səhifənin tam yüklənməsi üçün gözləyin
@@ -109,7 +109,7 @@ def main():
         updated_m3u8_link = None
         
     # İkinci linki də əlavə edirik
-    additional_link = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=z_x6qXYvRJj7HwDHPWC1tA&tms=1740722575"
+    additional_link = "https://live.cdn-canlitv.com/foxtv2.m3u8?anahtar=Feh6S6U9hft8JFULrTK--A&sure=1740821386"
     additional_updated_link = update_token_in_url(additional_link, new_token)
     print(f"İkinci M3U8 linki: {additional_updated_link}")
     
