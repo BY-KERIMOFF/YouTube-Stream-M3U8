@@ -97,17 +97,21 @@ def update_github_repo(github_token, m3u8_link, channel_name):
             return f"GitHub API səhvi: {response.text}"
 
         # Faylın yenilənməsi və ya yeni fayl yaradılması
+        content = base64.b64encode(m3u8_link.encode()).decode()
+        print(f"Base64 encoded content: {content}")  # Debug üçün
+
         data = {
             "message": f"Update {channel_name} M3U8 link",
-            "content": base64.b64encode(m3u8_link.encode()).decode(),  # Base64 formatına salırıq
+            "content": content,
             "sha": sha
         } if sha else {
             "message": f"Add {channel_name} M3U8 link",
-            "content": base64.b64encode(m3u8_link.encode()).decode()
+            "content": content
         }
 
         # PUT sorğusu ilə fayl yenilənir
         response = requests.put(github_api_url, json=data, headers=headers)
+        print(f"GitHub API cavabı: {response.status_code}, {response.text}")  # Debug üçün
         if response.status_code in [200, 201]:
             print(f"GitHub repo {channel_name} M3U8 linki ilə uğurla yeniləndi.")
         else:
@@ -129,15 +133,16 @@ def update_github_repo(github_token, m3u8_link, channel_name):
         # .txt faylının yenilənməsi və ya yeni fayl yaradılması
         txt_data = {
             "message": f"Add {channel_name} M3U8 link to TXT",
-            "content": base64.b64encode(m3u8_link.encode()).decode(),  # Base64 formatına salırıq
+            "content": content,
             "sha": txt_sha
         } if txt_sha else {
             "message": f"Add {channel_name} M3U8 link to TXT",
-            "content": base64.b64encode(m3u8_link.encode()).decode()
+            "content": content
         }
 
         # PUT sorğusu ilə .txt fayl yaradılır və ya yenilənir
         response_txt = requests.put(txt_github_api_url, json=txt_data, headers=headers)
+        print(f"GitHub API cavabı (.txt faylı): {response_txt.status_code}, {response_txt.text}")  # Debug üçün
         if response_txt.status_code in [200, 201]:
             print(f"GitHub repo-da {channel_name} .txt fayl ilə link uğurla qeyd edildi.")
         else:
