@@ -1,35 +1,35 @@
-name: CI
+name: run main.py
 
 on:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: '0 */2 * * *' # Runs in every 3 hours
+  pull_request:
+      branches:
+        - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Git user
+    steps: 
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: '3.x' 
+      - name: Install dependencies
         run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-
-      - name: Check for changes
-        id: changes
+          python -m pip install --upgrade pip
+          
+          pip3 install -r requirements.txt
+      - name: execute py script 
+        run: python main.py config.json
+      - name: commit and push files
         run: |
-          if [[ $(git status --porcelain) ]]; then
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit changes
-        if: steps.changes.outputs.changes == 'true'
-        run: |
-          git add .
-          git commit -m "Automated commit by GitHub Actions"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "updated streams"
           git push
+
+        
+        
