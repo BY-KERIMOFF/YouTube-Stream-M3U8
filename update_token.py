@@ -1,6 +1,7 @@
 import time
 import json
 import re
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -34,7 +35,7 @@ def get_m3u8_from_network():
         print("Network logları:")
         for entry in logs:
             try:
-                log = json.loads(entry["message"])["message"]
+                log = json.loads(entry["message"])  # Log məlumatını JSON formatında oxu
                 if log["method"] == "Network.responseReceived":
                     url = log["params"]["response"]["url"]
                     print(f"Tapılan URL: {url}")
@@ -72,8 +73,12 @@ def write_to_local_file(m3u8_link):
         # Yeni məzmunu hazırlayırıq
         new_content = f"#EXTM3U\n#EXTINF:-1,xezer tv\n{m3u8_link}\n"
 
+        # Faylın tam yolunu müəyyən edirik
+        file_path = os.path.abspath("token.txt")
+        print(f"Fayl yaradılacaq yol: {file_path}")
+
         # Yerli fayla yazırıq
-        with open("token.txt", "w") as file:
+        with open(file_path, "w") as file:
             file.write(new_content)
         print("Yerli fayl uğurla yeniləndi.")
     except Exception as e:
