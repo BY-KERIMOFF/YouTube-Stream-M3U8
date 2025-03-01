@@ -1,35 +1,46 @@
-name: run main.py
+name: Run main.py and update streams
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # Runs in every 3 hours
+    - cron: '0 */2 * * *'  # Hər 2 saatda bir işləyir
   pull_request:
-      branches:
-        - main
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps: 
-      - uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-            python-version: '3.x' 
+          python-version: '3.x'  # Python versiyasını avtomatik seçir
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          
-          pip3 install -r requirements.txt
-      - name: execute py script 
+          pip install -r requirements.txt
+
+      - name: Execute Python script
         run: python main.py config.json
-      - name: commit and push files
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [[ $(git status --porcelain) ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.changes == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git commit -m "updated streams"
+          git commit -m "Updated streams"
           git push
-
-        
-        
