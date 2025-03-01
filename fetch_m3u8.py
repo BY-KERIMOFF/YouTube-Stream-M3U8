@@ -20,8 +20,8 @@ logging.basicConfig(
 # Konfiqurasiya dəyişənləri
 CONFIG = {
     "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
-    "iframe_wait_time": 60,  # Artırılmış gözləmə müddəti
-    "video_wait_time": 30,   # Artırılmış video gözləmə müddəti
+    "iframe_wait_time": 60,
+    "video_wait_time": 30,
     "headless": True,  # GitHub Actions-da headless rejimi aktiv olmalıdır
 }
 
