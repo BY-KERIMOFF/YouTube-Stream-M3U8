@@ -22,7 +22,7 @@ CONFIG = {
     "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
     "iframe_wait_time": 30,
     "video_wait_time": 15,
-    "headless": False,  # Headless rejimi
+    "headless": True,  # GitHub Actions-da headless rejimi aktiv olmalıdır
 }
 
 def setup_driver():
