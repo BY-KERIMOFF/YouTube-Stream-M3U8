@@ -24,7 +24,7 @@ def get_m3u8_from_network():
         driver.get(url)
 
         # Sayfanın yüklənməsini gözləyirik (daha uzun gözləmə müddəti)
-        WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
+        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
 
         # Iframe-ə keçid edirik
         try:
