@@ -91,13 +91,16 @@ def update_github_repo(github_token, m3u8_link):
             return f"GitHub API səhvi: {response.text}"
 
         # Faylın yenilənməsi və ya yeni fayl yaradılması
+        content_base64 = base64.b64encode(m3u8_link.encode()).decode()  # Base64 formatına salırıq
+        print(f"Base64 kodlaşdırılmış məzmun: {content_base64[:100]}...")  # Məzmunu yoxlayaq
+
         data = {
             "message": "Update Xezer TV M3U8 link",
-            "content": base64.b64encode(m3u8_link.encode()).decode(),  # Base64 formatına salırıq
+            "content": content_base64,
             "sha": sha
         } if sha else {
             "message": "Add Xezer TV M3U8 link",
-            "content": base64.b64encode(m3u8_link.encode()).decode()
+            "content": content_base64
         }
 
         # PUT sorğusu ilə fayl yenilənir
