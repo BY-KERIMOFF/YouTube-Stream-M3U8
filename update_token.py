@@ -1,7 +1,4 @@
 import time
-import requests
-import base64
-import json
 import re
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -60,65 +57,27 @@ def update_token_in_url(url, new_token):
         print(f"Token yeniləmək xətası: {e}")
         return None
 
-# 🔄 GitHub-da M3U8 linkini yeniləyən funksiya
-def update_github_repo(github_token, m3u8_link):
+# 🔄 Yerli fayla M3U8 linkini yazan funksiya
+def write_to_local_file(m3u8_link):
     if not m3u8_link:
-        return "M3U8 linki tapılmadı, repo yenilənmədi."
-
-    owner = "by-kerimoff"
-    repo = "YouTube-Stream-M3U8"
-    path = "token.txt"  # Fayl adı
-    github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-
-    headers = {
-        'Authorization': f'token {github_token}',
-        'Accept': 'application/vnd.github.v3+json'
-    }
+        return "M3U8 linki tapılmadı, fayl yenilənmədi."
 
     try:
-        # Faylı oxuyuruq
-        response = requests.get(github_api_url, headers=headers)
-        if response.status_code == 200:
-            sha = response.json().get("sha")
-            print(f"Fayl mövcuddur, SHA: {sha}")
-        elif response.status_code == 404:
-            sha = None
-            print("Fayl tapılmadı, yeni fayl yaradılacaq.")
-        else:
-            print(f"GitHub API səhvi: {response.text}")
-            return f"GitHub API səhvi: {response.text}"
-
         # Yeni məzmunu hazırlayırıq
         new_content = f"#EXTM3U\n#EXTINF:-1,xezer tv\n{m3u8_link}\n"
-        content_base64 = base64.b64encode(new_content.encode()).decode()  # Base64 formatına salırıq
-        print(f"Base64 kodlaşdırılmış məzmun: {content_base64[:100]}...")  # Məzmunu yoxlayaq
 
-        data = {
-            "message": "Update Xezer TV M3U8 link",
-            "content": content_base64,
-            "sha": sha
-        } if sha else {
-            "message": "Add Xezer TV M3U8 link",
-            "content": content_base64
-        }
-
-        # PUT sorğusu ilə fayl yenilənir
-        response = requests.put(github_api_url, json=data, headers=headers)
-        if response.status_code in [200, 201]:
-            print("GitHub repo M3U8 linki ilə uğurla yeniləndi.")
-        else:
-            print(f"GitHub API sorğusunda xəta: {response.text}")
-            return f"GitHub API sorğusunda xəta: {response.text}"
-
+        # Yerli fayla yazırıq
+        with open("token.txt", "w") as file:
+            file.write(new_content)
+        print("Yerli fayl uğurla yeniləndi.")
     except Exception as e:
-        print(f"GitHub yeniləmə xətası: {e}")
-        return f"GitHub-da xəta baş verdi: {e}"
+        print(f"Fayla yazma xətası: {e}")
+        return f"Fayla yazma xətası: {e}"
 
 # 🔄 Əsas işləyən funksiya
 def main():
     # Yeni tokeni daxil et
     new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"  # Yenilənməli olan token
-    github_token = "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"  # Burada öz GitHub tokenini yaz
 
     # Saytdan yeni M3U8 linkini götür
     m3u8_link = get_m3u8_from_network()
@@ -130,8 +89,8 @@ def main():
         print("M3U8 tapılmadı.")
         return
 
-    # GitHub repo-nu yenilə
-    result = update_github_repo(github_token, updated_m3u8_link)
+    # Yerli fayla yaz
+    result = write_to_local_file(updated_m3u8_link)
     print(result)
 
 # 🏃‍♂️ Skripti işə sal
