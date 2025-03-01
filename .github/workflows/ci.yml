@@ -1,56 +1,11 @@
-name: Fetch M3U8 Link
+# Saytın URL-si, M3U8 linkini tapmaq istədiyiniz səhifə
+url: "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
 
-on:
-  schedule:
-    - cron: '0 */2 * * *'  # Hər 2 saatda bir işləyir
-  push:
-    branches:
-      - main
+# iframe elementinin tapılması üçün gözləmə müddəti (saniyə ilə)
+iframe_wait_time: 10
 
-jobs:
-  fetch-m3u8:
-    runs-on: ubuntu-latest
+# Video elementi tapmaq üçün gözləmə müddəti (saniyə ilə)
+video_wait_time: 15
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Bütün commit tarixçəsini yüklə
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'  # Python versiyasını avtomatik seçir
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install selenium webdriver_manager
-
-      - name: Install ChromeDriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-chromedriver
-
-      - name: Run Python script
-        run: python main.py
-
-      - name: Check for changes
-        id: changes
-        run: |
-          if [[ $(git status --porcelain) ]]; then
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push changes
-        if: steps.changes.outputs.changes == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token təmin edin
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
-          git commit -m "Automated update: M3U8 link fetched"
-          git push origin main
+# M3U8 linkinin yazılacağı fayl adı
+log_file: "m3u8_link.txt"
