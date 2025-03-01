@@ -1,7 +1,7 @@
+import os
 import time
 import json
 import re
-import os
 import requests
 import base64
 from selenium import webdriver
@@ -81,46 +81,8 @@ def write_to_local_file(m3u8_link):
     except Exception as e:
         return f"Fayla yazma xətası: {e}"
 
-def update_github_repo(github_token, m3u8_link):
-    owner = "by-kerimoff"
-    repo = "YouTube-Stream-M3U8"
-    path = "token.txt"
-    github_api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-
-    headers = {
-        'Authorization': f'token {github_token}',
-        'Accept': 'application/vnd.github.v3+json'
-    }
-
-    try:
-        response = requests.get(github_api_url, headers=headers)
-        sha = response.json().get("sha") if response.status_code == 200 else None
-
-        new_content = f"#EXTM3U\n#EXTINF:-1,xezer tv\n{m3u8_link}\n"
-        content_base64 = base64.b64encode(new_content.encode()).decode()
-
-        data = {
-            "message": "Update Xezer TV M3U8 link",
-            "content": content_base64,
-            "sha": sha
-        } if sha else {
-            "message": "Add Xezer TV M3U8 link",
-            "content": content_base64
-        }
-
-        response = requests.put(github_api_url, json=data, headers=headers)
-        return "GitHub repo uğurla yeniləndi." if response.status_code in [200, 201] else f"GitHub səhvi: {response.text}"
-
-    except Exception as e:
-        return f"GitHub-da xəta baş verdi: {e}"
-
 def main():
     new_token = os.getenv("NEW_TOKEN", "default_token")
-    github_token = os.getenv("GITHUB_TOKEN")
-
-    if not github_token:
-        print("GitHub token tapılmadı. Mühit dəyişənini yoxlayın.")
-        return
 
     m3u8_link = get_m3u8_from_network()
     if not m3u8_link:
@@ -129,7 +91,6 @@ def main():
 
     updated_m3u8_link = update_token_in_url(m3u8_link, new_token)
     print(write_to_local_file(updated_m3u8_link))
-    print(update_github_repo(github_token, updated_m3u8_link))
 
 if __name__ == "__main__":
     main()
