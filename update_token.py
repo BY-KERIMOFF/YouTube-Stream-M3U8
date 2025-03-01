@@ -30,22 +30,31 @@ def get_m3u8_from_network():
         iframe = driver.find_element(By.TAG_NAME, "iframe")
         driver.switch_to.frame(iframe)
 
-        logs = driver.get_log("performance")
-        m3u8_link = None
-        print("Network logları:")
-        for entry in logs:
-            try:
-                log = json.loads(entry["message"])  # Log məlumatını JSON formatında oxu
-                if "method" in log and log["method"] == "Network.responseReceived":
-                    url = log["params"]["response"]["url"]
-                    print(f"Tapılan URL: {url}")
-                    if "m3u8" in url:  # M3U8 linkini axtar
-                        m3u8_link = url
-                        print(f"M3U8 linki tapıldı: {m3u8_link}")
-                        break
-            except Exception as e:
-                print(f"Xəta baş verdi: {e}")
-                continue
+        # JavaScript ilə M3U8 linkini tapmağa çalışırıq
+        try:
+            m3u8_link = driver.execute_script("return window.player.getPlaylist()[0].file;")
+            print(f"JavaScript ilə tapılan M3U8 linki: {m3u8_link}")
+        except Exception as e:
+            print(f"JavaScript ilə M3U8 linki tapılmadı: {e}")
+            m3u8_link = None
+
+        # Əgər JavaScript ilə tapılmadısa, logları təhlil edirik
+        if not m3u8_link:
+            logs = driver.get_log("performance")
+            print("Network logları:")
+            for entry in logs:
+                try:
+                    log = json.loads(entry["message"])  # Log məlumatını JSON formatında oxu
+                    if "method" in log and log["method"] == "Network.responseReceived":
+                        url = log["params"]["response"]["url"]
+                        print(f"Tapılan URL: {url}")
+                        if "m3u8" in url:  # M3U8 linkini axtar
+                            m3u8_link = url
+                            print(f"M3U8 linki tapıldı: {m3u8_link}")
+                            break
+                except Exception as e:
+                    print(f"Xəta baş verdi: {e}")
+                    continue
 
         driver.quit()
         return m3u8_link
