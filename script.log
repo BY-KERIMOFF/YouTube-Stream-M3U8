@@ -114,3 +114,42 @@ Stacktrace:
 
 2025-03-01 23:00:14,455 - WARNING - M3U8 linki tapılmadı, fayl yaradılmadı.
 2025-03-01 23:00:14,589 - INFO - ChromeDriver bağlandı.
+2025-03-01 23:01:34,633 - INFO - ====== WebDriver manager ======
+2025-03-01 23:01:34,936 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 23:01:34,956 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 23:01:34,965 - INFO - There is no [linux64] chromedriver "133.0.6943.141" for browser google-chrome "133.0.6943" in cache
+2025-03-01 23:01:34,965 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 23:01:35,005 - INFO - WebDriver version 133.0.6943.141 selected
+2025-03-01 23:01:35,007 - INFO - Modern chrome version https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
+2025-03-01 23:01:35,007 - INFO - About to download new driver from https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
+2025-03-01 23:01:35,030 - INFO - Driver downloading response is 200
+2025-03-01 23:01:35,086 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 23:01:35,209 - INFO - Driver has been saved in cache [/home/runner/.wdm/drivers/chromedriver/linux64/133.0.6943.141]
+2025-03-01 23:01:35,767 - INFO - ChromeDriver uğurla başlatıldı.
+2025-03-01 23:01:37,214 - INFO - Səhifə yükləndi: https://www.ecanlitvizle.app/xezer-tv-canli-izle/
+2025-03-01 23:01:37,251 - INFO - Iframe-ə keçid edildi.
+2025-03-01 23:02:07,671 - ERROR - M3U8 linki əldə edilərkən xəta: Message: 
+Stacktrace:
+#0 0x559b3017014a <unknown>
+#1 0x559b2fc0db80 <unknown>
+#2 0x559b2fc5f0e9 <unknown>
+#3 0x559b2fc5f271 <unknown>
+#4 0x559b2fcadde4 <unknown>
+#5 0x559b2fc84efd <unknown>
+#6 0x559b2fcab14a <unknown>
+#7 0x559b2fc84ca3 <unknown>
+#8 0x559b2fc50f08 <unknown>
+#9 0x559b2fc52071 <unknown>
+#10 0x559b30139b5b <unknown>
+#11 0x559b3013dae2 <unknown>
+#12 0x559b30125967 <unknown>
+#13 0x559b3013e6d4 <unknown>
+#14 0x559b30109c7f <unknown>
+#15 0x559b3015ecd8 <unknown>
+#16 0x559b3015eea9 <unknown>
+#17 0x559b3016efc6 <unknown>
+#18 0x7fdd73e9caa4 <unknown>
+#19 0x7fdd73f29c3c <unknown>
+
+2025-03-01 23:02:07,671 - WARNING - M3U8 linki tapılmadı, fayl yaradılmadı.
+2025-03-01 23:02:07,804 - INFO - ChromeDriver bağlandı.
