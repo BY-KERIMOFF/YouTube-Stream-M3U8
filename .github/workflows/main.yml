@@ -1,31 +1,24 @@
-name: Run main.py and update streams
+name: CI
 
 on:
-  schedule:
-    - cron: '0 */2 * * *'  # Hər 2 saatda bir işləyir
-  pull_request:
+  push:
     branches:
       - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/checkout@v3
         with:
-          python-version: '3.x'  # Python versiyasını avtomatik seçir
+          fetch-depth: 0  # Bütün commit tarixçəsini yüklə
 
-      - name: Install dependencies
+      - name: Set up Git user
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Execute Python script
-        run: python main.py config.json
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
 
       - name: Check for changes
         id: changes
@@ -38,9 +31,9 @@ jobs:
 
       - name: Commit and push changes
         if: steps.changes.outputs.changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token təmin edin
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git commit -m "Updated streams"
-          git push
+          git add .
+          git commit -m "Automated commit by GitHub Actions"
+          git push origin main
