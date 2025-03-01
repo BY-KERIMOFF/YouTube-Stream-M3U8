@@ -1,4 +1,7 @@
 import tempfile
+import os
+import json
+import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -6,9 +9,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-import os
-import json
-import logging
 
 # Loglama konfiqurasiyası
 logging.basicConfig(
@@ -17,16 +17,14 @@ logging.basicConfig(
     handlers=[logging.FileHandler("script.log"), logging.StreamHandler()],
 )
 
-# Konfiqurasiya dəyişənləri
 CONFIG = {
     "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
     "iframe_wait_time": 30,
     "video_wait_time": 15,
-    "headless": True,  # GitHub Actions-da headless rejimi aktiv olmalıdır
+    "headless": True,
 }
 
 def setup_driver():
-    """ChromeDriver-i quraşdır və başlat."""
     try:
         options = Options()
         if CONFIG["headless"]:
@@ -35,7 +33,6 @@ def setup_driver():
         options.add_argument("--disable-dev-shm-usage")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
-        # Unikal bir qovluq yaradın
         user_data_dir = tempfile.mkdtemp()
         options.add_argument(f"--user-data-dir={user_data_dir}")
 
@@ -47,12 +44,10 @@ def setup_driver():
         return None
 
 def get_m3u8_from_network(driver):
-    """M3U8 linkini əldə et."""
     try:
         driver.get(CONFIG["url"])
         logging.info(f"Səhifə yükləndi: {CONFIG['url']}")
 
-        # iframe-i gözlə
         WebDriverWait(driver, CONFIG["iframe_wait_time"]).until(
             EC.presence_of_element_located((By.TAG_NAME, "iframe"))
         )
@@ -61,13 +56,11 @@ def get_m3u8_from_network(driver):
             driver.switch_to.frame(iframes[0])
             logging.info("Iframe-ə keçid edildi.")
 
-        # Video elementini gözlə
         WebDriverWait(driver, CONFIG["video_wait_time"]).until(
             EC.presence_of_element_located((By.TAG_NAME, "video"))
         )
         logging.info("Video elementi tapıldı.")
 
-        # M3U8 linklərini şəbəkə loglarından çıxar
         logs = driver.get_log("performance")
         m3u8_links = set()
         
@@ -89,7 +82,6 @@ def get_m3u8_from_network(driver):
         return None
 
 def write_to_file(m3u8_links):
-    """M3U8 linklərini fayla yaz."""
     if m3u8_links:
         with open("token.txt", "w") as file:
             for link in m3u8_links:
@@ -99,7 +91,6 @@ def write_to_file(m3u8_links):
         logging.warning("M3U8 linki tapılmadı, fayl yaradılmadı.")
 
 def main():
-    """Əsas funksiya."""
     driver = setup_driver()
     if not driver:
         return
@@ -110,11 +101,10 @@ def main():
     driver.quit()
     logging.info("ChromeDriver bağlandı.")
 
-    # Fayl mövcud olub-olmadığını yoxlayırıq
     if os.path.exists("token.txt") and os.path.getsize("token.txt") > 0:
         logging.info("token.txt faylı mövcuddur və boş deyil.")
         os.system("git add token.txt")
-        os.system("git commit -m 'Update token file'")
+        os.system("git commit -m 'Auto-update token.txt'")
         os.system("git push")
     else:
         logging.error("token.txt faylı mövcud deyil və ya boşdur!")
