@@ -71,7 +71,9 @@ def setup_driver():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
+    options.add_argument("--log-level=3")  # Chrome log səviyyəsini azaltmaq
 
+    # ChromeDriver-i avtomatik yüklə və quraşdır
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     driver.set_page_load_timeout(30)
     return driver
