@@ -1,7 +1,5 @@
 import time
-import requests
-import base64
-import json  # JSON modulunu daxil et
+import json
 import re
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -27,17 +25,22 @@ def get_m3u8_from_network():
         # Sayfanın yüklənməsini gözləyirik (daha uzun gözləmə müddəti)
         WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
 
+        # Iframe-ə keçid edirik
+        iframe = driver.find_element(By.TAG_NAME, "iframe")
+        driver.switch_to.frame(iframe)
+
         logs = driver.get_log("performance")
         m3u8_link = None
         print("Network logları:")
         for entry in logs:
             try:
-                log = json.loads(entry["message"])["message"]  # JSON məlumatını oxu
+                log = json.loads(entry["message"])["message"]
                 if log["method"] == "Network.responseReceived":
                     url = log["params"]["response"]["url"]
-                    print(f"Tapılan URL: {url}")  # Logları çap edirik
-                    if "xazartv.m3u8" in url:
+                    print(f"Tapılan URL: {url}")
+                    if "m3u8" in url:  # M3U8 linkini axtar
                         m3u8_link = url
+                        print(f"M3U8 linki tapıldı: {m3u8_link}")
                         break
             except Exception as e:
                 print(f"Xəta baş verdi: {e}")
