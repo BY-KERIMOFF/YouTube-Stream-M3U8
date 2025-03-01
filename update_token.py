@@ -1,3 +1,4 @@
+import tempfile
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -10,8 +11,12 @@ import json
 
 def get_m3u8_from_network():
     try:
+        # Unikal bir qovluq yaradın
+        user_data_dir = tempfile.mkdtemp()
+
         options = Options()
-        # options.add_argument("--headless")  # Headless rejimini sınaqdan keçirin
+        options.add_argument(f"--user-data-dir={user_data_dir}")
+        options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
