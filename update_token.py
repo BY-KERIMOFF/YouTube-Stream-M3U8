@@ -1,4 +1,7 @@
 import time
+import requests
+import base64
+import json  # JSON modulunu daxil et
 import re
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -29,7 +32,7 @@ def get_m3u8_from_network():
         print("Network logları:")
         for entry in logs:
             try:
-                log = json.loads(entry["message"])["message"]
+                log = json.loads(entry["message"])["message"]  # JSON məlumatını oxu
                 if log["method"] == "Network.responseReceived":
                     url = log["params"]["response"]["url"]
                     print(f"Tapılan URL: {url}")  # Logları çap edirik
