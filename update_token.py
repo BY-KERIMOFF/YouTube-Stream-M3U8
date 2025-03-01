@@ -157,7 +157,7 @@ def update_github_repo(github_token, m3u8_link, channel_name):
 def main():
     # Yeni tokeni daxil et
     new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"  # Yenilənməli olan token
-    github_token = "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"  # Burada öz GitHub tokenini yaz
+    github_token = "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"  # Burada öz GitHub tokenini yaz
 
     # Xezer TV üçün M3U8 linkini tap
     xezer_tv_url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
