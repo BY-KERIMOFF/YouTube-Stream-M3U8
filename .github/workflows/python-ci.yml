@@ -1,39 +1,41 @@
-name: Run Python Script
+name: Auto Extract and Push M3U8
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'  # Hər gün saat 00:00-da işə sal
+    - cron: "*/30 * * * *"  # Hər 30 dəqiqədən bir işə düşür
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  run-script:
+  extract-m3u8:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Repository-ni klonla
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
+      - name: Python və Chrome quraşdır
         run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install selenium webdriver-manager
 
-      - name: Run Python script
-        run: python update_token.py
+      - name: Skripti işə sal
+        run: python script.py
 
-      - name: Commit and push changes
+      - name: Dəyişiklikləri yoxla və yüklə
         run: |
-          if [[ -f "token.txt" ]]; then
-            git config --global user.name "GitHub Actions"
-            git config --global user.email "actions@github.com"
+          if [[ -s "token.txt" ]]; then
+            echo "M3U8 token tapıldı, Git-ə push edilir..."
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git add token.txt
-            git commit -m "Automated update from GitHub Actions"
+            git commit -m "Auto-update token.txt"
             git push
           else
-            echo "Fayl tapılmadı, dəyişiklik yoxdur."
+            echo "Xəta: token.txt faylı boşdur və ya tapılmadı."
+            exit 1
           fi
