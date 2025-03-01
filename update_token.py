@@ -78,8 +78,10 @@ def update_github_repo(github_token, m3u8_link):
         response = requests.get(github_api_url, headers=headers)
         if response.status_code == 200:
             sha = response.json().get("sha")
+            print(f"Fayl mövcuddur, SHA: {sha}")
         elif response.status_code == 404:
             sha = None
+            print("Fayl tapılmadı, yeni fayl yaradılacaq.")
         else:
             return f"GitHub API səhvi: {response.text}"
 
