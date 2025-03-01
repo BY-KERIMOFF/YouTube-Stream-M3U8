@@ -1,54 +1,26 @@
-import tempfile
+import time
+import logging
+import json
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-import os
-import json
-import logging
 
-# Loglama konfiqurasiyası
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("script.log"), logging.StreamHandler()],
-)
-
-# Konfiqurasiya dəyişənləri
+# Konfiqurasiya parametrləri
 CONFIG = {
-    "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
-    "iframe_wait_time": 60,
-    "video_wait_time": 30,
-    "headless": True,  # GitHub Actions-da headless rejimi aktiv olmalıdır
+    "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",  # M3U8 linkini tapmaq istədiyiniz saytın URL-si
+    "iframe_wait_time": 10,  # Iframe üçün gözləmə vaxtı
+    "video_wait_time": 15,  # Video elementinə baxmaq üçün gözləmə vaxtı
 }
 
-def setup_driver():
-    """ChromeDriver-i quraşdır və başlat."""
-    try:
-        options = Options()
-        if CONFIG["headless"]:
-            options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-
-        # Unikal bir qovluq yaradın
-        user_data_dir = tempfile.mkdtemp()
-        options.add_argument(f"--user-data-dir={user_data_dir}")
-
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=options)
-        logging.info("ChromeDriver uğurla başlatıldı.")
-        return driver
-    except Exception as e:
-        logging.error(f"ChromeDriver quraşdırılarkən xəta: {e}")
-        return None
+# Logging konfiqurasiyası
+logging.basicConfig(level=logging.INFO)
 
 def get_m3u8_from_network(driver):
-    """M3U8 linkini əldə et."""
     try:
         driver.get(CONFIG["url"])
         logging.info(f"Səhifə yükləndi: {CONFIG['url']}")
@@ -61,8 +33,6 @@ def get_m3u8_from_network(driver):
         if iframes:
             driver.switch_to.frame(iframes[0])
             logging.info("Iframe-ə keçid edildi.")
-        else:
-            logging.warning("Iframe tapılmadı!")
 
         # Video elementini gözlə
         WebDriverWait(driver, CONFIG["video_wait_time"]).until(
@@ -70,12 +40,10 @@ def get_m3u8_from_network(driver):
         )
         logging.info("Video elementi tapıldı.")
 
-        # Video elementini JavaScript ilə al
+        # M3U8 linkini əldə et
         m3u8_link = driver.execute_script("return document.querySelector('video').src;")
-
-        if not m3u8_link:
-            logging.error("M3U8 linki tapılmadı, JavaScript vasitəsilə alınmağa çalışıldı.")
-            # Daha ətraflı loglama
+        if m3u8_link and m3u8_link.startswith("blob:"):
+            logging.info("Blob linki tapıldı. Şəbəkə logları təhlil edilir...")
             logs = driver.get_log("performance")
             for entry in logs:
                 log = json.loads(entry["message"])
@@ -97,26 +65,34 @@ def get_m3u8_from_network(driver):
         logging.error(f"M3U8 linki əldə edilərkən xəta: {e}")
         return None
 
-def write_to_file(m3u8_link):
-    """M3U8 linkini fayla yaz."""
+def setup_driver():
+    options = Options()
+    options.add_argument("--headless")  # Başsız rejim
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver.set_page_load_timeout(30)
+    return driver
+
+def main():
+    # ChromeDriver setup
+    driver = setup_driver()
+
+    # M3U8 linkini tap
+    m3u8_link = get_m3u8_from_network(driver)
+
+    # Link tapıldısa fayl yaradılacaq
     if m3u8_link:
-        with open("token.txt", "w") as file:
+        with open("m3u8_link.txt", "w") as file:
             file.write(m3u8_link)
-        logging.info("Fayl uğurla yaradıldı.")
+        logging.info("M3U8 linki fayla yazıldı.")
     else:
         logging.warning("M3U8 linki tapılmadı, fayl yaradılmadı.")
 
-def main():
-    """Əsas funksiya."""
-    driver = setup_driver()
-    if not driver:
-        return
-
-    m3u8_link = get_m3u8_from_network(driver)
-    write_to_file(m3u8_link)
-
+    # ChromeDriver-ı bağla
     driver.quit()
-    logging.info("ChromeDriver bağlandı.")
 
 if __name__ == "__main__":
     main()
