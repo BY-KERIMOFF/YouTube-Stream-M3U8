@@ -20,8 +20,8 @@ logging.basicConfig(
 # Konfiqurasiya dəyişənləri
 CONFIG = {
     "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
-    "iframe_wait_time": 30,
-    "video_wait_time": 15,
+    "iframe_wait_time": 60,  # Artırılmış gözləmə müddəti
+    "video_wait_time": 30,   # Artırılmış video gözləmə müddəti
     "headless": True,  # GitHub Actions-da headless rejimi aktiv olmalıdır
 }
 
@@ -41,6 +41,7 @@ def setup_driver():
 
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
+        logging.info("ChromeDriver uğurla başlatıldı.")
         return driver
     except Exception as e:
         logging.error(f"ChromeDriver quraşdırılarkən xəta: {e}")
@@ -60,6 +61,8 @@ def get_m3u8_from_network(driver):
         if iframes:
             driver.switch_to.frame(iframes[0])
             logging.info("Iframe-ə keçid edildi.")
+        else:
+            logging.warning("Iframe tapılmadı!")
 
         # Video elementini gözlə
         WebDriverWait(driver, CONFIG["video_wait_time"]).until(
