@@ -11,55 +11,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# 🔎 M3U8 linkini tapmaq üçün network traffic-i yoxlayan funksiya
-def get_m3u8_from_network(url, channel_name):
-    try:
-        options = Options()
-        options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        driver.get(url)
-
-        # Sayfanın yüklənməsini gözləyirik (daha uzun gözləmə müddəti)
-        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
-
-        # Iframe-ə keçid et
-        iframe = driver.find_element(By.TAG_NAME, "iframe")
-        driver.switch_to.frame(iframe)
-
-        # JavaScript ilə yüklənməni gözlə
-        time.sleep(10)
-
-        logs = driver.get_log("performance")
-        m3u8_link = None
-        print(f"{channel_name} üçün network logları:")
-        for entry in logs:
-            try:
-                log = json.loads(entry["message"])["message"]
-                if log["method"] == "Network.requestWillBeSent":
-                    url = log["params"].get("request", {}).get("url", "")
-                elif log["method"] == "Network.responseReceived":
-                    url = log["params"].get("response", {}).get("url", "")
-                else:
-                    continue
-
-                if url and ".m3u8" in url:
-                    print(f"Tapılan URL: {url}")
-                    m3u8_link = url
-                    break
-            except Exception as e:
-                print(f"Xəta baş verdi: {e}")
-                continue
-
-        driver.quit()
-        return m3u8_link
-    except Exception as e:
-        print(f"Network yaxalama xətası: {e}")
-        return None
-
 # 🔄 Tokeni yeniləyən funksiya
 def update_token_in_url(url, new_token):
     try:
@@ -132,27 +83,22 @@ def update_github_repo(github_token, m3u8_link, channel_name):
 def main():
     # Yeni tokeni daxil et
     new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"  # Yenilənməli olan token
-    github_token = "yeni_token_buraya_yazın"  # Burada öz GitHub tokenini yaz
+    github_token = "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"  # Burada öz GitHub tokenini yaz
 
-    # Xezer TV üçün M3U8 linkini tap
-    xezer_tv_url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
-    xezer_tv_m3u8 = get_m3u8_from_network(xezer_tv_url, "xezer_tv")
-    if xezer_tv_m3u8:
-        updated_xezer_tv_m3u8 = update_token_in_url(xezer_tv_m3u8, new_token)
-        print(f"Yeni Xezer TV M3U8 linki: {updated_xezer_tv_m3u8}")
-        update_github_repo(github_token, updated_xezer_tv_m3u8, "xezer_tv")
-    else:
-        print("Xezer TV üçün M3U8 tapılmadı.")
+    # Verilən tokenli linklər
+    tokenli_linkler = {
+        "xezer_tv": "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=829DLSOSxS-rytI608bLOQ&tms=1740815292",
+        "aztv": "https://ecanlitv3.etvserver.com/aztv.m3u8?tkn=78G5M8aZ5F0zCSpGckbKKA&tms=1740815329"
+    }
 
-    # Now TV üçün M3U8 linkini tap
-    now_tv_url = "https://www.ecanlitvizle.app/now-tv-canli-izle-3/"
-    now_tv_m3u8 = get_m3u8_from_network(now_tv_url, "now_tv")
-    if now_tv_m3u8:
-        updated_now_tv_m3u8 = update_token_in_url(now_tv_m3u8, new_token)
-        print(f"Yeni Now TV M3U8 linki: {updated_now_tv_m3u8}")
-        update_github_repo(github_token, updated_now_tv_m3u8, "now_tv")
-    else:
-        print("Now TV üçün M3U8 tapılmadı.")
+    # Hər bir kanal üçün tokeni yenilə və GitHub repo-suna əlavə et
+    for channel_name, url in tokenli_linkler.items():
+        updated_url = update_token_in_url(url, new_token)
+        if updated_url:
+            print(f"Yeni {channel_name} M3U8 linki: {updated_url}")
+            update_github_repo(github_token, updated_url, channel_name)
+        else:
+            print(f"{channel_name} üçün M3U8 linki yenilənmədi.")
 
 # 🏃‍♂️ Skripti işə sal
 if __name__ == "__main__":
