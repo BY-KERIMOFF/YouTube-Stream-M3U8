@@ -153,3 +153,21 @@ Stacktrace:
 
 2025-03-01 23:02:07,671 - WARNING - M3U8 linki tapılmadı, fayl yaradılmadı.
 2025-03-01 23:02:07,804 - INFO - ChromeDriver bağlandı.
+2025-03-01 23:03:43,547 - INFO - ====== WebDriver manager ======
+2025-03-01 23:03:43,910 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 23:03:43,945 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 23:03:43,968 - INFO - There is no [linux64] chromedriver "133.0.6943.141" for browser google-chrome "133.0.6943" in cache
+2025-03-01 23:03:43,968 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 23:03:44,036 - INFO - WebDriver version 133.0.6943.141 selected
+2025-03-01 23:03:44,039 - INFO - Modern chrome version https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
+2025-03-01 23:03:44,039 - INFO - About to download new driver from https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
+2025-03-01 23:03:44,080 - INFO - Driver downloading response is 200
+2025-03-01 23:03:44,163 - INFO - Get LATEST chromedriver version for google-chrome
+2025-03-01 23:03:44,309 - INFO - Driver has been saved in cache [/home/runner/.wdm/drivers/chromedriver/linux64/133.0.6943.141]
+2025-03-01 23:03:44,957 - INFO - ChromeDriver uğurla başlatıldı.
+2025-03-01 23:03:46,516 - INFO - Səhifə yükləndi: https://www.ecanlitvizle.app/xezer-tv-canli-izle/
+2025-03-01 23:03:46,604 - INFO - Iframe-ə keçid edildi.
+2025-03-01 23:03:46,624 - INFO - Video elementi tapıldı.
+2025-03-01 23:03:46,628 - INFO - M3U8 linki tapıldı: blob:https://www.ecanlitvizle.app/2b8439e1-c71f-40ec-8891-13380a5416a7
+2025-03-01 23:03:46,628 - INFO - Fayl uğurla yaradıldı.
+2025-03-01 23:03:46,726 - INFO - ChromeDriver bağlandı.
