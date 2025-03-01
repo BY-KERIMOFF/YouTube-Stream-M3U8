@@ -67,36 +67,33 @@ def get_m3u8_from_network(driver):
         )
         logging.info("Video elementi tapıldı.")
 
-        # M3U8 linkini əldə et
-        m3u8_link = driver.execute_script("return document.querySelector('video').src;")
-        if m3u8_link and m3u8_link.startswith("blob:"):
-            logging.info("Blob linki tapıldı. Şəbəkə logları təhlil edilir...")
-            logs = driver.get_log("performance")
-            for entry in logs:
-                log = json.loads(entry["message"])
-                if "method" in log and log["method"] == "Network.responseReceived":
-                    url = log["params"]["response"]["url"]
-                    if "m3u8" in url:
-                        m3u8_link = url
-                        logging.info(f"Şəbəkə loglarından M3U8 linki tapıldı: {m3u8_link}")
-                        break
-
-        if m3u8_link:
-            logging.info(f"M3U8 linki tapıldı: {m3u8_link}")
-            return m3u8_link
-
+        # M3U8 linklərini şəbəkə loglarından çıxar
+        logs = driver.get_log("performance")
+        m3u8_links = set()
+        
+        for entry in logs:
+            log = json.loads(entry["message"])
+            if "method" in log and log["method"] == "Network.responseReceived":
+                url = log.get("params", {}).get("response", {}).get("url", "")
+                if "m3u8" in url:
+                    m3u8_links.add(url)
+                    logging.info(f"Tapıldı: {url}")
+        
+        if m3u8_links:
+            return list(m3u8_links)
+        
         logging.warning("M3U8 linki tapılmadı.")
         return None
-
     except Exception as e:
         logging.error(f"M3U8 linki əldə edilərkən xəta: {e}")
         return None
 
-def write_to_file(m3u8_link):
-    """M3U8 linkini fayla yaz."""
-    if m3u8_link:
+def write_to_file(m3u8_links):
+    """M3U8 linklərini fayla yaz."""
+    if m3u8_links:
         with open("token.txt", "w") as file:
-            file.write(m3u8_link)
+            for link in m3u8_links:
+                file.write(link + "\n")
         logging.info("Fayl uğurla yaradıldı.")
     else:
         logging.warning("M3U8 linki tapılmadı, fayl yaradılmadı.")
@@ -107,8 +104,8 @@ def main():
     if not driver:
         return
 
-    m3u8_link = get_m3u8_from_network(driver)
-    write_to_file(m3u8_link)
+    m3u8_links = get_m3u8_from_network(driver)
+    write_to_file(m3u8_links)
 
     driver.quit()
     logging.info("ChromeDriver bağlandı.")
