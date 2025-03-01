@@ -15,6 +15,7 @@ CONFIG = {
     "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",  # M3U8 linkini tapmaq istədiyiniz saytın URL-si
     "iframe_wait_time": 10,  # Iframe üçün gözləmə vaxtı
     "video_wait_time": 15,  # Video elementinə baxmaq üçün gözləmə vaxtı
+    "log_file": "m3u8_link.txt",  # M3U8 linkinin yazılacağı fayl adı
 }
 
 # Logging konfiqurasiyası
@@ -90,9 +91,9 @@ def main():
 
     # Link tapıldısa fayl yaradılacaq
     if m3u8_link:
-        with open("m3u8_link.txt", "w") as file:
+        with open(CONFIG["log_file"], "w") as file:
             file.write(m3u8_link)
-        logging.info("M3U8 linki fayla yazıldı.")
+        logging.info(f"M3U8 linki fayla yazıldı: {CONFIG['log_file']}")
     else:
         logging.warning("M3U8 linki tapılmadı, fayl yaradılmadı.")
 
