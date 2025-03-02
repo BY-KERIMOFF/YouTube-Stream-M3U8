@@ -8,10 +8,12 @@ from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
 # Chrome üçün Selenium konfiqurasiyası
-chrome_driver_path = "/path/to/chromedriver"  # Burada chromedriver yolunu düzgün daxil et
+chrome_driver_path = "/usr/local/bin/chromedriver"  # GitHub Actions üçün düzgün yol
 
 options = Options()
-options.headless = True  # Görünməz rejimdə işləsin
+options.add_argument("--headless=new")  
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
 options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
 
 service = Service(executable_path=chrome_driver_path)
@@ -26,7 +28,7 @@ time.sleep(5)  # Saytın tam yüklənməsini gözlə
 page_source = driver.page_source
 soup = BeautifulSoup(page_source, "html.parser")
 
-# Tokeni HTML kodundan çıxar (Əgər HTML-dədirsə)
+# Tokeni HTML kodundan çıxar
 token_pattern = r'tkn=([a-zA-Z0-9]+)'
 token_match = re.search(token_pattern, page_source)
 
@@ -43,7 +45,7 @@ else:
     }
     
     try:
-        ajax_url = "https://www.ecanlitvizle.app/api/get_token"  # Xətaya görə Developer Tools-da URL-ni yoxla
+        ajax_url = "https://www.ecanlitvizle.app/api/get_token"  # Developer Tools ilə yoxla
         response = requests.get(ajax_url, headers=headers)
 
         if response.status_code == 200:
