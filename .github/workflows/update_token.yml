@@ -1,6 +1,16 @@
+name: Auto Run Script
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 * * * *"  # Hər saatda bir dəfə işə düşəcək
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Repozitorini klonla
         uses: actions/checkout@v3
