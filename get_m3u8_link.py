@@ -3,8 +3,8 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-# Əgər Chrome versiyanı 133.0.6943 istifadə edirsinizsə, versiyanı belə təyin edin:
-service = Service(ChromeDriverManager(version="133.0.6943").install())
+# ChromeDriver versiyasını "latest" olaraq təyin edin
+service = Service(ChromeDriverManager().install())  # "latest" versiya avtomatik seçiləcək
 driver = webdriver.Chrome(service=service)
 
 driver.get('https://www.ecanlitvizle.app/xezer-tv-canli-izle/')
