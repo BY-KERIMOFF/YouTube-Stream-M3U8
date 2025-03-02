@@ -11,7 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Konfiqurasiya parametrləri
 CONFIG = {
-    "url": "https://www.ecanlitvizle.app/",  # Kanalların siyahısını almaq üçün URL
+    "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/3/",  # Kanalların siyahısını almaq üçün URL
     "wait_time": 60,  # Sayt yüklənməsi üçün gözləmə vaxtı (saniyə)
     "log_file": "yoda_channels.txt",  # Linklərin yazılacağı fayl adı
 }
