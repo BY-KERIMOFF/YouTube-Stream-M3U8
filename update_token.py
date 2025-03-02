@@ -1,28 +1,36 @@
-import re
 import requests
+from bs4 import BeautifulSoup
+import re
 
-# tv.txt faylını oxumaq
+# Sayt URL-i
+url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
+
+# Saytın HTML məzmununu əldə edirik
+response = requests.get(url)
+
+# HTML məzmununu BeautifulSoup ilə parse edirik
+soup = BeautifulSoup(response.text, "html.parser")
+
+# Tokeni regex ilə tapırıq
+match = re.search(r'tkn=([a-zA-Z0-9]+)', soup.prettify())
+if match:
+    new_token = match.group(1)
+    print(f"Yeni token tapıldı: {new_token}")
+else:
+    print("Yeni token tapılmadı.")
+
+# Köhnə tokeni və yeni tokeni faylda əvəz edirik
+old_token = "Fh2F2HhcbuZaxDX8hYPQqQ"  # Köhnə tokeni burada yazın
+
+# tv.txt faylını oxuyuruq və köhnə token ilə yeni tokeni əvəz edirik
 with open('tv.txt', 'r') as file:
     content = file.read()
 
-# Tokeni tapmaq üçün regex istifadə etmək
-old_token_match = re.search(r'tkn=([A-Za-z0-9]+)', content)
+# Tokeni dəyişdiririk
+content = content.replace(old_token, new_token)
 
-if old_token_match:
-    old_token = old_token_match.group(1)
-    print(f"Köhnə token tapıldı: {old_token}")
+# Yenilənmiş məzmunu faylda saxlayırıq
+with open('tv.txt', 'w') as file:
+    file.write(content)
 
-    # Burada yeni tokeni əldə etməlisiniz. (Məsələn, bir API-dən və ya başqa bir mənbədən)
-    # Bu misalda biz sadəcə 'NEW_TOKEN_HERE' istifadə edirik.
-    new_token = 'NEW_TOKEN_HERE'
-
-    # Yeni link yaratmaq
-    new_link = content.replace(f'tkn={old_token}', f'tkn={new_token}')
-    print(f"Yeni link: {new_link}")
-
-    # Yeni linki tv.txt faylında yazmaq
-    with open('tv.txt', 'w') as file:
-        file.write(new_link)
-    print("Yeni link tv.txt faylında yazıldı!")
-else:
-    print("Token tapılmadı!")
+print("Yeni token tv.txt faylında yazıldı!")
