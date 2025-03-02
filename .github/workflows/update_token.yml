@@ -24,7 +24,7 @@ jobs:
 
     - name: Download ChromeDriver
       run: |
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+' | head -1)
         MAJOR_CHROME_VERSION=$(echo $CHROME_VERSION | cut -d. -f1)
         echo "Chrome version: $CHROME_VERSION"
         CHROMEDRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$MAJOR_CHROME_VERSION)
