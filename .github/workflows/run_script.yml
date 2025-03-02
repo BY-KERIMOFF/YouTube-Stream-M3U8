@@ -24,5 +24,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt  # requirements.txt faylını istifadə edirik
 
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Install ChromeDriver
+        run: |
+          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | sed 's/\..*//')
+          wget https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+
       - name: Run script
         run: python get_m3u8_link.py  # Skriptin adı
