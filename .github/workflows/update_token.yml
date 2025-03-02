@@ -1,9 +1,9 @@
 name: Update Token in tv.txt
 
 on:
-  push:
-    branches:
-      - main
+  schedule:
+    # Hər 5 dəqiqədə bir workflow-u işə salır
+    - cron: '*/5 * * * *'  # 5 dəqiqədə bir
 
 jobs:
   update-token:
@@ -20,7 +20,7 @@ jobs:
 
     - name: Run Python script to update token
       run: |
-        python update_token.py  # Skriptin adını buraya daxil edin (yuxarıdakı skriptin adı)
+        python update_token.py  # Yuxarıda yaratdığınız update_token.py skriptini işə salır
 
     - name: Upload updated tv.txt
       uses: actions/upload-artifact@v4
