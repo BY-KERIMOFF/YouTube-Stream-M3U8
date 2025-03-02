@@ -1,3 +1,13 @@
+name: Build and Run Python Script
+
+on:
+  push:
+    branches:
+      - main  # Əsas branch üzərində işlədikdə işə düşür
+  pull_request:
+    branches:
+      - main  # PR olduqda işə düşür
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,17 +19,36 @@ jobs:
       - name: Python-u quraşdır
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.9'  # Python versiyasını tələblərinizə uyğun dəyişdirin
 
-      - name: Chrome və ChromeDriver quraşdır
+      - name: Sistem paketlərini yenilə
+        run: sudo apt update
+
+      - name: Chrome quraşdır
         run: |
+          sudo apt install -y wget
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt update
           sudo apt install -y google-chrome-stable
-          pip install chromedriver-autoinstaller
-          python -c "import chromedriver_autoinstaller; chromedriver_autoinstaller.install()"
+
+      - name: ChromeDriver quraşdır
+        run: |
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
+          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
+          wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/chromedriver
+          rm chromedriver_linux64.zip
 
       - name: Asılılıqları quraşdır
         run: pip install -r requirements.txt
 
       - name: Skripti işə sal
-        run: python your_script.py
+        run: python your_script.py  # Skriptinizin adını dəyişdirin
+
+      - name: Nəticəni yoxla
+        if: ${{ always() }}
+        run: |
+          echo "Skript işlədi!"
