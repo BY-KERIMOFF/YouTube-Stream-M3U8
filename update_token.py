@@ -1,37 +1,49 @@
 import re
 import requests
+from bs4 import BeautifulSoup
 
-# TV linkinin olduğu URL (sənə uyğun URL-ni burada istifadə et)
+# URL-ni uyğun olaraq dəyişin
 url = 'https://www.ecanlitvizle.app/xezer-tv-canli-izle/'
 
-# Linkdən məlumatları al
+# Saytdan məlumatları alırıq
 response = requests.get(url)
 
-# Əgər düzgün cavab alınarsa, tokeni tapmaq
+# Cavabın düzgünlüyünü yoxlayaq
 if response.status_code == 200:
     html_content = response.text
-    print("HTML Məzmunu:")
-    print(html_content)  # HTML məzmununu çap edirik, burada tokenin olduğu yeri tapmalısınız
-    
-    # Tokeni tapmaq üçün regex istifadə edirik
-    old_token_match = re.search(r'tkn=([A-Za-z0-9_-]+)', html_content)  # Tokeni tapmaq üçün regex
-    
-    if old_token_match:
-        old_token = old_token_match.group(1)
-        print(f"Köhnə token tapıldı: {old_token}")
-        
-        # Yeni tokeni tap (bu addımda, sənin saytında necə token əldə edildiyini göstərən kod əlavə etməlisiniz)
-        new_token = "NEW_TOKEN_HERE"  # Burada yeni tokeni əldə etməli və onu istifadə etməlisiniz
-        new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=VLEOe7IONIhFKUrefeERHQ&tms=1740963410"
-        print(f"Yeni link: {new_link}")
 
-        # Faylı yaz (hər halda yazacaq)
-        with open("tv.txt", "w") as f:
-            f.write(new_link)
-        print("Yeni link tv.txt faylında yazıldı!")
-    else:
+    # HTML məzmununu BeautifulSoup ilə analiz edirik
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # URL-ləri tapmaq üçün bütün <a> etiketlərini seçirik
+    links = soup.find_all('a', href=True)
+
+    # Hər bir linki yoxlayaq
+    old_token_found = False
+    for link in links:
+        # URL-lərdə tkn= olduğunu tapmağa çalışırıq
+        old_token_match = re.search(r'tkn=([A-Za-z0-9_-]+)', link['href'])
+        
+        if old_token_match:
+            old_token = old_token_match.group(1)
+            print(f"Köhnə token tapıldı: {old_token}")
+            
+            # Yeni token əlavə edirik
+            new_token = "NEW_TOKEN_HERE"  # Burada yeni token-i tapmalısınız
+            new_link = link['href'].replace(old_token, new_token)
+            print(f"Yeni link: {new_link}")
+
+            # Yeni linki faylda yazın
+            with open("tv.txt", "w") as f:
+                f.write(new_link)
+            print("Yeni link tv.txt faylında yazıldı!")
+            
+            old_token_found = True
+            break
+
+    if not old_token_found:
         print("Köhnə token tapılmadı.")
-        # Əgər heç bir token tapılmasa da, tv.txt faylını yenilə
+        # Token tapılmadıqda boş fayl yazın
         with open("tv.txt", "w") as f:
             f.write("No token found!")
         print("Heç bir token tapılmadı, boş məlumat tv.txt faylında saxlanıldı.")
