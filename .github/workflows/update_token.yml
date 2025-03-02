@@ -24,15 +24,20 @@ jobs:
         sudo apt-get install -y wget unzip python3-pip curl
         pip install requests selenium beautifulsoup4
 
-    - name: Get latest Chromedriver version
+    - name: Download and Install Google Chrome
       run: |
-        # Google-un rəsmi saytından son stabil versiyanı tapırıq
-        CHROME_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE)
-        CHROMEDRIVER_URL="https://storage.googleapis.com/chromedriver/chromedriver_linux64.zip"
-        echo "Downloading Chromedriver for version $CHROME_VERSION from: $CHROMEDRIVER_URL"
+        CHROME_URL="https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip"
+        wget "$CHROME_URL" -O chrome-linux64.zip
+        unzip chrome-linux64.zip
+        sudo mv chrome-linux64 /opt/google/chrome
+        sudo ln -s /opt/google/chrome/chrome /usr/local/bin/google-chrome
+
+    - name: Download and Install Chromedriver
+      run: |
+        CHROMEDRIVER_URL="https://chromedriver.storage.googleapis.com/133.0.6943.141/chromedriver_linux64.zip"
         wget "$CHROMEDRIVER_URL" -O chromedriver-linux64.zip
         unzip chromedriver-linux64.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+        sudo mv chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
 
     - name: Verify Chromedriver Installation
