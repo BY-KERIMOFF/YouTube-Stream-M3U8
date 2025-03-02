@@ -1,19 +1,33 @@
+import os
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 
 # Browser ayarları
-options = webdriver.ChromeOptions()
+options = Options()
 options.add_argument("--headless")  # Başsız rejim
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-extensions")  # Uzantıları bağlamaq
 
-# ChromeDriver yolunu əlinizlə təyin edin
-chrome_driver_path = "/path/to/chromedriver"  # Burada öz yolunuzu yazın
-browser = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
+# ChromeDriver versiyasını tapmaq və ya əl ilə yükləmək
+try:
+    # webdriver-manager istifadə edərək ChromeDriver versiyasını avtomatik yükləyin
+    chrome_driver_path = ChromeDriverManager().install()
+    print(f"ChromeDriver path: {chrome_driver_path}")
+except Exception as e:
+    print("Webdriver-manager ilə ChromeDriver tapılmadı, əl ilə yükləyirik...")
+    
+    # Burada versiya uyğun olmayan ChromeDriver yükləmək üçün əl ilə yükləmə təlimatını yazın
+    # Əgər versiyanız uyğun deyilsə, burada əl ilə yüklənmiş ChromeDriver-ı istifadə edə bilərsiniz
+    chrome_driver_path = "/path/to/your/downloaded/chromedriver"  # Öz yolda dəyişdirin
+
+# WebDriver başlat
+service = Service(chrome_driver_path)
+browser = webdriver.Chrome(service=service, options=options)
 
 # Saytı aç
 url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
