@@ -10,7 +10,11 @@ response = requests.get(url)
 # Əgər düzgün cavab alınarsa, tokeni tapmaq
 if response.status_code == 200:
     html_content = response.text
-    old_token_match = re.search(r'tkn=([A-Za-z0-9]+)', html_content)
+    print("HTML Məzmunu:")
+    print(html_content)  # HTML məzmununu çap edirik, burada tokenin olduğu yeri tapmalısınız
+    
+    # Tokeni tapmaq üçün regex istifadə edirik
+    old_token_match = re.search(r'tkn=([A-Za-z0-9_-]+)', html_content)  # Tokeni tapmaq üçün regex
     
     if old_token_match:
         old_token = old_token_match.group(1)
