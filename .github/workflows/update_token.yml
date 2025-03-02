@@ -3,38 +3,38 @@ name: Ecanlitvizle Scraper
 on:
   push:
     branches:
-      - main  # Yalnız main branch-a push edildikdə çalışacaq
+      - main
   pull_request:
     branches:
-      - main  # Main branch-da PR açıldıqda da çalışacaq
+      - main
 
 jobs:
   run_scraper:
-    runs-on: ubuntu-latest  # İşin Linux-da çalışmasını təmin edir
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2  # Repodakı kodu götürür
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'  # Python 3.9 versiyasını istifadə edirik
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt  # Tələb olunan kitabxanaları yükləyir
+          pip install selenium
+          apt-get update
+          apt-get install -y wget unzip
+          wget https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          mv chromedriver /usr/local/bin/
 
       - name: Run scraper script
         run: |
-          python scraper.py  # Skripti işlədir
-
-      - name: List files in current directory
-        run: |
-          echo "Current directory contents:"
-          ls -la  # Mühitdə olan faylların siyahısını göstərir
+          python scraper.py
 
       - name: Upload M3U links
-        uses: actions/upload-artifact@v4  # Yeni versiya v4 istifadə olunur
+        uses: actions/upload-artifact@v4
         with:
           name: m3u-links
-          path: m3u_links.txt  # Skript işlədildikdən sonra yaranan M3U faylını yükləyir
+          path: m3u_links.txt
