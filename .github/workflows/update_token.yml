@@ -1,29 +1,33 @@
-name: Update Token in tv.txt
+name: Update Token Workflow
 
 on:
   schedule:
-    # Hər 5 dəqiqədə bir workflow-u işə salır
-    - cron: '*/5 * * * *'  # 5 dəqiqədə bir
+    - cron: '*/5 * * * *'  # Hər 5 dəqiqədə bir işə salınır
+  workflow_dispatch:  # İstənilən zaman işə sala bilərsiz
 
 jobs:
-  update-token:
+  update-token-job:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout repository
+    - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        pip install -r requirements.txt  # Əgər tələb olunan əlavə kitabxanalar varsa, requirements.txt faylına əlavə edin
-
-    - name: Run Python script to update token
-      run: |
-        python update_token.py  # Yuxarıda yaratdığınız update_token.py skriptini işə salır
-
-    - name: Upload updated tv.txt
-      uses: actions/upload-artifact@v4
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        name: updated-tv-file
-        path: tv.txt
+        python-version: '3.9'  # Python versiyasını buraya uyğun olaraq dəyişə bilərsiz
+
+    - name: Install Dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run the update token script
+      run: |
+        python update_token.py  # Skriptin adını buraya daxil edin
+
+    - name: Upload the updated URL as an artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: updated-url
+        path: tv.txt  # Faylın adı, yəni tv.txt faylını göndəririk
