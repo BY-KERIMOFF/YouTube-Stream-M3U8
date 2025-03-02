@@ -29,7 +29,7 @@ jobs:
           python scraper.py  # Skripti işlədir
 
       - name: Upload M3U file
-        uses: actions/upload-artifact@v3  # v3 versiyası istifadə olunur
+        uses: actions/upload-artifact@v4  # Yeni versiya v4 istifadə olunur
         with:
           name: channels-m3u
           path: channels.m3u  # Skript işlədildikdən sonra yaranan M3U faylını yükləyir
