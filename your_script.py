@@ -71,7 +71,7 @@ def main():
     # M3U8 linkini tap
     m3u8_link = get_m3u8_from_network()
     if m3u8_link:
-        # Tokeni yenilə
+        # Hazır linkdəki tokeni yenilə
         updated_m3u8_link = re.sub(r"tkn=[^&]*", f"tkn={new_token}", m3u8_link)
         print(f"Yeni M3U8 linki: {updated_m3u8_link}")
 
