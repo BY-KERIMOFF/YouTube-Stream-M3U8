@@ -1,13 +1,78 @@
-name: m3u8-extractor
-channels:
-  - defaults
-  - conda-forge
-dependencies:
-  - python=3.8
-  - selenium
-  - requests
-  - webdriver-manager
-  - pip
-  - chromedriver-autoinstaller
-  - pip:
-    - chromedriver-autoinstaller
+name: Update M3U Playlist
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'  # Hər gün 12:00-da yeniləmə (cron vaxtı)
+
+jobs:
+  update-playlist:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install requests
+
+    - name: Get M3U8 links and update playlist
+      run: |
+        python - <<EOF
+        import requests
+        import re
+        import json
+
+        with open("channels.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        channels = data["channels"]
+        M3U_FILE = "playlist.m3u"
+
+        def get_new_m3u8_link(channel_url):
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+            }
+            response = requests.get(channel_url, headers=headers)
+
+            if response.status_code == 200:
+                match = re.search(r'https://[^"]+\.m3u8\?[^"]+', response.text)
+                if match:
+                    return match.group(0)
+                else:
+                    print(f"❌ Yeni m3u8 link tapılmadı: {channel_url}")
+                    return None
+            else:
+                print(f"❌ Xəta kodu: {response.status_code} | Kanal: {channel_url}")
+                return None
+
+        with open(M3U_FILE, "w", encoding="utf-8") as m3u:
+            m3u.write("#EXTM3U\n")
+            
+            for channel in channels:
+                new_m3u8_link = get_new_m3u8_link(channel["url"])
+                
+                if new_m3u8_link:
+                    m3u.write(f"#EXTINF:-1, {channel['name']}\n")
+                    m3u.write(f"{new_m3u8_link}\n")
+                else:
+                    print(f"❌ Kanal linki yenilənmədi: {channel['name']}")
+
+        print(f"✅ M3U playlist yeniləndi: {M3U_FILE}")
+        EOF
+
+    - name: Commit changes if there are any
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add playlist.m3u
+        git commit -m "Auto-update M3U playlist" || echo "No changes to commit"
+        git push
