@@ -1,49 +1,44 @@
-name: Update Token Daily with Selenium
+name: Update Token Link
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Hər gün saat 00:00-da işləyir
+    - cron: "0 */6 * * *"  # Hər 6 saatdan bir çalışır
+  workflow_dispatch:  # Əl ilə çalışdırmaq üçün
 
 jobs:
   update-token:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Repository-ni klonla
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Python-u qur
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: "3.x"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install selenium
+      - name: Lazım olan paketləri yüklə
+        run: pip install selenium
 
-      - name: Install Chrome and Chromedriver
+      - name: Google Chrome və ChromeDriver yüklə
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget unzip
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo dpkg -i google-chrome-stable_current_amd64.deb
+          sudo apt-get install -y google-chrome-stable
           CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
-          wget "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
+          DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)
+          wget -N https://chromedriver.storage.googleapis.com/$DRIVER_VERSION/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/chromedriver
+          sudo mv chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
 
-      - name: Run Python script to fetch token
-        run: python get_token_selenium.py
+      - name: Token skriptini çalışdır
+        run: python extract_token.py
 
-      - name: Commit and push token file
+      - name: Yeni tokeni GitHub-a push et
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add token.txt
-          git commit -m "Update token automatically" || echo "No changes to commit"
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add token_link.txt
+          git commit -m "Yeni token yeniləndi"
+          git push
+        continue-on-error: true
