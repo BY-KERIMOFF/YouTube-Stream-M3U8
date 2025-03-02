@@ -1,26 +1,40 @@
+import os
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-import time
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 
-# Chrome options
-chrome_options = webdriver.ChromeOptions()
+# ChromeOptions konfiqurasiyası
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Başsız rejim
+chrome_options.add_argument("--no-sandbox")  # Sandboxing-i deaktiv et
+chrome_options.add_argument("--disable-dev-shm-usage")  # DevTools Active Port problemi üçün
 
-# İstəyirsinizsə, headless modunda işləyə bilər
-chrome_options.add_argument("--headless")
+# Chrome sürücüsünü yükləmək üçün webdriver-manager istifadə et
+service = Service(ChromeDriverManager().install())
 
-# Chromedriver-ı avtomatik yükləyin və başlatın
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+# WebDriver başlatmaq
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
-# URL-ə get edin (istədiyiniz linki buraya daxil edin)
-driver.get("https://www.youtube.com")
+# Web səhifəsini açmaq
+driver.get("https://example.com")
 
-# Sayfa yükləndikdən sonra müəyyən bir müddət gözləyin (məsələn 5 saniyə)
-time.sleep(5)
+# Sayfadan məlumatı alırıq (misal üçün)
+channels = driver.find_elements(By.XPATH, "//a[contains(@href, '.m3u8')]")
 
-# Məsələn, YouTube-da bəzi elementləri tapmaq:
-# driver.find_element(By.XPATH, "element_xpath").click()
+# Faylın yaradılması
+file_path = "channels.m3u"
+with open(file_path, 'w') as f:
+    f.write("# Example Channel M3U Content\n")
+    for channel in channels:
+        f.write(f"{channel.get_attribute('href')}\n")
 
-# Brauzeri bağlayın
+# Faylın mövcudluğunu yoxlayaq
+if os.path.exists(file_path):
+    print(f"{file_path} yaradıldı!")
+else:
+    print(f"{file_path} tapılmadı!")
+
+# Chrome sürücüsünü bağlayırıq
 driver.quit()
