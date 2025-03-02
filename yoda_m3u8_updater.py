@@ -12,7 +12,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 # Konfiqurasiya parametrləri
 CONFIG = {
     "url": "https://yoda.az",  # Kanalların siyahısını almaq üçün URL
-    "wait_time": 30,  # Sayt yüklənməsi üçün gözləmə vaxtı (saniyə)
+    "wait_time": 60,  # Sayt yüklənməsi üçün gözləmə vaxtı (saniyə)
     "log_file": "yoda_channels.txt",  # Linklərin yazılacağı fayl adı
 }
 
@@ -42,7 +42,7 @@ def setup_driver():
 
 def get_all_channel_links(driver):
     """
-    Yoda.az saytından bütün kanalların `.m3u8` linklərini tapır.
+    Şəbəkə loglarından bütün `.m3u8` linklərini tapır.
     """
     try:
         driver.get(CONFIG["url"])
@@ -75,9 +75,44 @@ def get_all_channel_links(driver):
         return []
 
 
+def get_dynamic_m3u8_links(driver):
+    """
+    Dinamik JavaScript vasitəsiylə yüklənən `.m3u8` linklərini tapır.
+    """
+    try:
+        script = """
+        const links = [];
+        const scripts = document.querySelectorAll('script');
+        scripts.forEach(script => {
+            const text = script.textContent;
+            if (text.includes('.m3u8')) {
+                const matches = text.match(/(http.*\.m3u8)/g);
+                if (matches) {
+                    matches.forEach(match => {
+                        if (!links.includes(match)) {
+                            links.push(match);
+                        }
+                    });
+                }
+            }
+        });
+        return links;
+        """
+        m3u8_links = driver.execute_script(script)
+        if m3u8_links:
+            logging.info(f"Dinamik JavaScript-dən {len(m3u8_links)} M3U8 linki tapıldı.")
+            return m3u8_links
+        else:
+            logging.warning("Dinamik JavaScript-də M3U8 linki tapılmadı.")
+            return []
+    except Exception as e:
+        logging.error(f"Dinamik JavaScript-dən M3U8 linklərini əldə edilərkən xəta: {e}")
+        return []
+
+
 def update_m3u8_links_if_changed(new_links, file_path):
     """
-    Yeni linklər varsa, .txt faylını güncəlləyir.
+    Yeni linklər varsa, `.txt` faylını güncəlləyir.
     """
     try:
         # Eski linkləri oxu
@@ -110,8 +145,12 @@ def main():
     # ChromeDriver setup
     driver = setup_driver()
 
-    # Bütün kanalların `.m3u8` linklərini tap
+    # Bütün `.m3u8` linklərini tap
     m3u8_links = get_all_channel_links(driver)
+
+    # Əgər linklər tapılmasa, dinamik JavaScript-dən axtar
+    if not m3u8_links:
+        m3u8_links = get_dynamic_m3u8_links(driver)
 
     # Linklər tapıldısa fayl yaradılacaq
     if m3u8_links:
