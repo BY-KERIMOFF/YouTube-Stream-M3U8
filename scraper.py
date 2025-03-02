@@ -4,39 +4,24 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import time
 
-# Chrome üçün webdriver
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Brauzeri görünməz edirik
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
+# Chrome driver yolunu birbaşa göstəririk
+chrome_driver_path = "/usr/local/bin/chromedriver"  # Bu yola əmin olun
 
-# WebDriver konfiqurasiyası
-service = Service('path_to_your_chromedriver')  # ChromeDriver yolunu göstərin
+# Chrome-un başlatma seçimləri
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # GUI olmadan işlə
+
+# Selenium-da Chrome sürücüsünü işə salırıq
+service = Service(chrome_driver_path)
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
-# M3U linklərini tapmaq üçün URL-lər
-urls = [
-    "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
-    "https://www.ecanlitvizle.app/show-tv-canli-izle-hd-4/",
-    "https://www.ecanlitvizle.app/tlc-tv-canli/"
-]
+# Scraper işini yerinə yetirən hissə
+driver.get("https://www.ecanlitvizle.app/xezer-tv-canli-izle/")
+time.sleep(5)  # Saytın yüklənməsi üçün zaman qoyuruq
 
-# M3U linklərini tapmaq və yazmaq üçün fayl
-output_path = 'm3u_links.txt'
+# Hər hansı bir elementlə qarşılaşmaq
+# Bu, kanalların M3U linklərini tapmaq üçün uyğun elementlərə daxil olmağı tələb edir
+# Məsələn:
+# m3u_link = driver.find_element(By.XPATH, 'xpath-of-m3u-link')
 
-with open(output_path, 'w', encoding='utf-8') as file:
-    # URL-ləri dövr edirik
-    for url in urls:
-        driver.get(url)  # Saytı yükləyirik
-        time.sleep(5)  # Saytın tam yüklənməsi üçün bir neçə saniyə gözləyirik
-
-        # Saytın HTML-i ilə işləyirik
-        links = driver.find_elements(By.TAG_NAME, 'a')  # Bütün <a> tag-larını tapırıq
-
-        for link in links:
-            href = link.get_attribute('href')
-            if '.m3u' in href:  # Yalnız M3U linklərini tapırıq
-                file.write(f'{href}\n')  # M3U linkini fayla yazırıq
-
-driver.quit()  # WebDriver-i bağlayırıq
-print(f'M3U linkləri {output_path} faylına yazıldı.')
+driver.quit()
