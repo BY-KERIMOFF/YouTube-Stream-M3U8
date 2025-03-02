@@ -18,7 +18,7 @@ if response.status_code == 200:
         
         # Yeni tokeni tap (bu addımda, sənin saytında necə token əldə edildiyini göstərən kod əlavə etməlisiniz)
         new_token = "NEW_TOKEN_HERE"  # Burada yeni tokeni əldə etməli və onu istifadə etməlisiniz
-        new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={new_token}&tms=1740960002"
+        new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=MPRTc1MD3Wqj-9bTCnjL3w&tms=1740962573"
         print(f"Yeni link: {new_link}")
 
         # Faylı yaz (hər halda yazacaq)
