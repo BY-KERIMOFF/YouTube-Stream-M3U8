@@ -42,21 +42,19 @@ def get_m3u8_from_network():
         WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.TAG_NAME, "video")))
 
         # M3U8 linkini tap
-        m3u8_link = driver.execute_script("return document.querySelector('video').src;")
-        if not m3u8_link:
-            print("M3U8 linki tapılmadı! Şəbəkə logları yoxlanılır...")
-            logs = driver.get_log("performance")
-            for entry in logs:
-                try:
-                    log = json.loads(entry["message"])
-                    if "method" in log and log["method"] == "Network.responseReceived":
-                        url = log["params"]["response"]["url"]
-                        if "m3u8" in url:
-                            m3u8_link = url
-                            break
-                except Exception as e:
-                    print(f"Log analizi xətası: {e}")
-                    continue
+        m3u8_link = None
+        logs = driver.get_log("performance")
+        for entry in logs:
+            try:
+                log = json.loads(entry["message"])
+                if "method" in log and log["method"] == "Network.responseReceived":
+                    url = log["params"]["response"]["url"]
+                    if "m3u8" in url:
+                        m3u8_link = url
+                        break
+            except Exception as e:
+                print(f"Log analizi xətası: {e}")
+                continue
 
         return m3u8_link
     except Exception as e:
