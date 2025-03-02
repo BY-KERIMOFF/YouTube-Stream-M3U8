@@ -16,6 +16,8 @@ def get_m3u8_from_network():
     chrome_options.add_argument("--headless")  # Headless modda işləmək üçün
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
 
     # Chrome və ChromeDriver yollarını təyin edin
     chrome_path = os.path.join(os.getcwd(), "chrome-linux64", "chrome")
@@ -32,12 +34,12 @@ def get_m3u8_from_network():
         driver.get(url)
 
         # İframe-i gözlə və ona keç
-        WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
+        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
         iframe = driver.find_element(By.TAG_NAME, "iframe")
         driver.switch_to.frame(iframe)
 
         # Video elementi gözlə
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "video")))
+        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.TAG_NAME, "video")))
 
         # M3U8 linkini tap
         m3u8_link = driver.execute_script("return document.querySelector('video').src;")
