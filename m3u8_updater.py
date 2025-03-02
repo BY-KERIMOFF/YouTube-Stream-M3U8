@@ -100,7 +100,10 @@ def setup_driver():
     options.add_argument("--log-level=3")  # Chrome log səviyyəsini azaltmaq
     options.add_argument("--disable-blink-features=AutomationControlled")  # Bot aşkarlanmasını azaltmaq
     options.add_argument("--window-size=1920,1080")  # Pəncərə ölçüsü
-    options.add_experimental_option('perfLoggingPrefs', {'enableNetwork': True})  # Şəbəkə loglarını aktivləşdir
+
+    # Şəbəkə loglarını aktivləşdir
+    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    options.add_experimental_option('perfLoggingPrefs', {'enableNetwork': True})
 
     # ChromeDriver-i avtomatik yüklə və quraşdır
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
