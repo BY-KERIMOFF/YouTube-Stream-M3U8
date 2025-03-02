@@ -2,26 +2,28 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-import time
 
-# Chrome driver yolunu birbaşa göstəririk
-chrome_driver_path = "/usr/local/bin/chromedriver"  # Bu yola əmin olun
-
-# Chrome-un başlatma seçimləri
+# Chrome üçün konfigurasiya
 chrome_options = Options()
-chrome_options.add_argument("--headless")  # GUI olmadan işlə
+chrome_options.add_argument("--headless")  # Görsəl interfeys olmadan işləsin
+chrome_options.add_argument("--no-sandbox")  # Sandbox-u deaktiv et
+chrome_options.add_argument("--disable-dev-shm-usage")  # Dev-shm istifadəsini deaktiv et
+chrome_options.add_argument("--remote-debugging-port=9222")  # Debugging portu
 
-# Selenium-da Chrome sürücüsünü işə salırıq
+# ChromeDriver yolu
+chrome_driver_path = "/usr/local/bin/chromedriver"
+
+# ChromeService-i başlatmaq
 service = Service(chrome_driver_path)
+
+# WebDriver-i başlatmaq
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
-# Scraper işini yerinə yetirən hissə
+# Scraping və digər əməliyyatlar
 driver.get("https://www.ecanlitvizle.app/xezer-tv-canli-izle/")
-time.sleep(5)  # Saytın yüklənməsi üçün zaman qoyuruq
 
-# Hər hansı bir elementlə qarşılaşmaq
-# Bu, kanalların M3U linklərini tapmaq üçün uyğun elementlərə daxil olmağı tələb edir
-# Məsələn:
-# m3u_link = driver.find_element(By.XPATH, 'xpath-of-m3u-link')
+# Əlavə əməliyyatlar (səhifəni oxuma, məlumat əldə etmə və s.)
+# ...
 
+# Skripti bitirmək
 driver.quit()
