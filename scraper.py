@@ -3,27 +3,35 @@ from bs4 import BeautifulSoup
 import json
 import os
 
-# Sayta sorğu göndəririk
-url = 'https://www.ecanlitvizle.app'
-response = requests.get(url)
-html = response.text
+# M3U linklərini tapmaq üçün URL-lər
+urls = [
+    "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
+    "https://www.ecanlitvizle.app/show-tv-canli-izle-hd-4/",
+    "https://www.ecanlitvizle.app/tlc-tv-canli/"
+]
 
-# BeautifulSoup ilə HTML-i analiz edirik
-soup = BeautifulSoup(html, 'html.parser')
-
-# Kanal linklərini tapırıq (M3U linkləri)
-channels = soup.find_all('a', href=True)  # bütün linkləri tapırıq
-
-# M3U linklərini çıxarırıq
+# M3U linklərini saxlamaq üçün siyahı
 m3u_channels = []
-for channel in channels:
-    href = channel['href']
-    if '.m3u' in href:  # Yalnız M3U linklərini tapırıq
-        name = channel.text.strip()  # Kanalın adı
-        m3u_channels.append({
-            'name': name,
-            'm3u_url': href  # M3U linkini saxlayırıq
-        })
+
+# URL-ləri dövr edirik
+for url in urls:
+    response = requests.get(url)
+    html = response.text
+
+    # Saytın HTML-i ilə işləyirik
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # M3U linklərini tapırıq
+    channels = soup.find_all('a', href=True)  # Bütün linkləri tapırıq
+
+    for channel in channels:
+        href = channel['href']
+        if '.m3u' in href:  # Yalnız M3U linklərini tapırıq
+            name = channel.text.strip()  # Kanalın adı
+            m3u_channels.append({
+                'name': name,
+                'm3u_url': href  # M3U linkini saxlayırıq
+            })
 
 # JSON faylını yazırıq
 output_path = os.path.join(os.getcwd(), 'channels.json')
