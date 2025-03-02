@@ -20,7 +20,13 @@ else:
     print("Yeni token tapılmadı.")
     exit()
 
-# tv.txt faylını oxuyuruq
+# Əsas URL-i yeniləyirik
+old_url = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=NEW_TOKEN_HERE&tms=1740960002"
+new_url = old_url.replace("NEW_TOKEN_HERE", new_token)
+
+print(f"Yeni URL: {new_url}")
+
+# tv.txt faylını oxuyuruq və yeni linki yazırıq
 try:
     with open('tv.txt', 'r') as file:
         content = file.read()
@@ -30,18 +36,8 @@ except FileNotFoundError:
     print("tv.txt faylı tapılmadı.")
     exit()
 
-# Köhnə tokeni yeni token ilə əvəz edirik
-old_token = "Fh2F2HhcbuZaxDX8hYPQqQ"
-if old_token in content:
-    content = content.replace(old_token, new_token)
-    print(f"Köhnə token tapıldı: {old_token}")
-    print(f"Yeni token: {new_token}")
-else:
-    print(f"Köhnə token tapılmadı: {old_token}")
-    exit()
-
 # Yenilənmiş məzmunu tv.txt faylında saxlayırıq
 with open('tv.txt', 'w') as file:
-    file.write(content)
+    file.write(new_url)
 
-print("Yeni token tv.txt faylında yazıldı!")
+print("Yeni link tv.txt faylında yazıldı!")
