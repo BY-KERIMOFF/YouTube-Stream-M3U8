@@ -1,18 +1,23 @@
-name: Run Scraper and Save M3U Links
+name: Run Scraper and Upload M3U File
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  scraper-job:
+  scraper:
     runs-on: ubuntu-latest
     
     steps:
+    # Checkout the repository
     - name: Checkout repository
       uses: actions/checkout@v2
-    
+
+    # Install Python and dependencies
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -20,14 +25,26 @@ jobs:
 
     - name: Install dependencies
       run: |
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run the scraper script
+    # Run the scraper to generate the channels.m3u file
+    - name: Run scraper
       run: |
-        python scraper.py
+        python scraper.py  # Bu, scraper.py faylınızı işə salacaq
+
+    # Ensure that channels.m3u file exists and upload it
+    - name: Check if channels.m3u exists
+      run: |
+        if [ -f "./channels.m3u" ]; then
+          echo "channels.m3u file found."
+        else
+          echo "channels.m3u file not found!"
+          exit 1
+        fi
 
     - name: Upload M3U file as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: m3u-links
-        path: channels.m3u
+        name: channels-m3u
+        path: ./channels.m3u  # Faylın doğru yolu burada göstərilməlidir
