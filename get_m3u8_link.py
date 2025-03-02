@@ -1,18 +1,15 @@
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-# ChromeDriver konfiqurasiyası
-service = Service(ChromeDriverManager().install())
+# Əgər Chrome versiyanı 133.0.6943 istifadə edirsinizsə, versiyanı belə təyin edin:
+service = Service(ChromeDriverManager(version="133.0.6943").install())
 driver = webdriver.Chrome(service=service)
 
-# Saytın açılması
 driver.get('https://www.ecanlitvizle.app/xezer-tv-canli-izle/')
 
-# Sayfanın yüklənməsini gözləyin
-time.sleep(5)  # Sayfa tam yüklənməyibsə gözləyin
+time.sleep(5)
 
 # M3U8 linkini tapın
 m3u8_link = driver.find_element(By.XPATH, '//a[contains(@href, "m3u8")]').get_attribute('href')
