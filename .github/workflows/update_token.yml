@@ -1,4 +1,4 @@
-name: Token Check and Upload
+name: Update Token in tv.txt
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  check-token:
+  update-token:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,23 +16,14 @@ jobs:
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements.txt  # Əgər tələb olunan əlavə kitabxanalar varsa, requirements.txt faylına əlavə edin
 
-    - name: Run Python script to get new token
+    - name: Run Python script to update token
       run: |
-        python scraper.py  # burada sizin Python skriptinizin adı olacaq
+        python update_token.py  # Skriptin adını buraya daxil edin (yuxarıdakı skriptin adı)
 
-    - name: Check if new_token.txt exists
-      run: |
-        if [ -f "./new_token.txt" ]; then
-          echo "new_token.txt exists"
-        else
-          echo "new_token.txt does not exist"
-          exit 1
-        fi
-
-    - name: Upload new_token.txt as artifact
+    - name: Upload updated tv.txt
       uses: actions/upload-artifact@v4
       with:
-        name: new_token
-        path: new_token.txt
+        name: updated-tv-file
+        path: tv.txt
