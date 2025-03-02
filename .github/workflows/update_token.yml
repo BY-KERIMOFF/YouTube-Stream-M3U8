@@ -1,43 +1,33 @@
-name: Ecanlitvizle Scraper
+name: Run Scraper and Save M3U Links
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  run_scraper:
+  scraper-job:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
 
-      - name: Install dependencies
-        run: |
-          pip install selenium
-          # Chrome versiyasını avtomatik yükləyirik
-          wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip
-          unzip chrome-linux64.zip
-          mv chrome-linux64/chrome /usr/local/bin/google-chrome
-          # ChromeDriver-ı da yükləyirik
-          wget https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_linux64.zip
-          unzip chromedriver_linux64.zip
-          mv chromedriver /usr/local/bin/
+    - name: Run the scraper script
+      run: |
+        python scraper.py
 
-      - name: Run scraper script
-        run: |
-          python scraper.py
-
-      - name: Upload M3U links
-        uses: actions/upload-artifact@v4
-        with:
-          name: m3u-links
-          path: m3u_links.txt
+    - name: Upload M3U file as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: m3u-links
+        path: channels.m3u
