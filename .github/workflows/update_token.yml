@@ -39,13 +39,21 @@ jobs:
       # 5. Chrome versiyasını tap
       - name: Chrome versiyasını tap
         run: |
-          CHROME_VERSION=$(dpkg -s google-chrome-stable | grep 'Version' | awk '{print $2}' | cut -d'.' -f1)
+          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d'.' -f1)
+          if [ -z "$CHROME_VERSION" ]; then
+            echo "Xəta: Chrome versiyası tapılmadı!"
+            exit 1
+          fi
           echo "Chrome Major Version: $CHROME_VERSION"
 
       # 6. ChromeDriver quraşdır
       - name: ChromeDriver quraşdır
         run: |
           CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
+          if [[ "$CHROMEDRIVER_VERSION" == *"Error"* ]]; then
+            echo "Xəta: ChromeDriver versiyası tapılmadı!"
+            exit 1
+          fi
           echo "ChromeDriver Version: $CHROMEDRIVER_VERSION"
           wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
