@@ -3,6 +3,8 @@ import requests
 import zipfile
 import json
 import re
+import platform
+import shutil
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -12,10 +14,17 @@ from selenium.webdriver.support import expected_conditions as EC
 
 def get_chrome_version():
     try:
-        import subprocess
-        version = subprocess.run(["chrome", "--version"], capture_output=True, text=True).stdout
-        version_number = re.search(r"(\d+\.\d+\.\d+)", version)
-        return version_number.group(1) if version_number else None
+        if platform.system() == "Windows":
+            import winreg
+            reg_path = r"SOFTWARE\Google\Chrome\BLBeacon"
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, reg_path) as key:
+                version, _ = winreg.QueryValueEx(key, "version")
+                return version
+        else:
+            import subprocess
+            result = subprocess.run(["google-chrome", "--version"], capture_output=True, text=True)
+            version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
+            return version_match.group(1) if version_match else None
     except Exception:
         return None
 
@@ -26,9 +35,10 @@ def download_chromedriver():
         return
 
     major_version = chrome_version.split(".")[0]
-    chromedriver_url = f"https://storage.googleapis.com/chrome-for-testing-public/{major_version}.0.0.0/win64/chromedriver-win64.zip"
+    os_type = "win64" if platform.system() == "Windows" else "linux64"
+    chromedriver_url = f"https://storage.googleapis.com/chrome-for-testing-public/{major_version}.0.0.0/{os_type}/chromedriver-{os_type}.zip"
     zip_path = "chromedriver.zip"
-
+    
     print("ChromeDriver yüklənir...")
     response = requests.get(chromedriver_url)
     if response.status_code == 200:
@@ -38,6 +48,8 @@ def download_chromedriver():
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall("chrome_driver")
         os.remove(zip_path)
+        chromedriver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver")
+        os.chmod(chromedriver_path, 0o755)
     else:
         print("ChromeDriver yükləmə xətası! Versiya tapılmadı.")
 
@@ -48,7 +60,7 @@ def get_m3u8_from_network():
     options.add_argument("--disable-dev-shm-usage")
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    chromedriver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe")
+    chromedriver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe" if platform.system() == "Windows" else "chromedriver")
     if not os.path.exists(chromedriver_path):
         download_chromedriver()
 
