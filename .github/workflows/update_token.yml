@@ -28,6 +28,11 @@ jobs:
         run: |
           python scraper.py  # Skripti işlədir
 
+      - name: List files
+        run: |
+          echo "Current directory contents:"
+          ls -la  # Mühitdə olan faylları göstərir
+
       - name: Upload M3U file
         uses: actions/upload-artifact@v4  # Yeni versiya v4 istifadə olunur
         with:
