@@ -33,8 +33,8 @@ jobs:
           echo "Current directory contents:"
           ls -la  # Mühitdə olan faylların siyahısını göstərir
 
-      - name: Upload JSON file
+      - name: Upload M3U links
         uses: actions/upload-artifact@v4  # Yeni versiya v4 istifadə olunur
         with:
-          name: channels-json
-          path: channels.json  # Skript işlədildikdən sonra yaranan JSON faylını yükləyir
+          name: m3u-links
+          path: m3u_links.txt  # Skript işlədildikdən sonra yaranan M3U faylını yükləyir
