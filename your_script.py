@@ -7,7 +7,7 @@ import re
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -49,10 +49,7 @@ def get_m3u8_from_network():
         # ChromeDriver-ın tam yolunu burada göstəririk
         chrome_driver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe")  # Yüklənmiş chrome driver
 
-        # PATH-inə `chromedriver.exe`-i əlavə edirik
-        os.environ["PATH"] += os.pathsep + os.path.join(os.getcwd(), "chrome_driver")
-
-        driver = webdriver.Chrome(service=Service(chrome_driver_path), options=options)
+        driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
         url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
         driver.get(url)
 
