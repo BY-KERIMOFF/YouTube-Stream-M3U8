@@ -17,8 +17,8 @@ def get_m3u8_from_network():
     chrome_options.add_argument("--disable-dev-shm-usage")
 
     # Chrome və ChromeDriver yollarını təyin edin
-    chrome_path = "/path/to/chrome-linux64/chrome"
-    chromedriver_path = "/path/to/chromedriver-linux64/chromedriver"
+    chrome_path = os.path.join(os.getcwd(), "chrome-linux64", "chrome")
+    chromedriver_path = os.path.join(os.getcwd(), "chromedriver-linux64", "chromedriver")
 
     chrome_options.binary_location = chrome_path
 
