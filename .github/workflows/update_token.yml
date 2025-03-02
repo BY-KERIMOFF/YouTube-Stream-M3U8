@@ -8,7 +8,7 @@ on:
 jobs:
   update_token:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
@@ -22,6 +22,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt  # requirements.txt faylınızda selenium olmalıdır
+
+    - name: Set up ChromeDriver
+      run: |
+        # Yükləyirik və PATH-ə əlavə edirik
+        CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
+        DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
+        wget https://chromedriver.storage.googleapis.com/$DRIVER_VERSION/chromedriver_linux64.zip
+        unzip chromedriver_linux64.zip
+        sudo mv chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
 
     - name: Run update_token.py
       run: python update_token.py
