@@ -10,18 +10,28 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager  # ✅ ChromeDriver avtomatik yüklənməsi üçün
 
-# 🔄 ChromeDriver yükləyən və qaytaran funksiya
-def get_chromedriver():
+# 🔄 ChromeDriver əl ilə yükləyən funksiya
+def download_chromedriver():
     try:
+        chrome_driver_url = "https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.0/win64/chromedriver-win64.zip"
+        chrome_driver_zip = "chromedriver-win64.zip"
+
         print("ChromeDriver yüklənir...")
-        chrome_driver_path = ChromeDriverManager().install()  # ✅ Düzgün versiya avtomatik yüklənir
-        print("ChromeDriver uğurla yükləndi.")
-        return chrome_driver_path
+        response = requests.get(chrome_driver_url)
+        if response.status_code == 200:
+            with open(chrome_driver_zip, "wb") as file:
+                file.write(response.content)
+            print("ChromeDriver uğurla yükləndi.")
+
+            with zipfile.ZipFile(chrome_driver_zip, 'r') as zip_ref:
+                zip_ref.extractall("chrome_driver")
+            print("ChromeDriver çıxarıldı.")
+            os.remove(chrome_driver_zip)
+        else:
+            print(f"Yükləmə zamanı xəta baş verdi. Status kodu: {response.status_code}")
     except Exception as e:
         print(f"ChromeDriver yükləmə xətası: {e}")
-        return None
 
 # 🔎 M3U8 linkini tapmaq üçün funksiya
 def get_m3u8_from_network():
@@ -32,9 +42,9 @@ def get_m3u8_from_network():
         options.add_argument("--disable-dev-shm-usage")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
-        chrome_driver_path = get_chromedriver()
-        if not chrome_driver_path:
-            return None
+        chrome_driver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe")
+        if not os.path.exists(chrome_driver_path):
+            download_chromedriver()
 
         service = Service(chrome_driver_path)
         driver = webdriver.Chrome(service=service, options=options)
@@ -72,41 +82,19 @@ def get_m3u8_from_network():
         print(f"Network yaxalama xətası: {e}")
         return None
 
-# 🔄 Tokeni yeniləyən funksiya
-def update_token_in_url(url, new_token):
-    try:
-        if not url:
-            return None
-        return re.sub(r"tkn=[^&]*", f"tkn={new_token}", url)
-    except Exception as e:
-        print(f"Token yeniləmək xətası: {e}")
-        return None
-
-# 🔄 Yerli fayla M3U8 linkini yazan funksiya
-def write_to_local_file(m3u8_link):
-    if not m3u8_link:
-        return "M3U8 linki tapılmadı, fayl yenilənmədi."
-    try:
-        new_content = f"#EXTM3U\n#EXTINF:-1,xezer tv\n{m3u8_link}\n"
-        file_path = os.path.abspath("token.txt")
-        with open(file_path, "w") as file:
-            file.write(new_content)
-        print("Yerli fayl uğurla yeniləndi.")
-    except Exception as e:
-        print(f"Fayla yazma xətası: {e}")
-        return f"Fayla yazma xətası: {e}"
-
 # 🔄 Əsas işləyən funksiya
 def main():
     new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"
     m3u8_link = get_m3u8_from_network()
     if m3u8_link:
-        updated_m3u8_link = update_token_in_url(m3u8_link, new_token)
+        updated_m3u8_link = re.sub(r"tkn=[^&]*", f"tkn={new_token}", m3u8_link)
         print(f"Yeni M3U8 linki: {updated_m3u8_link}")
     else:
         print("M3U8 tapılmadı.")
         return
-    write_to_local_file(updated_m3u8_link)
+    with open("token.txt", "w") as file:
+        file.write(f"#EXTM3U\n#EXTINF:-1,xezer tv\n{updated_m3u8_link}\n")
+    print("Yerli fayl uğurla yeniləndi.")
 
 if __name__ == "__main__":
     main()
