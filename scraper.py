@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import json
 import os
 
 # Sayta sorğu göndəririk
@@ -13,16 +14,19 @@ soup = BeautifulSoup(html, 'html.parser')
 # Kanal linklərini tapırıq (XPath ilə deyil, CSS selector ilə)
 channels = soup.find_all('a', class_='channel-link')  # Bu sinifi təhlil etməli olacaqsınız
 
-# Faylın tam yolunu göstəririk
-output_path = os.path.join(os.getcwd(), 'channels.m3u')
+# Kanal məlumatlarını toplamaq
+channel_list = []
+for channel in channels:
+    name = channel.text.strip()
+    url = channel.get('href')  # URL-nı alırıq
+    channel_list.append({
+        'name': name,
+        'url': url
+    })
 
-# M3U faylını yazırıq
-with open(output_path, 'w') as file:
-    file.write('#EXTM3U\n')  # M3U başlığı
-    for channel in channels:
-        name = channel.text.strip()
-        url = channel.get('href')  # URL-nı alırıq
-        file.write(f'#EXTINF:-1,{name}\n')
-        file.write(f'{url}\n')
+# JSON faylını yazırıq
+output_path = os.path.join(os.getcwd(), 'channels.json')
+with open(output_path, 'w', encoding='utf-8') as file:
+    json.dump(channel_list, file, ensure_ascii=False, indent=4)
 
-print(f'M3U faylı yaradıldı: {output_path}')
+print(f'JSON faylı yaradıldı: {output_path}')
