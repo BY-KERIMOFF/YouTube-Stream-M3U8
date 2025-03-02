@@ -11,22 +11,23 @@ html = response.text
 # BeautifulSoup ilə HTML-i analiz edirik
 soup = BeautifulSoup(html, 'html.parser')
 
-# Kanal linklərini tapırıq - class-ı düzgün tapmalısınız
-channels = soup.find_all('a', class_='channel-item')  # Dəyişdirin, düzgün class-ı istifadə edin
+# Kanal linklərini tapırıq (M3U linkləri)
+channels = soup.find_all('a', href=True)  # bütün linkləri tapırıq
 
-# Kanal məlumatlarını toplamaq
-channel_list = []
+# M3U linklərini çıxarırıq
+m3u_channels = []
 for channel in channels:
-    name = channel.text.strip()
-    url = channel.get('href')  # URL-nı alırıq
-    channel_list.append({
-        'name': name,
-        'url': url
-    })
+    href = channel['href']
+    if '.m3u' in href:  # Yalnız M3U linklərini tapırıq
+        name = channel.text.strip()  # Kanalın adı
+        m3u_channels.append({
+            'name': name,
+            'm3u_url': href  # M3U linkini saxlayırıq
+        })
 
 # JSON faylını yazırıq
 output_path = os.path.join(os.getcwd(), 'channels.json')
 with open(output_path, 'w', encoding='utf-8') as file:
-    json.dump(channel_list, file, ensure_ascii=False, indent=4)
+    json.dump(m3u_channels, file, ensure_ascii=False, indent=4)
 
 print(f'JSON faylı yaradıldı: {output_path}')
