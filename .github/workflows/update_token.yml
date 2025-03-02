@@ -23,6 +23,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install selenium
+          # Chrome versiyasını avtomatik yükləyirik
+          wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip
+          unzip chrome-linux64.zip
+          mv chrome-linux64/chrome /usr/local/bin/google-chrome
+          # ChromeDriver-ı da yükləyirik
           wget https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
           mv chromedriver /usr/local/bin/
