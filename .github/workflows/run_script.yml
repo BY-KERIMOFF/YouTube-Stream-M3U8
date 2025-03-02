@@ -3,7 +3,7 @@ name: Run Python Script
 on:
   push:
     branches:
-      - main  # Main branch-a push edildikdə işə düşəcək
+      - main
   schedule:
     - cron: "0 * * * *"  # Hər saat başı çalışsın
 
@@ -32,10 +32,10 @@ jobs:
       - name: Install ChromeDriver
         run: |
           CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | sed 's/\..*//')
-          wget https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_linux64.zip
+          wget https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_linux64.zip  # 113 versiyasını yükləyirik
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
 
       - name: Run script
-        run: python get_m3u8_link.py  # Skriptin adı
+        run: python get_m3u8_link.py
