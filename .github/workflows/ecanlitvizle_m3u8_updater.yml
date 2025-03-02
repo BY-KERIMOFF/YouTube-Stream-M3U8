@@ -1,4 +1,4 @@
-name: Yoda Channels M3U8 Updater
+name: Ecanlitvizle M3U8 Updater
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:  # Manüel işə salmaq üçün
 
 jobs:
-  update-yoda-channels:
+  update-ecanlitvizle-channels:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,9 +33,9 @@ jobs:
           chrome-version: stable
 
       # Skripti işə salın
-      - name: Run Yoda M3U8 Links Updater Script
+      - name: Run Ecanlitvizle M3U8 Links Updater Script
         run: |
-          python yoda_m3u8_updater.py
+          python ecanlitvizle_m3u8_updater.py
 
       # Faylları güncəlləyin və commit edin
       - name: Commit changes
@@ -45,7 +45,7 @@ jobs:
           if git diff --quiet; then
             echo "No changes to commit."
           else
-            git add yoda_channels.txt
-            git commit -m "Update Yoda channels M3U8 links" || echo "No changes to commit"
+            git add ecanlitvizle_channels.txt
+            git commit -m "Update Ecanlitvizle channels M3U8 links" || echo "No changes to commit"
             git push
           fi
