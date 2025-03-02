@@ -1,29 +1,26 @@
 from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
+import time
 
-# Chrome üçün konfigurasiya
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Görsəl interfeys olmadan işləsin
-chrome_options.add_argument("--no-sandbox")  # Sandbox-u deaktiv et
-chrome_options.add_argument("--disable-dev-shm-usage")  # Dev-shm istifadəsini deaktiv et
-chrome_options.add_argument("--remote-debugging-port=9222")  # Debugging portu
+# Chrome options
+chrome_options = webdriver.ChromeOptions()
 
-# ChromeDriver yolu
-chrome_driver_path = "/usr/local/bin/chromedriver"
+# İstəyirsinizsə, headless modunda işləyə bilər
+chrome_options.add_argument("--headless")
 
-# ChromeService-i başlatmaq
-service = Service(chrome_driver_path)
+# Chromedriver-ı avtomatik yükləyin və başlatın
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-# WebDriver-i başlatmaq
-driver = webdriver.Chrome(service=service, options=chrome_options)
+# URL-ə get edin (istədiyiniz linki buraya daxil edin)
+driver.get("https://www.youtube.com")
 
-# Scraping və digər əməliyyatlar
-driver.get("https://www.ecanlitvizle.app/xezer-tv-canli-izle/")
+# Sayfa yükləndikdən sonra müəyyən bir müddət gözləyin (məsələn 5 saniyə)
+time.sleep(5)
 
-# Əlavə əməliyyatlar (səhifəni oxuma, məlumat əldə etmə və s.)
-# ...
+# Məsələn, YouTube-da bəzi elementləri tapmaq:
+# driver.find_element(By.XPATH, "element_xpath").click()
 
-# Skripti bitirmək
+# Brauzeri bağlayın
 driver.quit()
