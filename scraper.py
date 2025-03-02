@@ -1,40 +1,34 @@
-import os
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
+import requests
+import re
+from datetime import datetime
 
-# ChromeOptions konfiqurasiyası
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Başsız rejim
-chrome_options.add_argument("--no-sandbox")  # Sandboxing-i deaktiv et
-chrome_options.add_argument("--disable-dev-shm-usage")  # DevTools Active Port problemi üçün
+# Tokenli link
+url = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=Fh2F2HhcbuZaxDX8hYPQqQ&tms=1740960002"
 
-# Chrome sürücüsünü yükləmək üçün webdriver-manager istifadə et
-service = Service(ChromeDriverManager().install())
+# Linkdəki tokeni tapmaq üçün regex istifadə edirik
+def get_new_token(url):
+    try:
+        response = requests.get(url)
+        # URL-dəki tokeni regex ilə çəkirik
+        token_match = re.search(r'tkn=([A-Za-z0-9]+)', response.url)
+        
+        if token_match:
+            return token_match.group(1)  # Yeni tokeni qaytarır
+        else:
+            print("Token tapılmadı.")
+            return None
+    except Exception as e:
+        print(f"Xəta baş verdi: {e}")
+        return None
 
-# WebDriver başlatmaq
-driver = webdriver.Chrome(service=service, options=chrome_options)
+# Yeni tokeni al
+new_token = get_new_token(url)
 
-# Web səhifəsini açmaq
-driver.get("https://example.com")
-
-# Sayfadan məlumatı alırıq (misal üçün)
-channels = driver.find_elements(By.XPATH, "//a[contains(@href, '.m3u8')]")
-
-# Faylın yaradılması
-file_path = "channels.m3u"
-with open(file_path, 'w') as f:
-    f.write("# Example Channel M3U Content\n")
-    for channel in channels:
-        f.write(f"{channel.get_attribute('href')}\n")
-
-# Faylın mövcudluğunu yoxlayaq
-if os.path.exists(file_path):
-    print(f"{file_path} yaradıldı!")
+if new_token:
+    # Yeni tokeni faylda saxlamaq
+    with open("new_token.txt", "w") as file:
+        file.write(f"Yeni Token: {new_token}\n")
+        file.write(f"Tarix: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    print(f"Yeni token {new_token} fayla yazıldı.")
 else:
-    print(f"{file_path} tapılmadı!")
-
-# Chrome sürücüsünü bağlayırıq
-driver.quit()
+    print("Yeni token tapılmadı.")
