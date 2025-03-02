@@ -18,18 +18,29 @@ if match:
     print(f"Yeni token tapıldı: {new_token}")
 else:
     print("Yeni token tapılmadı.")
+    exit()
 
-# Köhnə tokeni və yeni tokeni faylda əvəz edirik
-old_token = "Fh2F2HhcbuZaxDX8hYPQqQ"  # Köhnə tokeni burada yazın
+# tv.txt faylını oxuyuruq
+try:
+    with open('tv.txt', 'r') as file:
+        content = file.read()
+        print("Faylın əvvəlki məzmunu:")
+        print(content)
+except FileNotFoundError:
+    print("tv.txt faylı tapılmadı.")
+    exit()
 
-# tv.txt faylını oxuyuruq və köhnə token ilə yeni tokeni əvəz edirik
-with open('tv.txt', 'r') as file:
-    content = file.read()
+# Köhnə tokeni yeni token ilə əvəz edirik
+old_token = "Fh2F2HhcbuZaxDX8hYPQqQ"
+if old_token in content:
+    content = content.replace(old_token, new_token)
+    print(f"Köhnə token tapıldı: {old_token}")
+    print(f"Yeni token: {new_token}")
+else:
+    print(f"Köhnə token tapılmadı: {old_token}")
+    exit()
 
-# Tokeni dəyişdiririk
-content = content.replace(old_token, new_token)
-
-# Yenilənmiş məzmunu faylda saxlayırıq
+# Yenilənmiş məzmunu tv.txt faylında saxlayırıq
 with open('tv.txt', 'w') as file:
     file.write(content)
 
