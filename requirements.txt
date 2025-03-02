@@ -1,2 +1,2 @@
-requests
-beautifulsoup4
+selenium==4.29.0
+webdriver-manager==4.10.0
