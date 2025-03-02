@@ -6,7 +6,7 @@ import time
 # Chrome driverni yükləyin və başlatın
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument("--headless")  # Headless modda işləyir
-service = Service("path/to/chromedriver")  # Chromedriver yolunu daxil edin
+service = Service("/usr/bin/chromedriver")  # GitHub Actions-də chromedriver yolunu daxil edin
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 try:
@@ -20,6 +20,10 @@ try:
         token_element = driver.find_element(By.XPATH, "//script[contains(., 'token')]").text
 
     print(f"Token: {token_element}")
+
+    # Tokeni faylə yazın
+    with open("token.txt", "w") as file:
+        file.write(token_element)
 
 finally:
     driver.quit()  # Browseri bağlayın
