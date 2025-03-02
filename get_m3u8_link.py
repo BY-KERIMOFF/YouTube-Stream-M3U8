@@ -1,28 +1,48 @@
-import time
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
+name: Run Python Script
 
-# ChromeDriver versiyasını düzgün təyin edin (məsələn, 113.0.5672.63)
-service = Service(ChromeDriverManager(version="113.0.5672.63").install())  # Uyğun versiyanı təyin et
-driver = webdriver.Chrome(service=service)
+on:
+  push:
+    branches:
+      - main  # Main branch-a push edildikdə işə düşəcək
+  schedule:
+    - cron: "0 * * * *"  # Hər saat başı çalışsın
 
-# URL-i açın
-driver.get('https://www.ecanlitvizle.app/xezer-tv-canli-izle/')
+jobs:
+  run:
+    runs-on: ubuntu-latest  # GitHub Actions üçün Ubuntu istifadə edirik
 
-# Səhifənin tam yüklənməsini gözləyin
-time.sleep(5)
+    steps:
+      # Kodunuzu GitHub reposundan çəkin
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-# M3U8 linkini tapın və ekrana çap edin
-try:
-    m3u8_link = driver.find_element(By.XPATH, '//a[contains(@href, "m3u8")]').get_attribute('href')
-    print(f"M3U8 Link: {m3u8_link}")
+      # Python mühitini qurun
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x  # Python 3.x versiyasını istifadə edin
 
-    # Linki bir txt faylında qeyd edin
-    with open('m3u8_link.txt', 'w') as file:
-        file.write(m3u8_link)
-except Exception as e:
-    print(f"Xəta baş verdi: {e}")
-finally:
-    driver.quit()  # Browserı bağla
+      # Lazım olan asılılıqları quraşdırın
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # requirements.txt faylını istifadə edirik
+
+      # Google Chrome-u quraşdırın
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y google-chrome-stable  # Chrome yükləyirik
+
+      # ChromeDriver-ı quraşdırın
+      - name: Install ChromeDriver
+        run: |
+          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | sed 's/\..*//')  # Chrome versiyasını alırıq
+          wget https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_linux64.zip  # Uyğun ChromeDriver versiyasını yükləyirik
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/  # ChromeDriver-ı sistemə yerləşdiririk
+          sudo chmod +x /usr/local/bin/chromedriver
+
+      # Python skriptini işə salın
+      - name: Run script
+        run: python get_m3u8_link.py  # Skriptin adı
