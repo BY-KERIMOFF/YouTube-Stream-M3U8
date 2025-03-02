@@ -1,5 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 # Browser ayarları
@@ -7,6 +9,7 @@ options = webdriver.ChromeOptions()
 options.add_argument("--headless")  # Başsız rejim
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
+options.add_argument("--disable-extensions")  # Uzantıları bağlamaq
 
 # Webdriver başlat
 browser = webdriver.Chrome(options=options)
@@ -15,11 +18,13 @@ browser = webdriver.Chrome(options=options)
 url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
 browser.get(url)
 
-time.sleep(5)  # Elementlərin yüklənməsini gözləyək
-
-# Tokenli linki tap
 try:
-    video_element = browser.find_element(By.TAG_NAME, "iframe")
+    # Elementin yüklənməsini gözləyin (iframe tapılana qədər)
+    video_element = WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.TAG_NAME, "iframe"))
+    )
+    
+    # Tokenli linki tap
     token_link = video_element.get_attribute("src")
     
     if token_link:
@@ -30,9 +35,8 @@ try:
             file.write(token_link)
     else:
         print("Tokenli link tapılmadı!")
-
 except Exception as e:
     print("Xəta baş verdi:", e)
-
-# Brauzeri bağla
-browser.quit()
+finally:
+    # Brauzeri bağla
+    browser.quit()
