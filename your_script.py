@@ -10,33 +10,20 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager  # ✅ ChromeDriver avtomatik yüklənməsi üçün
 
-# 🔄 ChromeDriver yükləyən funksiya
-def download_chromedriver():
+# 🔄 ChromeDriver yükləyən və qaytaran funksiya
+def get_chromedriver():
     try:
-        chrome_driver_url = "https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/win64/chrome-win64.zip"
-        chrome_driver_zip = "chrome-win64.zip"
-        
-        # Yükləmə əməliyyatı
         print("ChromeDriver yüklənir...")
-        response = requests.get(chrome_driver_url)
-        if response.status_code == 200:
-            with open(chrome_driver_zip, "wb") as file:
-                file.write(response.content)
-            print("ChromeDriver uğurla yükləndi.")
-            
-            # Yüklənmiş faylı çıxarırıq
-            with zipfile.ZipFile(chrome_driver_zip, 'r') as zip_ref:
-                zip_ref.extractall("chrome_driver")
-            print("ChromeDriver çıxarıldı.")
-            os.remove(chrome_driver_zip)  # Yüklənmiş zip faylını silirik
-            print("Yüklənmiş zip faylı silindi.")
-        else:
-            print(f"Yükləmə zamanı xəta baş verdi. Status kodu: {response.status_code}")
+        chrome_driver_path = ChromeDriverManager().install()  # ✅ Düzgün versiya avtomatik yüklənir
+        print("ChromeDriver uğurla yükləndi.")
+        return chrome_driver_path
     except Exception as e:
         print(f"ChromeDriver yükləmə xətası: {e}")
+        return None
 
-# 🔎 M3U8 linkini tapmaq üçün network traffic-i yoxlayan funksiya
+# 🔎 M3U8 linkini tapmaq üçün funksiya
 def get_m3u8_from_network():
     try:
         options = Options()
@@ -45,50 +32,38 @@ def get_m3u8_from_network():
         options.add_argument("--disable-dev-shm-usage")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
-        # ChromeDriver-ın tam yolunu burada göstəririk
-        chrome_driver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe")  # Yüklənmiş chrome driver
+        chrome_driver_path = get_chromedriver()
+        if not chrome_driver_path:
+            return None
 
-        # Service obyektini istifadə edirik
         service = Service(chrome_driver_path)
-
         driver = webdriver.Chrome(service=service, options=options)
         url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
         driver.get(url)
 
-        # Sayfanın yüklənməsini gözləyirik (daha uzun gözləmə müddəti)
         WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
-
-        # Iframe-ə keçid edirik
         iframe = driver.find_element(By.TAG_NAME, "iframe")
         driver.switch_to.frame(iframe)
-
-        # Video elementinin yüklənməsini gözləyirik
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "video")))
 
-        # JavaScript ilə M3U8 linkini tapmağa çalışırıq
         try:
             m3u8_link = driver.execute_script("return document.querySelector('video').src;")
             print(f"JavaScript ilə tapılan M3U8 linki: {m3u8_link}")
-        except Exception as e:
-            print(f"JavaScript ilə M3U8 linki tapılmadı: {e}")
+        except Exception:
             m3u8_link = None
 
-        # Əgər JavaScript ilə tapılmadısa, logları təhlil edirik
         if not m3u8_link:
             logs = driver.get_log("performance")
-            print("Network logları:")
             for entry in logs:
                 try:
-                    log = json.loads(entry["message"])  # Log məlumatını JSON formatında oxu
+                    log = json.loads(entry["message"])
                     if "method" in log and log["method"] == "Network.responseReceived":
                         url = log["params"]["response"]["url"]
-                        print(f"Tapılan URL: {url}")
-                        if "m3u8" in url:  # M3U8 linkini axtar
+                        if "m3u8" in url:
                             m3u8_link = url
                             print(f"M3U8 linki tapıldı: {m3u8_link}")
                             break
-                except Exception as e:
-                    print(f"Xəta baş verdi: {e}")
+                except Exception:
                     continue
 
         driver.quit()
@@ -102,8 +77,7 @@ def update_token_in_url(url, new_token):
     try:
         if not url:
             return None
-        updated_url = re.sub(r"tkn=[^&]*", f"tkn={new_token}", url)
-        return updated_url
+        return re.sub(r"tkn=[^&]*", f"tkn={new_token}", url)
     except Exception as e:
         print(f"Token yeniləmək xətası: {e}")
         return None
@@ -112,16 +86,9 @@ def update_token_in_url(url, new_token):
 def write_to_local_file(m3u8_link):
     if not m3u8_link:
         return "M3U8 linki tapılmadı, fayl yenilənmədi."
-
     try:
-        # Yeni məzmunu hazırlayırıq
         new_content = f"#EXTM3U\n#EXTINF:-1,xezer tv\n{m3u8_link}\n"
-
-        # Faylın tam yolunu müəyyən edirik
         file_path = os.path.abspath("token.txt")
-        print(f"Fayl yaradılacaq yol: {file_path}")
-
-        # Yerli fayla yazırıq
         with open(file_path, "w") as file:
             file.write(new_content)
         print("Yerli fayl uğurla yeniləndi.")
@@ -131,26 +98,15 @@ def write_to_local_file(m3u8_link):
 
 # 🔄 Əsas işləyən funksiya
 def main():
-    # ChromeDriver yükləyirik
-    download_chromedriver()
-
-    # Yeni tokeni daxil et
-    new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"  # Yenilənməli olan token
-
-    # Saytdan yeni M3U8 linkini götür
+    new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"
     m3u8_link = get_m3u8_from_network()
-
     if m3u8_link:
         updated_m3u8_link = update_token_in_url(m3u8_link, new_token)
         print(f"Yeni M3U8 linki: {updated_m3u8_link}")
     else:
         print("M3U8 tapılmadı.")
         return
+    write_to_local_file(updated_m3u8_link)
 
-    # Yerli fayla yaz
-    result = write_to_local_file(updated_m3u8_link)
-    print(result)
-
-# 🏃‍♂ Skripti işə sal
 if __name__ == "__main__":
     main()
