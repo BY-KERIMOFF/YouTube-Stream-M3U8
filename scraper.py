@@ -11,8 +11,8 @@ html = response.text
 # BeautifulSoup ilə HTML-i analiz edirik
 soup = BeautifulSoup(html, 'html.parser')
 
-# Kanal linklərini tapırıq (XPath ilə deyil, CSS selector ilə)
-channels = soup.find_all('a', class_='channel-link')  # Bu sinifi təhlil etməli olacaqsınız
+# Kanal linklərini tapırıq - class-ı düzgün tapmalısınız
+channels = soup.find_all('a', class_='channel-item')  # Dəyişdirin, düzgün class-ı istifadə edin
 
 # Kanal məlumatlarını toplamaq
 channel_list = []
