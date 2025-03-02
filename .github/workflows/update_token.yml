@@ -1,27 +1,25 @@
-name: Python application
-
-on:
-  push:
-    branches:
-      - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out repository
-      uses: actions/checkout@v2
+      - name: Repozitorini klonla
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
+      - name: Python-u quraşdır
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install webdriver-manager
+      - name: Chrome və ChromeDriver quraşdır
+        run: |
+          sudo apt update
+          sudo apt install -y google-chrome-stable
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}')
+          echo "Chrome versiyası: $CHROME_VERSION"
+          sudo apt install -y chromium-chromedriver
 
-    - name: Run script
-      run: python your_script.py
+      - name: Asılılıqları quraşdır
+        run: pip install -r requirements.txt
+
+      - name: Skripti işə sal
+        run: python your_script.py
