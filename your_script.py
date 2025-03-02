@@ -1,86 +1,76 @@
-import os
-import re
-import json
 import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
+import json
+import re
 
-def get_m3u8_from_network():
-    """M3U8 linkini tapır."""
-    # Chrome seçimlərini təyin et
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Headless modda işləmək üçün
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-
-    # Chrome və ChromeDriver yollarını təyin edin
-    chrome_path = os.path.join(os.getcwd(), "chrome-linux64", "chrome")
-    chromedriver_path = os.path.join(os.getcwd(), "chromedriver-linux64", "chromedriver")
-
-    chrome_options.binary_location = chrome_path
-
-    # ChromeDriver-i başlat
-    driver = webdriver.Chrome(service=Service(chromedriver_path), options=chrome_options)
-
+def fetch_channels(url):
+    """
+    Verilmiş URL-dən kanalların adlarını və linklərini əldə edir.
+    """
     try:
-        # M3U8 linkini tapmaq üçün səhifəyə daxil ol
-        url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
-        driver.get(url)
+        response = requests.get(url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        # İframe-i gözlə və ona keç
-        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
-        iframe = driver.find_element(By.TAG_NAME, "iframe")
-        driver.switch_to.frame(iframe)
+        channels = []
 
-        # Video elementi gözlə
-        WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.TAG_NAME, "video")))
+        # Kanalların yerləşdiyi elementləri tapmaq
+        channel_elements = soup.select('.channel-item')
+        for element in channel_elements:
+            name = element.select_one('.channel-name').text.strip() if element.select_one('.channel-name') else "Unknown"
+            stream_url = element.select_one('a')['href'] if element.select_one('a') else None
 
-        # M3U8 linkini tap
-        m3u8_link = None
-        logs = driver.get_log("performance")
-        for entry in logs:
-            try:
-                log = json.loads(entry["message"])
-                if "method" in log and log["method"] == "Network.responseReceived":
-                    url = log["params"]["response"]["url"]
-                    if "m3u8" in url:
-                        m3u8_link = url
-                        break
-            except Exception as e:
-                print(f"Log analizi xətası: {e}")
-                continue
+            # Kanal məlumatlarını dictionary formasında qeyd etmək
+            channel_data = {
+                "name": name,
+                "stream_url": stream_url
+            }
+            channels.append(channel_data)
 
-        return m3u8_link
+        return channels
+
     except Exception as e:
-        print(f"M3U8 linki tapılmadı: {e}")
-        return None
-    finally:
-        # Brauzeri bağla
-        driver.quit()
+        print(f"Xəta baş verdi: {e}")
+        return []
+
+def validate_stream_url(stream_url):
+    """
+    Strim URL-sinin mövcudluğunu yoxlayır.
+    """
+    try:
+        response = requests.head(stream_url, timeout=5)
+        return response.status_code == 200
+    except:
+        return False
+
+def save_to_json(data, filename="channels.json"):
+    """
+    Nəticəni JSON faylına yazır.
+    """
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    print(f"Nəticə `{filename}` faylına yazıldı.")
 
 def main():
-    # Yeni token
-    new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"
+    url = "https://www.ecanlitvizle.app/"
+    print("Kanallar yüklənir...")
+    channels = fetch_channels(url)
 
-    # M3U8 linkini tap
-    m3u8_link = get_m3u8_from_network()
-    if m3u8_link:
-        # Hazır linkdəki tokeni yenilə
-        updated_m3u8_link = re.sub(r"tkn=[^&]*", f"tkn={new_token}", m3u8_link)
-        print(f"Yeni M3U8 linki: {updated_m3u8_link}")
+    if not channels:
+        print("Heç bir kanal tapılmadı.")
+        return
 
-        # Fayla yaz
-        with open("token.txt", "w") as file:
-            file.write(f"#EXTM3U\n#EXTINF:-1,xezer tv\n{updated_m3u8_link}\n")
-        print("Yerli fayl uğurla yeniləndi.")
+    # Strim URL-lərinin doğrulanması
+    validated_channels = []
+    for channel in channels:
+        stream_url = channel["stream_url"]
+        if stream_url and validate_stream_url(stream_url):
+            validated_channels.append(channel)
+
+    if validated_channels:
+        save_to_json(validated_channels)
     else:
-        print("M3U8 tapılmadı.")
+        print("Doğru strim URL-ləri tapılmadı.")
 
 if __name__ == "__main__":
     main()
