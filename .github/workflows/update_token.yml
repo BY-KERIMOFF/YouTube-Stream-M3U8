@@ -1,27 +1,30 @@
-name: Update Token
+name: Update Token in TV Link
 
 on:
   schedule:
-    - cron: "*/5 * * * *"  # Hər 5 dəqiqədən bir işə düşür
-  workflow_dispatch:
+    - cron: "*/5 * * * *"  # Bu cron təkrarı ilə hər 5 dəqiqədən bir işə düşəcək
+  workflow_dispatch:  # Manual işə salınması üçün əlavə et
 
 jobs:
-  update-token:
+  update_token:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Lazım olan paketləri yüklə
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
+      - name: Update Token
+        run: |
+          python update_token.py  # Tokeni yeniləyən skriptin adını buraya daxil edin
 
-    - name: Run update_token.py script
-      run: |
-        python update_token.py
+      - name: Commit changes
+        run: |
+          git config --global user.name "Your Name"
+          git config --global user.email "youremail@example.com"
+          git add tv.txt
+          git commit -m "Update token in tv.txt"
+          git push
