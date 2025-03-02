@@ -1,4 +1,4 @@
-name: Run Scraper and Upload M3U File
+name: YouTube Stream M3U8 Scraper
 
 on:
   push:
@@ -11,40 +11,43 @@ on:
 jobs:
   scraper:
     runs-on: ubuntu-latest
-    
+
     steps:
-    # Checkout the repository
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      # Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    # Install Python and dependencies
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
+      # Set up Python
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
 
-    # Run the scraper to generate the channels.m3u file
-    - name: Run scraper
-      run: |
-        python scraper.py  # Bu, scraper.py faylınızı işə salacaq
+      # Run scraper.py
+      - name: Run scraper.py
+        run: |
+          python scraper.py
 
-    # Ensure that channels.m3u file exists and upload it
-    - name: Check if channels.m3u exists
-      run: |
-        if [ -f "./channels.m3u" ]; then
-          echo "channels.m3u file found."
-        else
-          echo "channels.m3u file not found!"
-          exit 1
-        fi
+      # Check if channels.m3u exists
+      - name: Check if channels.m3u exists
+        run: |
+          ls -l  # Faylları göstərmək üçün ls komutunu istifadə et
+          if [ -f "./channels.m3u" ]; then
+            echo "channels.m3u file found."
+          else
+            echo "channels.m3u file not found!"
+            exit 1
+          fi
 
-    - name: Upload M3U file as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: channels-m3u
-        path: ./channels.m3u  # Faylın doğru yolu burada göstərilməlidir
+      # Upload the artifact (channels.m3u)
+      - name: Upload channels.m3u artifact
+        if: success() && fileExists('channels.m3u')
+        uses: actions/upload-artifact@v4
+        with:
+          name: channels-m3u
+          path: channels.m3u
