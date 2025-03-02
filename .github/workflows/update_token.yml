@@ -1,4 +1,4 @@
-name: Update Token Daily with Selenium
+name: Update Token Automatically
 
 on:
   schedule:
@@ -36,7 +36,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add token.txt
-          git commit -m "Update token" || echo "No changes to commit"
+          git commit -m "Update token automatically" || echo "No changes to commit"
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
