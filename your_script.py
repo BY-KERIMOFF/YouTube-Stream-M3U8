@@ -1,10 +1,8 @@
 import os
+import re
 import requests
 import zipfile
-import json
-import re
 import platform
-import shutil
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -13,6 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 def get_chrome_version():
+    """Google Chrome versiyasını tapır."""
     try:
         if platform.system() == "Windows":
             import winreg
@@ -21,14 +20,12 @@ def get_chrome_version():
                 version, _ = winreg.QueryValueEx(key, "version")
                 return version
         elif platform.system() == "Linux":
-            import subprocess
-            result = subprocess.run(["google-chrome", "--version"], capture_output=True, text=True)
-            version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
+            result = os.popen("google-chrome-stable --version").read()
+            version_match = re.search(r"(\d+\.\d+\.\d+)", result)
             return version_match.group(1) if version_match else None
         elif platform.system() == "Darwin":  # macOS
-            import subprocess
-            result = subprocess.run(["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "--version"], capture_output=True, text=True)
-            version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
+            result = os.popen("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --version").read()
+            version_match = re.search(r"(\d+\.\d+\.\d+)", result)
             return version_match.group(1) if version_match else None
         else:
             return None
@@ -36,41 +33,63 @@ def get_chrome_version():
         print(f"Chrome versiyası tapılmadı: {e}")
         return None
 
-def download_chromedriver():
-    chrome_version = get_chrome_version()
+def download_chromedriver(chrome_version):
+    """ChromeDriver-i avtomatik yükləyir və quraşdırır."""
     if not chrome_version:
         print("Chrome versiyası tapılmadı!")
-        return
+        return None
 
     major_version = chrome_version.split(".")[0]
     os_type = "win64" if platform.system() == "Windows" else "linux64" if platform.system() == "Linux" else "mac64"
-    chromedriver_url = f"https://storage.googleapis.com/chrome-for-testing-public/{major_version}.0.0.0/{os_type}/chromedriver-{os_type}.zip"
-    zip_path = "chromedriver.zip"
+    chromedriver_url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{major_version}"
     
-    print("ChromeDriver yüklənir...")
-    response = requests.get(chromedriver_url)
-    if response.status_code == 200:
+    try:
+        # ChromeDriver versiyasını tap
+        response = requests.get(chromedriver_url)
+        if response.status_code != 200:
+            print(f"ChromeDriver versiyası tapılmadı: {response.text}")
+            return None
+        chromedriver_version = response.text.strip()
+        print(f"ChromeDriver versiyası: {chromedriver_version}")
+
+        # ChromeDriver-i yüklə
+        download_url = f"https://chromedriver.storage.googleapis.com/{chromedriver_version}/chromedriver_{os_type}.zip"
+        print(f"ChromeDriver yüklənir: {download_url}")
+        response = requests.get(download_url)
+        if response.status_code != 200:
+            print(f"ChromeDriver yüklənmədi: {response.status_code}")
+            return None
+
+        # Zip faylını çıxart
+        zip_path = "chromedriver.zip"
         with open(zip_path, "wb") as file:
             file.write(response.content)
-        print("ChromeDriver uğurla yükləndi.")
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall("chrome_driver")
         os.remove(zip_path)
+
+        # ChromeDriver faylını icazələndir
         chromedriver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe" if platform.system() == "Windows" else "chromedriver")
         os.chmod(chromedriver_path, 0o755)
-    else:
-        print("ChromeDriver yükləmə xətası! Versiya tapılmadı.")
+        print(f"ChromeDriver quraşdırıldı: {chromedriver_path}")
+        return chromedriver_path
+    except Exception as e:
+        print(f"ChromeDriver yüklənmə xətası: {e}")
+        return None
 
 def get_m3u8_from_network():
+    """M3U8 linkini tapır."""
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     
-    chromedriver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe" if platform.system() == "Windows" else "chromedriver")
-    if not os.path.exists(chromedriver_path):
-        download_chromedriver()
+    chrome_version = get_chrome_version()
+    chromedriver_path = download_chromedriver(chrome_version)
+    if not chromedriver_path:
+        print("ChromeDriver quraşdırılmadı!")
+        return None
 
     service = Service(chromedriver_path)
     driver = webdriver.Chrome(service=service, options=options)
