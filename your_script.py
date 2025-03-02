@@ -5,7 +5,6 @@ import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -19,8 +18,11 @@ def get_m3u8_from_network():
         options.add_argument("--disable-dev-shm-usage")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
-        # ChromeDriverManager ilə doğru versiyanı avtomatik yükləyirik
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        # ChromeDriver yolu
+        chrome_driver_path = "/path/to/chromedriver"  # Burada doğru yolu daxil edin
+
+        # WebDriver'ı yükləmək
+        driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
         url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
         driver.get(url)
 
