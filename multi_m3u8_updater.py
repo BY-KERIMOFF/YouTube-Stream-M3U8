@@ -112,21 +112,18 @@ def fetch_m3u8_links_from_api(api_url, headers):
     try:
         response = requests.get(api_url, headers=headers, timeout=10)
         if response.status_code == 200:
-            data = response.json()
-            if "playlist" in data and isinstance(data["playlist"], list):
-                m3u8_links = set()
-                for item in data["playlist"]:
-                    if "file" in item and ".m3u8" in item["file"]:
-                        m3u8_links.add(item["file"])
-                if m3u8_links:
-                    logging.info(f"API-dən {len(m3u8_links)} M3U8 linki tapıldı.")
-                    return m3u8_links
-                else:
-                    logging.warning("API-də M3U8 linki tapılmadı.")
-                    return set()
+            # API-cərvəzində `.m3u8` linklərini axtar
+            data = response.text
+            m3u8_links = set(re.findall(r'(https?://[^\s]+\?tkn=[^&]+&tms=\d+)', data))
+            if m3u8_links:
+                logging.info(f"API-dən {len(m3u8_links)} M3U8 linki tapıldı.")
+                return m3u8_links
             else:
-                logging.warning("API-cərvəzində playlist məlumatları tapılmadı.")
+                logging.warning("API-cərvəzində M3U8 linki tapılmadı.")
                 return set()
+        else:
+            logging.warning(f"API reqesti uğursuz oldu ({response.status_code}).")
+            return set()
     except Exception as e:
         logging.error(f"API reqestindən M3U8 linklərini əldə edilərkən xəta: {e}")
         return set()
@@ -140,27 +137,6 @@ def get_all_channel_links(driver, url):
         driver.get(url)
         logging.info(f"Səhifə yükləndi: {url}")
 
-        # Iframe varsa, ona keçid edir
-        try:
-            WebDriverWait(driver, CONFIG["iframe_wait_time"]).until(
-                EC.presence_of_element_located((By.TAG_NAME, "iframe"))
-            )
-            iframes = driver.find_elements(By.TAG_NAME, "iframe")
-            if iframes:
-                driver.switch_to.frame(iframes[0])
-                logging.info("Iframe-ə keçid edildi.")
-        except Exception as e:
-            logging.warning(f"Iframe tapılmadı ({url}), doğrudan video elementinə keçilir.")
-
-        # Video elementini gözləyir
-        try:
-            WebDriverWait(driver, CONFIG["video_wait_time"]).until(
-                EC.presence_of_element_located((By.TAG_NAME, "video"))
-            )
-            logging.info("Video elementi tapıldı.")
-        except Exception as e:
-            logging.warning(f"Video elementi tapılmadı ({url}), yalnız şəbəkə loglarından axtarılır.")
-
         # İlkin `.m3u8` linklərini şəbəkə loglarından tap
         m3u8_links = get_m3u8_links_from_network_logs(driver)
 
@@ -170,7 +146,7 @@ def get_all_channel_links(driver, url):
 
         # Əgər linklər hələ də tapılmasa, API reqestindən axtar
         if not m3u8_links:
-            api_url = "https://prd.jwpcdn.com/player/v/8.34.0/provider.hlsjs.js"
+            api_url = "https://platform-api.sharethis.com/js/sharethis.js"
             headers = {
                 "Referer": url,
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
