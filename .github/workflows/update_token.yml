@@ -11,10 +11,10 @@ jobs:
     
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3  # V3 versiyasını istifadə edirik
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4  # Python setup üçün yeni versiya
       with:
         python-version: '3.9'  # Python versiyasını buraya uyğun olaraq dəyişə bilərsiz
 
@@ -27,7 +27,7 @@ jobs:
         python update_token.py  # Skriptin adını buraya daxil edin
 
     - name: Upload the updated URL as an artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3  # Yeni versiya v3 istifadə edilir
       with:
         name: updated-url
         path: tv.txt  # Faylın adı, yəni tv.txt faylını göndəririk
