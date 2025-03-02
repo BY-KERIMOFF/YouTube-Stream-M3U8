@@ -1,13 +1,17 @@
-name: Update Token Link
+name: Install ChromeDriver
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  update-token:
+  install-chromedriver:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -22,7 +26,7 @@ jobs:
     - name: Install Google Chrome
       run: sudo apt-get install -y google-chrome-stable
 
-    - name: Download ChromeDriver
+    - name: Install ChromeDriver
       run: |
         CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
         MAJOR_MINOR_CHROME_VERSION=$(echo $CHROME_VERSION | cut -d. -f1-2)
@@ -30,7 +34,7 @@ jobs:
 
         # Fallback to latest available ChromeDriver if specific version is not found
         CHROMEDRIVER_VERSION=$(curl -sS "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$MAJOR_MINOR_CHROME_VERSION")
-        
+
         # If specific version not found, fallback to the latest version available
         if [ -z "$CHROMEDRIVER_VERSION" ]; then
           echo "Warning: ChromeDriver version for Chrome $CHROME_VERSION not found. Downloading the latest available ChromeDriver."
@@ -38,11 +42,11 @@ jobs:
         fi
 
         echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
-        
+
         # Download and install ChromeDriver
         wget -N "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
         unzip chromedriver_linux64.zip -d /usr/local/bin/
         rm chromedriver_linux64.zip
 
-    - name: Run script
+    - name: Run Python Script
       run: python script.py
