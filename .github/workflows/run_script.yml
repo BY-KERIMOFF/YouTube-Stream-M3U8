@@ -1,0 +1,28 @@
+name: Run Python Script
+
+on:
+  push:
+    branches:
+      - main  # Main branch-a push edildikdə işə düşəcək
+  schedule:
+    - cron: "0 * * * *"  # Hər saat başı çalışsın
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium pygithub
+
+      - name: Run script
+        run: python get_m3u8_link.py  # Skriptin adı
