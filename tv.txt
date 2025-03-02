@@ -1,1 +1,1 @@
-https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={new_token}&tms=1740960002
+https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=MPRTc1MD3Wqj-9bTCnjL3w&tms=1740962573
