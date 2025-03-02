@@ -3,10 +3,10 @@ name: Run Python Script with Chrome
 on:
   push:
     branches:
-      - main  # Əsas branch üzərində işlədikdə işə düşür
+      - main
   pull_request:
     branches:
-      - main  # PR olduqda işə düşür
+      - main
 
 jobs:
   build:
@@ -21,7 +21,7 @@ jobs:
       - name: Python-u quraşdır
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Python versiyasını tələblərinizə uyğun dəyişdirin
+          python-version: '3.9'
 
       # 3. Sistem paketlərini yenilə
       - name: Sistem paketlərini yenilə
@@ -36,21 +36,27 @@ jobs:
           sudo apt update
           sudo apt install -y google-chrome-stable
 
-      # 5. ChromeDriver quraşdır
+      # 5. Chrome versiyasını tap
+      - name: Chrome versiyasını tap
+        run: |
+          CHROME_VERSION=$(dpkg -s google-chrome-stable | grep 'Version' | awk '{print $2}' | cut -d'.' -f1)
+          echo "Chrome Major Version: $CHROME_VERSION"
+
+      # 6. ChromeDriver quraşdır
       - name: ChromeDriver quraşdır
         run: |
-          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d'.' -f1)
           CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
+          echo "ChromeDriver Version: $CHROMEDRIVER_VERSION"
           wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/chromedriver
           sudo chmod +x /usr/local/bin/chromedriver
           rm chromedriver_linux64.zip
 
-      # 6. Asılılıqları quraşdır
+      # 7. Asılılıqları quraşdır
       - name: Asılılıqları quraşdır
         run: pip install -r requirements.txt
 
-      # 7. Skripti işə sal
+      # 8. Skripti işə sal
       - name: Skripti işə sal
         run: python your_script.py  # Skriptinizin adını dəyişdirin
