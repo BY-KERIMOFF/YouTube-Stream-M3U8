@@ -1,4 +1,4 @@
-name: Ecanlitvizle M3U8 Updater
+name: Multi M3U8 Updater
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:  # Manüel işə salmaq üçün
 
 jobs:
-  update-ecanlitvizle-channels:
+  update-multi-channels:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,9 +33,9 @@ jobs:
           chrome-version: stable
 
       # Skripti işə salın
-      - name: Run Ecanlitvizle M3U8 Links Updater Script
+      - name: Run Multi M3U8 Links Updater Script
         run: |
-          python ecanlitvizle_m3u8_updater.py
+          python multi_m3u8_updater.py
 
       # Faylları güncəlləyin və commit edin
       - name: Commit changes
@@ -45,7 +45,7 @@ jobs:
           if git diff --quiet; then
             echo "No changes to commit."
           else
-            git add ecanlitvizle_channels.txt
-            git commit -m "Update Ecanlitvizle channels M3U8 links" || echo "No changes to commit"
+            git add multi_channels.txt
+            git commit -m "Update Multi channels M3U8 links" || echo "No changes to commit"
             git push
           fi
