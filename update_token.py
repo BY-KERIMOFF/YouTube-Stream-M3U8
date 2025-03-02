@@ -1,54 +1,47 @@
-import re
+import time
 import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+import re
 
-# URL-ni uyğun olaraq dəyişin
-url = 'https://www.ecanlitvizle.app/xezer-tv-canli-izle/'
+# Selenium ilə Chrome'u başlat
+options = Options()
+options.headless = True  # Başsız rejimdə işləsin
+service = Service(executable_path="/path/to/chromedriver")  # chromedriver yolunu daxil et
+driver = webdriver.Chrome(service=service, options=options)
 
-# Saytdan məlumatları alırıq
-response = requests.get(url)
+# Sayta gedək
+url = "https://www.ecanlitvizle.app/kucukcekmece-mobese-canli-izle/"
+driver.get(url)
 
-# Cavabın düzgünlüyünü yoxlayaq
-if response.status_code == 200:
-    html_content = response.text
+# Saytın yüklənməsini gözləyək
+time.sleep(5)
 
-    # HTML məzmununu BeautifulSoup ilə analiz edirik
-    soup = BeautifulSoup(html_content, 'html.parser')
-    
-    # URL-ləri tapmaq üçün bütün <a> etiketlərini seçirik
-    links = soup.find_all('a', href=True)
+# Saytın HTML məzmununu əldə et
+page_source = driver.page_source
+soup = BeautifulSoup(page_source, "html.parser")
 
-    # Hər bir linki yoxlayaq
-    old_token_found = False
-    for link in links:
-        # URL-lərdə tkn= olduğunu tapmağa çalışırıq
-        old_token_match = re.search(r'tkn=([A-Za-z0-9_-]+)', link['href'])
-        
-        if old_token_match:
-            old_token = old_token_match.group(1)
-            print(f"Köhnə token tapıldı: {old_token}")
-            
-            # Yeni token əlavə edirik
-            new_token = "NEW_TOKEN_HERE"  # Burada yeni token-i tapmalısınız
-            new_link = link['href'].replace(old_token, new_token)
-            print(f"Yeni link: {new_link}")
+# Tokeni tapmaq üçün müvafiq HTML elementini tap
+token_pattern = r'tkn=([a-zA-Z0-9]+)'
+token_match = re.search(token_pattern, page_source)
 
-            # Yeni linki faylda yazın
-            with open("tv.txt", "w") as f:
-                f.write(new_link)
-            print("Yeni link tv.txt faylında yazıldı!")
-            
-            old_token_found = True
-            break
+if token_match:
+    token = token_match.group(1)
+    print(f"Köhnə token tapıldı: {token}")
 
-    if not old_token_found:
-        print("Köhnə token tapılmadı.")
-        # Token tapılmadıqda boş fayl yazın
-        with open("tv.txt", "w") as f:
-            f.write("No token found!")
-        print("Heç bir token tapılmadı, boş məlumat tv.txt faylında saxlanıldı.")
+    # Yeni token tapıldısa, onu tv.txt faylında qeyd edirik
+    new_token = "NEW_TOKEN_HERE"  # Burada yeni token tapılacaq, lazım gələrsə skripti tənzimləyin
+    new_url = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={new_token}&tms=1740960002"
+
+    with open("tv.txt", "w") as file:
+        file.write(new_url)
+    print(f"Yeni token: {new_token}")
+    print(f"Yeni link: {new_url}")
 else:
-    print("Saytla əlaqə qurulmadı.")
-    with open("tv.txt", "w") as f:
-        f.write("Failed to fetch URL")
-    print("Saytla əlaqə qurulmadı, səhv mesajı tv.txt faylında saxlanıldı.")
+    print("Token tapılmadı")
+
+# Brauzeri bağla
+driver.quit()
