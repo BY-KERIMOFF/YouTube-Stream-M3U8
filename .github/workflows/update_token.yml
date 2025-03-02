@@ -33,17 +33,21 @@ jobs:
         run: |
           python scraper.py
 
-      # Check if channels.m3u exists and upload it
-      - name: Upload channels.m3u artifact if exists
-        if: ${{ exists('channels.m3u') }}
+      # Check if channels.m3u exists, then upload artifact
+      - name: Check if channels.m3u exists
+        id: check_file
+        run: |
+          if [ -f "./channels.m3u" ]; then
+            echo "channels.m3u exists"
+          else
+            echo "channels.m3u not found!"
+            exit 1
+          fi
+
+      # Upload channels.m3u artifact if it exists
+      - name: Upload channels.m3u artifact
+        if: ${{ steps.check_file.outputs.exists == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: channels-m3u
           path: channels.m3u
-
-      # If the file doesn't exist, fail the workflow
-      - name: Fail if channels.m3u not found
-        if: ${{ !exists('channels.m3u') }}
-        run: |
-          echo "channels.m3u file not found!"
-          exit 1
