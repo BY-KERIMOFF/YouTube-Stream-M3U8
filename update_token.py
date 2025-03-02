@@ -21,8 +21,8 @@ else:
     exit()
 
 # Əsas URL-i yeniləyirik
-old_url = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=NEW_TOKEN_HERE&tms=1740960002"
-new_url = old_url.replace("NEW_TOKEN_HERE", new_token)
+old_url = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=Fh2F2HhcbuZaxDX8hYPQqQ&tms=1740960002"
+new_url = old_url.replace("Fh2F2HhcbuZaxDX8hYPQqQ", new_token)
 
 print(f"Yeni URL: {new_url}")
 
