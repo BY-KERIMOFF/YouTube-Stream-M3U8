@@ -14,11 +14,11 @@ jobs:
     steps:
       # Kodunuzu GitHub reposundan çəkin
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # actions/checkout@v3 istifadə edin
 
       # Python mühitini qurun
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4  # actions/setup-python@v4 istifadə edin
         with:
           python-version: '3.x'  # Python 3.x versiyasını istifadə edin
 
@@ -26,21 +26,28 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt  # requirements.txt faylını istifadə edirik
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt  # requirements.txt faylı varsa quraşdır
+          fi
 
       # Google Chrome-u quraşdırın
       - name: Install Google Chrome
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y google-chrome-stable  # Chrome yükləyirik
+          sudo apt-get install -y wget unzip
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update -y
+          sudo apt-get install -y google-chrome-stable
 
       # ChromeDriver-ı quraşdırın
       - name: Install ChromeDriver
         run: |
-          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | sed 's/\..*//')  # Chrome versiyasını alırıq
-          wget https://chromedriver.storage.googleapis.com/113.0.5672.63/chromedriver_linux64.zip  # Uyğun ChromeDriver versiyasını yükləyirik
+          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d'.' -f1)
+          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
+          wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/  # ChromeDriver-ı sistemə yerləşdiririk
+          sudo mv chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
 
       # Python skriptini işə salın
