@@ -24,9 +24,9 @@ jobs:
 
     - name: Download ChromeDriver
       run: |
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+' | head -1)
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+')
         echo "Chrome version: $CHROME_VERSION"
-        CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION | head -1)
+        CHROMEDRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
         if [ -z "$CHROMEDRIVER_VERSION" ]; then
           echo "Error: Unable to find ChromeDriver version for Chrome $CHROME_VERSION"
           exit 1
