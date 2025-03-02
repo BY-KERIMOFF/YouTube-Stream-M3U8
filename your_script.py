@@ -19,6 +19,7 @@ def get_m3u8_from_network():
         options.add_argument("--disable-dev-shm-usage")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
+        # ChromeDriverManager ilə doğru versiyanı avtomatik yükləyirik
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
         driver.get(url)
