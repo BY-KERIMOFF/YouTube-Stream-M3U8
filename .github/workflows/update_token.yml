@@ -1,33 +1,38 @@
-name: Update Token Workflow
+import re
+import requests
 
-on:
-  schedule:
-    - cron: '*/5 * * * *'  # Hər 5 dəqiqədə bir işə salınır
-  workflow_dispatch:  # İstənilən zaman işə sala bilərsiz
+# Yeni tokeni əldə etmək üçün URL
+url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
 
-jobs:
-  update-token-job:
-    runs-on: ubuntu-latest
+# tv.txt faylını oxumaq
+with open('tv.txt', 'r') as file:
+    content = file.read()
+
+# Köhnə tokeni tapmaq üçün regular expression istifadə edirik
+match = re.search(r'tkn=([a-zA-Z0-9]+)', content)
+
+if match:
+    old_token = match.group(1)
+    print(f"Köhnə token tapıldı: {old_token}")
     
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3  # V3 versiyasını istifadə edirik
+    # Yeni tokeni əldə etmək üçün URL-i sorğu edirik
+    response = requests.get(url)
+    
+    # Burada, yeni tokeni müvafiq yerdən götürmək lazımdır. Misal üçün:
+    # Yeni tokenin HTML səhifəsindən əldə edilməsi
+    new_token = "NEW_TOKEN_HERE"  # Burada 'NEW_TOKEN_HERE' ilə yeni tokeni əvəz edin.
 
-    - name: Set up Python
-      uses: actions/setup-python@v4  # Python setup üçün yeni versiya
-      with:
-        python-version: '3.9'  # Python versiyasını buraya uyğun olaraq dəyişə bilərsiz
+    # Köhnə tokeni yeni token ilə dəyişdiririk
+    new_content = content.replace(f'tkn={old_token}', f'tkn={new_token}')
+    
+    # Yeni linki və yeni tokeni ekrana yazdırmaq
+    print(f"Yeni token: {new_token}")
+    print(f"Yeni link: {new_content.splitlines()[0]}")  # İlk sətirdə link varsa
 
-    - name: Install Dependencies
-      run: |
-        pip install -r requirements.txt
-
-    - name: Run the update token script
-      run: |
-        python update_token.py  # Skriptin adını buraya daxil edin
-
-    - name: Upload the updated URL as an artifact
-      uses: actions/upload-artifact@v4  # V4 versiyası
-      with:
-        name: updated-url
-        path: tv.txt  # Faylın adı, yəni tv.txt faylını göndəririk
+    # tv.txt faylını yenidən yazmaq
+    with open('tv.txt', 'w') as file:
+        file.write(new_content)
+    
+    print("Yeni link tv.txt faylında yazıldı!")
+else:
+    print("Köhnə token tapılmadı.")
