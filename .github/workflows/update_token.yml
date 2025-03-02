@@ -36,35 +36,10 @@ jobs:
           sudo apt update
           sudo apt install -y google-chrome-stable
 
-      # 5. Chrome versiyasını tap
-      - name: Chrome versiyasını tap
-        run: |
-          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d'.' -f1)
-          if [ -z "$CHROME_VERSION" ]; then
-            echo "Xəta: Chrome versiyası tapılmadı!"
-            exit 1
-          fi
-          echo "Chrome Major Version: $CHROME_VERSION"
-
-      # 6. ChromeDriver quraşdır
-      - name: ChromeDriver quraşdır
-        run: |
-          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
-          if [[ "$CHROMEDRIVER_VERSION" == *"Error"* ]]; then
-            echo "Xəta: ChromeDriver versiyası tapılmadı!"
-            exit 1
-          fi
-          echo "ChromeDriver Version: $CHROMEDRIVER_VERSION"
-          wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
-          rm chromedriver_linux64.zip
-
-      # 7. Asılılıqları quraşdır
+      # 5. Asılılıqları quraşdır
       - name: Asılılıqları quraşdır
         run: pip install -r requirements.txt
 
-      # 8. Skripti işə sal
+      # 6. Skripti işə sal
       - name: Skripti işə sal
         run: python your_script.py  # Skriptinizin adını dəyişdirin
