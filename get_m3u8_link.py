@@ -1,9 +1,14 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-# Selenium WebDriver setup
-driver = webdriver.Chrome(executable_path='/path/to/chromedriver')  # ChromeDriver'ı müvafiq yol ilə dəyiş
+# ChromeDriver konfiqurasiyası
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service)
+
+# Saytın açılması
 driver.get('https://www.ecanlitvizle.app/xezer-tv-canli-izle/')
 
 # Sayfanın yüklənməsini gözləyin
