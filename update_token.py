@@ -16,16 +16,23 @@ if response.status_code == 200:
         old_token = old_token_match.group(1)
         print(f"Köhnə token tapıldı: {old_token}")
         
-        # Yeni tokeni tap (bu addımda, sənin saytında necə token əldə edildiyini göstərən kod əlavə etməlisən)
+        # Yeni tokeni tap (bu addımda, sənin saytında necə token əldə edildiyini göstərən kod əlavə etməlisiniz)
         new_token = "NEW_TOKEN_HERE"  # Burada yeni tokeni əldə etməli və onu istifadə etməlisiniz
         new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={new_token}&tms=1740960002"
         print(f"Yeni link: {new_link}")
 
-        # Faylı yaz
+        # Faylı yaz (hər halda yazacaq)
         with open("tv.txt", "w") as f:
             f.write(new_link)
         print("Yeni link tv.txt faylında yazıldı!")
     else:
         print("Köhnə token tapılmadı.")
+        # Əgər heç bir token tapılmasa da, tv.txt faylını yenilə
+        with open("tv.txt", "w") as f:
+            f.write("No token found!")
+        print("Heç bir token tapılmadı, boş məlumat tv.txt faylında saxlanıldı.")
 else:
     print("Saytla əlaqə qurulmadı.")
+    with open("tv.txt", "w") as f:
+        f.write("Failed to fetch URL")
+    print("Saytla əlaqə qurulmadı, səhv mesajı tv.txt faylında saxlanıldı.")
