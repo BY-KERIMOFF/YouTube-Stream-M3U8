@@ -14,12 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Chrome və ChromeDriver-ı yükləyin
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: stable
-
       # Python və Selenium quraşdırın
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -32,6 +26,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install selenium webdriver-manager
 
+      # Chrome və ChromeDriver-ı yükləyin
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
       # Skripti işə salın
       - name: Run Yoda M3U8 Links Updater Script
         run: |
@@ -41,3 +41,11 @@ jobs:
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          if git diff --quiet; then
+            echo "No changes to commit."
+          else
+            git add yoda_channels.txt
+            git commit -m "Update Yoda channels M3U8 links" || echo "No changes to commit"
+            git push
+          fi
