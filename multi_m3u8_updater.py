@@ -11,10 +11,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Konfiqurasiya parametrləri
 CONFIG = {
-    "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/3/",  # Kanalların siyahısını almaq üçün URL
+    "urls": [
+        "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
+        "https://www.ecanlitvizle.app/xezer-tv-canli-izle/3/"
+    ],  # Kanalların siyahısını almaq üçün URL-lər
     "iframe_wait_time": 20,  # Iframe yüklənməsi üçün gözləmə vaxtı (saniyə)
     "video_wait_time": 30,  # Video elementinin yüklənməsi üçün gözləmə vaxtı (saniyə)
-    "log_file": "ecanlitvizle_channels.txt",  # Linklərin yazılacağı fayl adı
+    "log_file": "multi_channels.txt",  # Linklərin yazılacağı fayl adı
 }
 
 # Logging konfiqurasiyası
@@ -41,13 +44,13 @@ def setup_driver():
     return driver
 
 
-def get_all_channel_links(driver):
+def get_all_channel_links(driver, url):
     """
-    ecanlitvizle saytından bütün kanalların `.m3u8` linklərini tapır.
+    Verilmiş URL-dən bütün kanalların `.m3u8` linklərini tapır.
     """
     try:
-        driver.get(CONFIG["url"])
-        logging.info(f"Səhifə yükləndi: {CONFIG['url']}")
+        driver.get(url)
+        logging.info(f"Səhifə yükləndi: {url}")
 
         # Iframe varsa, ona keçid edir
         try:
@@ -59,7 +62,7 @@ def get_all_channel_links(driver):
                 driver.switch_to.frame(iframes[0])
                 logging.info("Iframe-ə keçid edildi.")
         except Exception as e:
-            logging.warning("Iframe tapılmadı, doğrudan video elementinə keçilir.")
+            logging.warning(f"Iframe tapılmadı ({url}), doğrudan video elementinə keçilir.")
 
         # Video elementini gözləyir
         try:
@@ -68,7 +71,7 @@ def get_all_channel_links(driver):
             )
             logging.info("Video elementi tapıldı.")
         except Exception as e:
-            logging.warning("Video elementi tapılmadı, yalnız şəbəkə loglarından axtarılır.")
+            logging.warning(f"Video elementi tapılmadı ({url}), yalnız şəbəkə loglarından axtarılır.")
 
         # Şəbəkə loglarından `.m3u8` linklərini tap
         logs = driver.get_log("performance")
@@ -83,14 +86,14 @@ def get_all_channel_links(driver):
                     m3u8_links.add(url)
 
         if m3u8_links:
-            logging.info(f"Toplam {len(m3u8_links)} M3U8 linki tapıldı.")
+            logging.info(f"{url} - Toplam {len(m3u8_links)} M3U8 linki tapıldı.")
         else:
-            logging.warning("Heç bir M3U8 linki tapılmadı.")
+            logging.warning(f"{url} - Heç bir M3U8 linki tapılmadı.")
 
         return list(m3u8_links)
 
     except Exception as e:
-        logging.error(f"M3U8 linklərini əldə edilərkən xəta: {e}")
+        logging.error(f"{url} - M3U8 linklərini əldə edilərkən xəta: {e}")
         return []
 
 
@@ -124,19 +127,23 @@ def update_m3u8_links_if_changed(new_links, file_path):
 
 def main():
     """
-    Ana funksiya: Bütün kanalların `.m3u8` linklərini tapır və `.txt` faylına yazır.
+    Ana funksiya: Bütün URL-lərdən `.m3u8` linklərini tapır və `.txt` faylına yazır.
     """
     # ChromeDriver setup
     driver = setup_driver()
 
-    # `.m3u8` linklərini tap
-    m3u8_links = get_all_channel_links(driver)
+    all_m3u8_links = []
+
+    # Hər bir URL üçün `.m3u8` linklərini tap
+    for url in CONFIG["urls"]:
+        m3u8_links = get_all_channel_links(driver, url)
+        all_m3u8_links.extend(m3u8_links)
 
     # Linklər tapıldısa fayl yaradılacaq
-    if m3u8_links:
-        updated = update_m3u8_links_if_changed(m3u8_links, CONFIG["log_file"])
+    if all_m3u8_links:
+        updated = update_m3u8_links_if_changed(all_m3u8_links, CONFIG["log_file"])
         if updated:
-            logging.info(f"{len(m3u8_links)} M3U8 linki fayla yazıldı: {CONFIG['log_file']}")
+            logging.info(f"{len(all_m3u8_links)} M3U8 linki fayla yazıldı: {CONFIG['log_file']}")
     else:
         logging.warning("Heç bir M3U8 linki tapılmadı, fayl boşdur.")
 
