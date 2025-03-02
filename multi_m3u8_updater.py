@@ -137,9 +137,9 @@ def get_all_channel_links(driver, url):
         driver.get(url)
         logging.info(f"Səhifə yükləndi: {url}")
 
-        # iframe varsa, onları da yükləmək üçün gözləyirik
-        WebDriverWait(driver, CONFIG["iframe_wait_time"]).until(
-            EC.presence_of_all_elements_located((By.TAG_NAME, "iframe"))
+        # Sayfanın tam yüklənməsini gözləmək
+        WebDriverWait(driver, CONFIG["video_wait_time"]).until(
+            EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
 
         # İlkin `.m3u8` linklərini şəbəkə loglarından tap
