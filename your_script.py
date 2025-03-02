@@ -1,7 +1,9 @@
+import os
+import requests
+import zipfile
 import time
 import json
 import re
-import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -9,6 +11,31 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+# 🔄 ChromeDriver yükləyən funksiya
+def download_chromedriver():
+    try:
+        chrome_driver_url = "https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/win64/chrome-win64.zip"
+        chrome_driver_zip = "chrome-win64.zip"
+        
+        # Yükləmə əməliyyatı
+        print("ChromeDriver yüklənir...")
+        response = requests.get(chrome_driver_url)
+        if response.status_code == 200:
+            with open(chrome_driver_zip, "wb") as file:
+                file.write(response.content)
+            print("ChromeDriver uğurla yükləndi.")
+            
+            # Yüklənmiş faylı çıxarırıq
+            with zipfile.ZipFile(chrome_driver_zip, 'r') as zip_ref:
+                zip_ref.extractall("chrome_driver")
+            print("ChromeDriver çıxarıldı.")
+            os.remove(chrome_driver_zip)  # Yüklənmiş zip faylını silirik
+            print("Yüklənmiş zip faylı silindi.")
+        else:
+            print(f"Yükləmə zamanı xəta baş verdi. Status kodu: {response.status_code}")
+    except Exception as e:
+        print(f"ChromeDriver yükləmə xətası: {e}")
 
 # 🔎 M3U8 linkini tapmaq üçün network traffic-i yoxlayan funksiya
 def get_m3u8_from_network():
@@ -19,11 +46,8 @@ def get_m3u8_from_network():
         options.add_argument("--disable-dev-shm-usage")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
-        # WebDriver-ı yükləmək
-        service = Service(ChromeDriverManager().install())
-
-        # WebDriver ilə ChromeDriver-ı işə salmaq
-        driver = webdriver.Chrome(service=service, options=options)
+        chrome_driver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe")  # Yüklənmiş chrome driver
+        driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
         url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
         driver.get(url)
 
@@ -103,6 +127,9 @@ def write_to_local_file(m3u8_link):
 
 # 🔄 Əsas işləyən funksiya
 def main():
+    # ChromeDriver yükləyirik
+    download_chromedriver()
+
     # Yeni tokeni daxil et
     new_token = "NrfHQG16Bk4Qp4yo0YWCaQ"  # Yenilənməli olan token
 
