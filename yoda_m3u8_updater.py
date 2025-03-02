@@ -11,7 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Konfiqurasiya parametrləri
 CONFIG = {
-    "url": "https://yoda.az",  # Kanalların siyahısını almaq üçün URL
+    "url": "https://www.ecanlitvizle.app/",  # Kanalların siyahısını almaq üçün URL
     "wait_time": 60,  # Sayt yüklənməsi üçün gözləmə vaxtı (saniyə)
     "log_file": "yoda_channels.txt",  # Linklərin yazılacağı fayl adı
 }
