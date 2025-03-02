@@ -31,8 +31,8 @@ jobs:
         CHROMEDRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
         echo "Downloading Chromedriver for version $CHROME_VERSION from: $CHROMEDRIVER_URL"
         wget "$CHROMEDRIVER_URL" -O chromedriver-linux64.zip
-        unzip chromedriver-linux64.zip
-        sudo mv chromedriver /usr/local/bin/
+        unzip chromedriver-linux64.zip -d chromedriver-linux64
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
 
     - name: Verify Chromedriver Installation
