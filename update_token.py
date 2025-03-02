@@ -10,7 +10,10 @@ response = requests.get(url)
 # Əgər düzgün cavab alınarsa, tokeni tapmaq
 if response.status_code == 200:
     html_content = response.text
-    old_token_match = re.search(r'tkn=([A-Za-z0-9]+)', html_content)
+    print(html_content)  # HTML məzmununu yoxla, buradakı çıxışı sənə daha yaxşı yardım edəcək
+    
+    # Tokeni tapmaq üçün regex istifadə edirik
+    old_token_match = re.search(r'tkn=([A-Za-z0-9_-]+)', html_content)  # Daha geniş regex
     
     if old_token_match:
         old_token = old_token_match.group(1)
@@ -18,7 +21,7 @@ if response.status_code == 200:
         
         # Yeni tokeni tap (bu addımda, sənin saytında necə token əldə edildiyini göstərən kod əlavə etməlisiniz)
         new_token = "NEW_TOKEN_HERE"  # Burada yeni tokeni əldə etməli və onu istifadə etməlisiniz
-        new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=MPRTc1MD3Wqj-9bTCnjL3w&tms=1740962573"
+        new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={new_token}&tms=1740960002"
         print(f"Yeni link: {new_link}")
 
         # Faylı yaz (hər halda yazacaq)
