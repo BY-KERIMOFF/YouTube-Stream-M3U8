@@ -27,7 +27,7 @@ jobs:
         python scraper.py
 
     - name: Upload M3U file as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: m3u-links
         path: channels.m3u
