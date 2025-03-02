@@ -46,8 +46,13 @@ def get_m3u8_from_network():
         options.add_argument("--disable-dev-shm-usage")
         options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
+        # ChromeDriver-ın tam yolunu burada göstəririk
         chrome_driver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe")  # Yüklənmiş chrome driver
-        driver = webdriver.Chrome(executable_path=chrome_driver_path, options=options)
+
+        # PATH-inə `chromedriver.exe`-i əlavə edirik
+        os.environ["PATH"] += os.pathsep + os.path.join(os.getcwd(), "chrome_driver")
+
+        driver = webdriver.Chrome(service=Service(chrome_driver_path), options=options)
         url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
         driver.get(url)
 
