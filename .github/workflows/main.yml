@@ -1,4 +1,4 @@
-name: Update Token Automatically
+name: Update Token Daily with Selenium
 
 on:
   schedule:
