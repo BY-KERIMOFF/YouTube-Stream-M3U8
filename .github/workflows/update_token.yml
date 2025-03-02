@@ -1,56 +1,35 @@
-name: Run Python Script with Chrome
+name: Ecanlitvizle Scraper
 
 on:
   push:
     branches:
-      - main
+      - main  # Yalnız main branch-a push edildikdə çalışacaq
   pull_request:
     branches:
-      - main
+      - main  # Main branch-da PR açıldıqda da çalışacaq
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  run_scraper:
+    runs-on: ubuntu-latest  # İşin Linux-da çalışmasını təmin edir
     steps:
-      # 1. Repozitorini klonla
-      - name: Repozitorini klonla
-        uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v2  # Repodakı kodu götürür
 
-      # 2. Python-u quraşdır
-      - name: Python-u quraşdır
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.9'  # Python 3.9 versiyasını istifadə edirik
 
-      # 3. Sistem paketlərini yenilə
-      - name: Sistem paketlərini yenilə
-        run: sudo apt update
-
-      # 4. Google Chrome və ChromeDriver quraşdır
-      - name: Google Chrome və ChromeDriver quraşdır
+      - name: Install dependencies
         run: |
-          wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip
-          unzip chrome-linux64.zip
-          chmod +x chrome-linux64/chrome
+          pip install -r requirements.txt  # Tələb olunan kitabxanaları yükləyir
 
-          wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
-          unzip chromedriver-linux64.zip
-          chmod +x chromedriver-linux64/chromedriver
-
-      # 5. Asılılıqları quraşdır
-      - name: Asılılıqları quraşdır
-        run: pip install -r requirements.txt
-
-      # 6. Skripti işə sal
-      - name: Skripti işə sal
-        run: python your_script.py  # Skriptinizin adını dəyişdirin
-
-      # 7. Faylı GitHub-a yüklə
-      - name: Faylı GitHub-a yüklə
+      - name: Run scraper script
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add token.txt
-          git commit -m "M3U8 linki yeniləndi"
-          git push
+          python scraper.py  # Skripti işlədir
+
+      - name: Upload M3U file
+        uses: actions/upload-artifact@v2
+        with:
+          name: channels-m3u
+          path: channels.m3u  # Skript işlədildikdən sonra yaranan M3U faylını yükləyir
