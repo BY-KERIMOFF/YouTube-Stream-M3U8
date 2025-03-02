@@ -21,26 +21,10 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Sistem paketlərini yenilə
-        run: sudo apt update
-
-      - name: Google Chrome quraşdır
+      - name: Google Chrome və ChromeDriver quraşdır
         run: |
-          sudo apt install -y wget
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt update
-          sudo apt install -y google-chrome-stable
-
-      - name: ChromeDriver quraşdır
-        run: |
-          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d'.' -f1)
-          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
-          wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/chromedriver
-          sudo chmod +x /usr/local/bin/chromedriver
-          rm chromedriver_linux64.zip
+          chmod +x install_chrome_chromedriver.sh
+          ./install_chrome_chromedriver.sh
 
       - name: Asılılıqları quraşdır
         run: pip install -r requirements.txt
