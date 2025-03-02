@@ -1,6 +1,7 @@
 import os
 import re
 import requests
+import subprocess
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -8,6 +9,16 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+
+def get_chrome_version():
+    """Google Chrome versiyasını tapır."""
+    try:
+        result = subprocess.run(["google-chrome-stable", "--version"], capture_output=True, text=True)
+        version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
+        return version_match.group(1) if version_match else None
+    except Exception as e:
+        print(f"Chrome versiyası tapılmadı: {e}")
+        return None
 
 def get_chromedriver_version(chrome_version):
     """Chrome versiyasına uyğun ChromeDriver versiyasını tapır."""
@@ -31,10 +42,14 @@ def get_m3u8_from_network():
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
 
-    # Chrome versiyasını əl ilə təyin edin
-    chrome_version = "114.0.5735.90"  # Google Chrome versiyasını əl ilə təyin edin
-    chromedriver_version = get_chromedriver_version(chrome_version)
+    # Chrome versiyasını tap
+    chrome_version = get_chrome_version()
+    if not chrome_version:
+        print("Google Chrome versiyası tapılmadı!")
+        return None
 
+    # ChromeDriver versiyasını tap
+    chromedriver_version = get_chromedriver_version(chrome_version)
     if not chromedriver_version:
         print("ChromeDriver versiyası tapılmadı!")
         return None
