@@ -12,8 +12,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 # Konfiqurasiya parametrləri
 CONFIG = {
     "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/3/",  # Kanalların siyahısını almaq üçün URL
-    "wait_time": 60,  # Sayt yüklənməsi üçün gözləmə vaxtı (saniyə)
-    "log_file": "yoda_channels.txt",  # Linklərin yazılacağı fayl adı
+    "iframe_wait_time": 20,  # Iframe yüklənməsi üçün gözləmə vaxtı (saniyə)
+    "video_wait_time": 30,  # Video elementinin yüklənməsi üçün gözləmə vaxtı (saniyə)
+    "log_file": "ecanlitvizle_channels.txt",  # Linklərin yazılacağı fayl adı
 }
 
 # Logging konfiqurasiyası
@@ -36,22 +37,40 @@ def setup_driver():
 
     # ChromeDriver-i avtomatik yüklə və quraşdır
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    driver.set_page_load_timeout(CONFIG["wait_time"])
+    driver.set_page_load_timeout(CONFIG["video_wait_time"])
     return driver
 
 
 def get_all_channel_links(driver):
     """
-    Şəbəkə loglarından bütün `.m3u8` linklərini tapır.
+    ecanlitvizle saytından bütün kanalların `.m3u8` linklərini tapır.
     """
     try:
         driver.get(CONFIG["url"])
         logging.info(f"Səhifə yükləndi: {CONFIG['url']}")
 
-        # Kanalların yüklənməsi üçün gözləyin
-        time.sleep(10)  # JavaScript-dən elementləri yükləmək üçün vaxt verin
+        # Iframe varsa, ona keçid edir
+        try:
+            WebDriverWait(driver, CONFIG["iframe_wait_time"]).until(
+                EC.presence_of_element_located((By.TAG_NAME, "iframe"))
+            )
+            iframes = driver.find_elements(By.TAG_NAME, "iframe")
+            if iframes:
+                driver.switch_to.frame(iframes[0])
+                logging.info("Iframe-ə keçid edildi.")
+        except Exception as e:
+            logging.warning("Iframe tapılmadı, doğrudan video elementinə keçilir.")
 
-        # Şəbəkə loglarını oxuyun
+        # Video elementini gözləyir
+        try:
+            WebDriverWait(driver, CONFIG["video_wait_time"]).until(
+                EC.presence_of_element_located((By.TAG_NAME, "video"))
+            )
+            logging.info("Video elementi tapıldı.")
+        except Exception as e:
+            logging.warning("Video elementi tapılmadı, yalnız şəbəkə loglarından axtarılır.")
+
+        # Şəbəkə loglarından `.m3u8` linklərini tap
         logs = driver.get_log("performance")
         m3u8_links = set()  # Unikal linkləri saxlamaq üçün set istifadə edilir
 
@@ -72,41 +91,6 @@ def get_all_channel_links(driver):
 
     except Exception as e:
         logging.error(f"M3U8 linklərini əldə edilərkən xəta: {e}")
-        return []
-
-
-def get_dynamic_m3u8_links(driver):
-    """
-    Dinamik JavaScript vasitəsiylə yüklənən `.m3u8` linklərini tapır.
-    """
-    try:
-        script = """
-        const links = [];
-        const scripts = document.querySelectorAll('script');
-        scripts.forEach(script => {
-            const text = script.textContent;
-            if (text.includes('.m3u8')) {
-                const matches = text.match(/(http.*\.m3u8)/g);
-                if (matches) {
-                    matches.forEach(match => {
-                        if (!links.includes(match)) {
-                            links.push(match);
-                        }
-                    });
-                }
-            }
-        });
-        return links;
-        """
-        m3u8_links = driver.execute_script(script)
-        if m3u8_links:
-            logging.info(f"Dinamik JavaScript-dən {len(m3u8_links)} M3U8 linki tapıldı.")
-            return m3u8_links
-        else:
-            logging.warning("Dinamik JavaScript-də M3U8 linki tapılmadı.")
-            return []
-    except Exception as e:
-        logging.error(f"Dinamik JavaScript-dən M3U8 linklərini əldə edilərkən xəta: {e}")
         return []
 
 
@@ -145,12 +129,8 @@ def main():
     # ChromeDriver setup
     driver = setup_driver()
 
-    # Bütün `.m3u8` linklərini tap
+    # `.m3u8` linklərini tap
     m3u8_links = get_all_channel_links(driver)
-
-    # Əgər linklər tapılmasa, dinamik JavaScript-dən axtar
-    if not m3u8_links:
-        m3u8_links = get_dynamic_m3u8_links(driver)
 
     # Linklər tapıldısa fayl yaradılacaq
     if m3u8_links:
