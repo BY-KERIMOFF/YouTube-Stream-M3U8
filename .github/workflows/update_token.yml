@@ -28,7 +28,7 @@ jobs:
         MAJOR_MINOR_CHROME_VERSION=$(echo $CHROME_VERSION | cut -d. -f1-2)
         echo "Chrome version: $CHROME_VERSION"
 
-        # Fallback to the latest ChromeDriver if the exact version is not found
+        # Fallback to latest available ChromeDriver if specific version is not found
         CHROMEDRIVER_VERSION=$(curl -sS "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$MAJOR_MINOR_CHROME_VERSION")
         if [ -z "$CHROMEDRIVER_VERSION" ]; then
           echo "Warning: ChromeDriver version for Chrome $CHROME_VERSION not found. Downloading the latest available ChromeDriver."
