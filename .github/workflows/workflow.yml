@@ -3,34 +3,30 @@ name: Run Python Script
 on:
   push:
     branches:
-      - main  # Main branch-a push edildikdə işə düşəcək
+      - main
   schedule:
-    - cron: "0 * * * *"  # Hər saat başı çalışsın
+    - cron: "0 * * * *"
 
 jobs:
   run:
-    runs-on: ubuntu-latest  # GitHub Actions üçün Ubuntu istifadə edirik
+    runs-on: ubuntu-latest
 
     steps:
-      # Kodunuzu GitHub reposundan çəkin
       - name: Checkout repository
-        uses: actions/checkout@v3  # actions/checkout@v3 istifadə edin
+        uses: actions/checkout@v3
 
-      # Python mühitini qurun
       - name: Set up Python
-        uses: actions/setup-python@v4  # actions/setup-python@v4 istifadə edin
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'  # Python 3.x versiyasını istifadə edin
+          python-version: '3.x'
 
-      # Lazım olan asılılıqları quraşdırın
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then
-            pip install -r requirements.txt  # requirements.txt faylı varsa quraşdır
+            pip install -r requirements.txt
           fi
 
-      # Google Chrome-u quraşdırın
       - name: Install Google Chrome
         run: |
           sudo apt-get update -y
@@ -40,16 +36,15 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y google-chrome-stable
 
-      # ChromeDriver-ı quraşdırın
       - name: Install ChromeDriver
         run: |
           CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d'.' -f1)
           CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
+          echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
           wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
           sudo mv chromedriver /usr/local/bin/
           sudo chmod +x /usr/local/bin/chromedriver
 
-      # Python skriptini işə salın
       - name: Run script
-        run: python get_m3u8_link.py  # Skriptin adı
+        run: python get_m3u8_link.py
