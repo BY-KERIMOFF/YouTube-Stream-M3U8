@@ -1,42 +1,27 @@
 import requests
-from bs4 import BeautifulSoup
 import re
 
-# Sayt URL-i
-url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
-
-# Saytın HTML məzmununu əldə edirik
-response = requests.get(url)
-
-# HTML məzmununu BeautifulSoup ilə parse edirik
-soup = BeautifulSoup(response.text, "html.parser")
+# Verilən linki daxil edirik
+url = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=JbZLksnwCGdDPy9ojcvXCQ&tms=1740960891"
 
 # Tokeni regex ilə tapırıq
-match = re.search(r'tkn=([a-zA-Z0-9]+)', soup.prettify())
+match = re.search(r'tkn=([a-zA-Z0-9]+)', url)
 if match:
-    new_token = match.group(1)
-    print(f"Yeni token tapıldı: {new_token}")
+    old_token = match.group(1)
+    print(f"Köhnə token tapıldı: {old_token}")
 else:
-    print("Yeni token tapılmadı.")
+    print("Köhnə token tapılmadı.")
     exit()
 
-# Əsas URL-i yeniləyirik
-old_url = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=Fh2F2HhcbuZaxDX8hYPQqQ&tms=1740960002"
-new_url = old_url.replace("Fh2F2HhcbuZaxDX8hYPQqQ", new_token)
+# Yeni tokeni daxil et
+new_token = "NEW_TOKEN_HERE"  # Buraya yeni tokeni daxil et
+
+# URL-dəki köhnə tokeni yeni token ilə əvəz edirik
+new_url = url.replace(old_token, new_token)
 
 print(f"Yeni URL: {new_url}")
 
-# tv.txt faylını oxuyuruq və yeni linki yazırıq
-try:
-    with open('tv.txt', 'r') as file:
-        content = file.read()
-        print("Faylın əvvəlki məzmunu:")
-        print(content)
-except FileNotFoundError:
-    print("tv.txt faylı tapılmadı.")
-    exit()
-
-# Yenilənmiş məzmunu tv.txt faylında saxlayırıq
+# tv.txt faylını yazırıq
 with open('tv.txt', 'w') as file:
     file.write(new_url)
 
