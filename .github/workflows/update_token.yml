@@ -27,14 +27,16 @@ jobs:
       - name: Sistem paketlərini yenilə
         run: sudo apt update
 
-      # 4. Google Chrome quraşdır
-      - name: Google Chrome quraşdır
+      # 4. Google Chrome və ChromeDriver quraşdır
+      - name: Google Chrome və ChromeDriver quraşdır
         run: |
-          sudo apt install -y wget
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt update
-          sudo apt install -y google-chrome-stable
+          wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip
+          unzip chrome-linux64.zip
+          chmod +x chrome-linux64/chrome
+
+          wget https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chromedriver-linux64.zip
+          unzip chromedriver-linux64.zip
+          chmod +x chromedriver-linux64/chromedriver
 
       # 5. Asılılıqları quraşdır
       - name: Asılılıqları quraşdır
