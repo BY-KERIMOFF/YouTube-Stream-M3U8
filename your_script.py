@@ -7,21 +7,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-
-def get_chromedriver_version(chrome_version):
-    """Chrome versiyasına uyğun ChromeDriver versiyasını tapır."""
-    try:
-        url = f"https://chromedriver.storage.googleapis.com/LATEST_RELEASE_{chrome_version}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.text.strip()
-        else:
-            print(f"ChromeDriver versiyası tapılmadı: {response.text}")
-            return None
-    except Exception as e:
-        print(f"ChromeDriver versiyası tapılmadı: {e}")
-        return None
 
 def get_m3u8_from_network():
     """M3U8 linkini tapır."""
@@ -31,17 +16,14 @@ def get_m3u8_from_network():
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
 
-    # Chrome versiyasını əl ilə təyin edin
-    chrome_version = "117.0.5938.62"  # Google Chrome versiyasını buraya yazın
-    chromedriver_version = get_chromedriver_version(chrome_version)
+    # Chrome və ChromeDriver yollarını təyin edin
+    chrome_path = "/path/to/chrome-linux64/chrome"
+    chromedriver_path = "/path/to/chromedriver-linux64/chromedriver"
 
-    if not chromedriver_version:
-        print("ChromeDriver versiyası tapılmadı!")
-        return None
+    chrome_options.binary_location = chrome_path
 
-    # ChromeDriver-i quraşdır və başlat
-    driver_path = ChromeDriverManager(version=chromedriver_version).install()
-    driver = webdriver.Chrome(service=Service(driver_path), options=chrome_options)
+    # ChromeDriver-i başlat
+    driver = webdriver.Chrome(service=Service(chromedriver_path), options=chrome_options)
 
     try:
         # M3U8 linkini tapmaq üçün səhifəyə daxil ol
