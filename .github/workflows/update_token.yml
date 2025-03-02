@@ -1,53 +1,38 @@
-name: YouTube Stream M3U8 Scraper
+name: Token Check and Upload
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  scraper:
+  check-token:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repo
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      # Set up Python
-      - name: Set up Python 3.x
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      # Install dependencies
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+    - name: Run Python script to get new token
+      run: |
+        python scraper.py  # burada sizin Python skriptinizin adı olacaq
 
-      # Run scraper.py to fetch the new token and create a file
-      - name: Run scraper.py
-        run: |
-          python scraper.py
+    - name: Check if new_token.txt exists
+      run: |
+        if [ -f "./new_token.txt" ]; then
+          echo "new_token.txt exists"
+        else
+          echo "new_token.txt does not exist"
+          exit 1
+        fi
 
-      # Check if new_token.txt exists
-      - name: Check if new_token.txt exists
-        id: check_file
-        run: |
-          if [ -f "./new_token.txt" ]; then
-            echo "new_token.txt exists"
-          else
-            echo "new_token.txt not found!"
-            exit 1
-          fi
-
-      # Upload new_token.txt as an artifact
-      - name: Upload new_token.txt artifact
-        if: ${{ steps.check_file.outputs.exists == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: new-token-file
-          path: new_token.txt
+    - name: Upload new_token.txt as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: new_token
+        path: new_token.txt
