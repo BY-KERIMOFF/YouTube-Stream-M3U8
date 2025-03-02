@@ -12,15 +12,15 @@ from webdriver_manager.chrome import ChromeDriverManager
 # Konfiqurasiya parametrləri
 CONFIG = {
     "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",  # M3U8 linkini tapmaq istədiyiniz saytın URL-si
-    "iframe_wait_time": 20,  # Iframe üçün gözləmə vaxtı (saniyə)
-    "video_wait_time": 30,  # Video elementinə baxmaq üçün gözləmə vaxtı (saniyə)
+    "iframe_wait_time": 30,  # Iframe üçün gözləmə vaxtı (saniyə)
+    "video_wait_time": 60,  # Video elementinə baxmaq üçün gözləmə vaxtı (saniyə)
     "log_file": "m3u8_links.txt",  # M3U8 linklərinin yazılacağı fayl adı
 }
 
 # Logging konfiqurasiyası
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-def get_all_m3u8_links_from_network_logs(driver):
+def get_m3u8_links_from_network_logs(driver):
     """
     Şəbəkə loglarından bütün .m3u8 linklərini axtarır.
     """
@@ -42,6 +42,37 @@ def get_all_m3u8_links_from_network_logs(driver):
     except Exception as e:
         logging.error(f"Şəbəkə loglarının analizində xəta: {e}")
         return []
+
+
+def get_m3u8_link_from_javascript(driver):
+    """
+    JavaScript-dən M3U8 linkini axtarır.
+    """
+    try:
+        script = """
+        const scripts = document.querySelectorAll('script');
+        let m3u8Link = null;
+        scripts.forEach(script => {
+            const text = script.textContent;
+            if (text.includes('.m3u8')) {
+                const match = text.match(/(http.*\.m3u8)/);
+                if (match) {
+                    m3u8Link = match[0];
+                }
+            }
+        });
+        return m3u8Link;
+        """
+        m3u8_link = driver.execute_script(script)
+        if m3u8_link:
+            logging.info(f"JavaScript-dən M3U8 linki tapıldı: {m3u8_link}")
+            return m3u8_link
+        else:
+            logging.warning("JavaScript-də M3U8 linki tapılmadı.")
+            return None
+    except Exception as e:
+        logging.error(f"JavaScript-dən M3U8 linkini əldə edilərkən xəta: {e}")
+        return None
 
 
 def get_m3u8_links_from_network(driver):
@@ -74,7 +105,13 @@ def get_m3u8_links_from_network(driver):
             logging.warning("Video elementi tapılmadı, yalnız şəbəkə loglarından axtarılır.")
 
         # Şəbəkə loglarından bütün .m3u8 linklərini axtar
-        m3u8_links = get_all_m3u8_links_from_network_logs(driver)
+        m3u8_links = get_m3u8_links_from_network_logs(driver)
+
+        # Video elementi yoxdursa, JavaScript-dən axtar
+        if not m3u8_links:
+            m3u8_link = get_m3u8_link_from_javascript(driver)
+            if m3u8_link:
+                m3u8_links.append(m3u8_link)
 
         if m3u8_links:
             logging.info(f"{len(m3u8_links)} M3U8 linki tapıldı.")
@@ -100,8 +137,6 @@ def setup_driver():
     options.add_argument("--log-level=3")  # Chrome log səviyyəsini azaltmaq
     options.add_argument("--disable-blink-features=AutomationControlled")  # Bot aşkarlanmasını azaltmaq
     options.add_argument("--window-size=1920,1080")  # Pəncərə ölçüsü
-
-    # Şəbəkə loglarını aktivləşdir
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     options.add_experimental_option('perfLoggingPrefs', {'enableNetwork': True})
 
