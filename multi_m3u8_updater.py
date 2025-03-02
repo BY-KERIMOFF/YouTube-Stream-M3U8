@@ -1,7 +1,8 @@
 import time
 import logging
-import json
 import re
+import json
+import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -45,6 +46,92 @@ def setup_driver():
     return driver
 
 
+def extract_m3u8_links_from_javascript(driver):
+    """
+    JavaScript-dən `.m3u8` linklərini çıxarır.
+    """
+    try:
+        script = """
+        const scripts = document.querySelectorAll('script');
+        let m3u8Links = [];
+        scripts.forEach(script => {
+            const text = script.textContent;
+            if (text.includes('.m3u8')) {
+                // Regex ile .m3u8 linklərini axtar
+                const matches = text.match(/(https?:\/\/[^\s]+\.m3u8[^"]*)/g);
+                if (matches) {
+                    m3u8Links.push(...matches);
+                }
+            }
+        });
+        return m3u8Links;
+        """
+        m3u8_links = driver.execute_script(script)
+        if m3u8_links:
+            logging.info(f"JavaScript-dən {len(m3u8_links)} M3U8 linki tapıldı.")
+            return set(m3u8_links)
+        else:
+            logging.warning("JavaScript-də M3U8 linki tapılmadı.")
+            return set()
+    except Exception as e:
+        logging.error(f"JavaScript-dən M3U8 linklərini əldə edilərkən xəta: {e}")
+        return set()
+
+
+def get_m3u8_links_from_network_logs(driver):
+    """
+    Şəbəkə loglarından `.m3u8` linklərini tapır.
+    """
+    try:
+        logs = driver.get_log("performance")
+        m3u8_links = set()
+
+        for entry in logs:
+            log = json.loads(entry["message"])
+            if "method" in log and log["method"] == "Network.requestWillBeSent":
+                url = log["params"]["request"]["url"]
+                if ".m3u8" in url:
+                    logging.info(f"Şəbəkə loglarından M3U8 linki tapıldı: {url}")
+                    m3u8_links.add(url)
+
+        if m3u8_links:
+            logging.info(f"Şəbəkə loglarından {len(m3u8_links)} M3U8 linki tapıldı.")
+        else:
+            logging.warning("Şəbəkə loglarında M3U8 linki tapılmadı.")
+
+        return m3u8_links
+    except Exception as e:
+        logging.error(f"Şəbəkə loglarının analizində xəta: {e}")
+        return set()
+
+
+def fetch_m3u8_links_from_api(api_url, headers):
+    """
+    API reqestindən `.m3u8` linklərini alır.
+    """
+    try:
+        response = requests.get(api_url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            if "playlist" in data and isinstance(data["playlist"], list):
+                m3u8_links = set()
+                for item in data["playlist"]:
+                    if "file" in item and ".m3u8" in item["file"]:
+                        m3u8_links.add(item["file"])
+                if m3u8_links:
+                    logging.info(f"API-dən {len(m3u8_links)} M3U8 linki tapıldı.")
+                    return m3u8_links
+                else:
+                    logging.warning("API-də M3U8 linki tapılmadı.")
+                    return set()
+            else:
+                logging.warning("API-cərvəzində playlist məlumatları tapılmadı.")
+                return set()
+    except Exception as e:
+        logging.error(f"API reqestindən M3U8 linklərini əldə edilərkən xəta: {e}")
+        return set()
+
+
 def get_all_channel_links(driver, url):
     """
     Verilmiş URL-dən bütün kanalların `.m3u8` linklərini tapır.
@@ -74,25 +161,21 @@ def get_all_channel_links(driver, url):
         except Exception as e:
             logging.warning(f"Video elementi tapılmadı ({url}), yalnız şəbəkə loglarından axtarılır.")
 
-        # Şəbəkə loglarından `.m3u8` linklərini tap
-        logs = driver.get_log("performance")
-        m3u8_links = set()  # Unikal linkləri saxlamaq üçün set istifadə edilir
+        # İlkin `.m3u8` linklərini şəbəkə loglarından tap
+        m3u8_links = get_m3u8_links_from_network_logs(driver)
 
-        for entry in logs:
-            log = json.loads(entry["message"])
-            if "method" in log and log["method"] == "Network.responseReceived":
-                url = log["params"]["response"]["url"]
-                if ".m3u8" in url:
-                    logging.info(f"Şəbəkə loglarından M3U8 linki tapıldı: {url}")
-                    m3u8_links.add(url)
-
-        # JavaScript-dən `.m3u8` linklərini çıxar
+        # Əgər linklər tapılmasa, JavaScript-dən axtar
         if not m3u8_links:
-            m3u8_links.update(get_m3u8_links_from_javascript(driver))
+            m3u8_links.update(extract_m3u8_links_from_javascript(driver))
 
-        # API reqestlərini izləyib `.m3u8` linklərini tap
+        # Əgər linklər hələ də tapılmasa, API reqestindən axtar
         if not m3u8_links:
-            m3u8_links.update(get_m3u8_links_from_api_requests(driver))
+            api_url = "https://prd.jwpcdn.com/player/v/8.34.0/provider.hlsjs.js"
+            headers = {
+                "Referer": url,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+            }
+            m3u8_links.update(fetch_m3u8_links_from_api(api_url, headers))
 
         if m3u8_links:
             logging.info(f"{url} - Toplam {len(m3u8_links)} M3U8 linki tapıldı.")
@@ -100,68 +183,9 @@ def get_all_channel_links(driver, url):
             logging.warning(f"{url} - Heç bir M3U8 linki tapılmadı.")
 
         return list(m3u8_links)
-
     except Exception as e:
         logging.error(f"{url} - M3U8 linklərini əldə edilərkən xəta: {e}")
         return []
-
-
-def get_m3u8_links_from_javascript(driver):
-    """
-    JavaScript-dən `.m3u8` linklərini çıxarır.
-    """
-    try:
-        script = """
-        const scripts = document.querySelectorAll('script');
-        let m3u8Links = [];
-        scripts.forEach(script => {
-            const text = script.textContent;
-            if (text.includes('.m3u8')) {
-                const matches = text.match(/(http.*\.m3u8)/g);
-                if (matches) {
-                    m3u8Links.push(...matches);
-                }
-            }
-        });
-        return m3u8Links;
-        """
-        m3u8_links = driver.execute_script(script)
-        if m3u8_links:
-            logging.info(f"JavaScript-dən {len(m3u8_links)} M3U8 linki tapıldı.")
-            return set(m3u8_links)
-        else:
-            logging.warning("JavaScript-də M3U8 linki tapılmadı.")
-            return set()
-    except Exception as e:
-        logging.error(f"JavaScript-dən M3U8 linklərini əldə edilərkən xəta: {e}")
-        return set()
-
-
-def get_m3u8_links_from_api_requests(driver):
-    """
-    API reqestlərindən `.m3u8` linklərini tapır.
-    """
-    try:
-        logs = driver.get_log("performance")
-        m3u8_links = set()
-
-        for entry in logs:
-            log = json.loads(entry["message"])
-            if "method" in log and log["method"] == "Network.requestWillBeSent":
-                url = log["params"]["request"]["url"]
-                if ".m3u8" in url:
-                    logging.info(f"API reqestindən M3U8 linki tapıldı: {url}")
-                    m3u8_links.add(url)
-
-        if m3u8_links:
-            logging.info(f"API reqestindən {len(m3u8_links)} M3U8 linki tapıldı.")
-        else:
-            logging.warning("API reqestində M3U8 linki tapılmadı.")
-
-        return m3u8_links
-    except Exception as e:
-        logging.error(f"API reqestindən M3U8 linklərini əldə edilərkən xəta: {e}")
-        return set()
 
 
 def update_m3u8_links_if_changed(new_links, file_path):
@@ -186,7 +210,6 @@ def update_m3u8_links_if_changed(new_links, file_path):
         else:
             logging.info("Linklər dəyişmir, fayl aktualdır.")
             return False
-
     except Exception as e:
         logging.error(f"Fayl güncəllənilərkən xəta: {e}")
         return False
