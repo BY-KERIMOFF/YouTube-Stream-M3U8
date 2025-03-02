@@ -13,13 +13,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Konfiqurasiya parametrləri
 CONFIG = {
-    "urls": [
-        "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",
-        "https://www.ecanlitvizle.app/xezer-tv-canli-izle/3/"
-    ],  # Kanalların siyahısını almaq üçün URL-lər
+    "url": "https://www.ecanlitvizle.app/xezer-tv-canli-izle/",  # Kanal URL-si
     "iframe_wait_time": 30,  # Iframe yüklənməsi üçün gözləmə vaxtı (saniyə)
     "video_wait_time": 60,  # Video elementinin yüklənməsi üçün gözləmə vaxtı (saniyə)
-    "log_file": "multi_channels.txt",  # Linklərin yazılacağı fayl adı
+    "log_file": "channel_m3u8_links.txt",  # Linklərin yazılacağı fayl adı
 }
 
 # Logging konfiqurasiyası
@@ -44,7 +41,6 @@ def setup_driver():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     driver.set_page_load_timeout(CONFIG["video_wait_time"])
     return driver
-
 
 def extract_m3u8_links_from_javascript(driver):
     """
@@ -77,7 +73,6 @@ def extract_m3u8_links_from_javascript(driver):
         logging.error(f"JavaScript-dən M3U8 linklərini əldə edilərkən xəta: {e}")
         return set()
 
-
 def get_m3u8_links_from_network_logs(driver):
     """
     Şəbəkə loglarından `.m3u8` linklərini tapır.
@@ -104,34 +99,9 @@ def get_m3u8_links_from_network_logs(driver):
         logging.error(f"Şəbəkə loglarının analizində xəta: {e}")
         return set()
 
-
-def fetch_m3u8_links_from_api(api_url, headers):
-    """
-    API reqestindən `.m3u8` linklərini alır.
-    """
-    try:
-        response = requests.get(api_url, headers=headers, timeout=10)
-        if response.status_code == 200:
-            # API-cərvəzində `.m3u8` linklərini axtar
-            data = response.text
-            m3u8_links = set(re.findall(r'(https?://[^\s]+\?tkn=[^&]+&tms=\d+)', data))
-            if m3u8_links:
-                logging.info(f"API-dən {len(m3u8_links)} M3U8 linki tapıldı.")
-                return m3u8_links
-            else:
-                logging.warning("API-cərvəzində M3U8 linki tapılmadı.")
-                return set()
-        else:
-            logging.warning(f"API reqesti uğursuz oldu ({response.status_code}).")
-            return set()
-    except Exception as e:
-        logging.error(f"API reqestindən M3U8 linklərini əldə edilərkən xəta: {e}")
-        return set()
-
-
 def get_all_channel_links(driver, url):
     """
-    Verilmiş URL-dən bütün kanalların `.m3u8` linklərini tapır.
+    Verilmiş URL-dən `.m3u8` linklərini tapır.
     """
     try:
         driver.get(url)
@@ -149,15 +119,6 @@ def get_all_channel_links(driver, url):
         if not m3u8_links:
             m3u8_links.update(extract_m3u8_links_from_javascript(driver))
 
-        # Əgər linklər hələ də tapılmasa, API reqestindən axtar
-        if not m3u8_links:
-            api_url = "https://platform-api.sharethis.com/js/sharethis.js"
-            headers = {
-                "Referer": url,
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
-            }
-            m3u8_links.update(fetch_m3u8_links_from_api(api_url, headers))
-
         if m3u8_links:
             logging.info(f"{url} - Toplam {len(m3u8_links)} M3U8 linki tapıldı.")
         else:
@@ -167,7 +128,6 @@ def get_all_channel_links(driver, url):
     except Exception as e:
         logging.error(f"{url} - M3U8 linklərini əldə edilərkən xəta: {e}")
         return []
-
 
 def update_m3u8_links_if_changed(new_links, file_path):
     """
@@ -198,23 +158,19 @@ def update_m3u8_links_if_changed(new_links, file_path):
 
 def main():
     """
-    Ana funksiya: Bütün URL-lərdən `.m3u8` linklərini tapır və `.txt` faylına yazır.
+    Ana funksiya: Verilmiş URL-dən `.m3u8` linkini tapır və fayla yazır.
     """
     # ChromeDriver setup
     driver = setup_driver()
 
-    all_m3u8_links = []
-
-    # Hər bir URL üçün `.m3u8` linklərini tap
-    for url in CONFIG["urls"]:
-        m3u8_links = get_all_channel_links(driver, url)
-        all_m3u8_links.extend(m3u8_links)
+    # `.m3u8` linklərini tap
+    m3u8_links = get_all_channel_links(driver, CONFIG["url"])
 
     # Linklər tapıldısa fayl yaradılacaq
-    if all_m3u8_links:
-        updated = update_m3u8_links_if_changed(all_m3u8_links, CONFIG["log_file"])
+    if m3u8_links:
+        updated = update_m3u8_links_if_changed(m3u8_links, CONFIG["log_file"])
         if updated:
-            logging.info(f"{len(all_m3u8_links)} M3U8 linki fayla yazıldı: {CONFIG['log_file']}")
+            logging.info(f"{len(m3u8_links)} M3U8 linki fayla yazıldı: {CONFIG['log_file']}")
     else:
         logging.warning("Heç bir M3U8 linki tapılmadı, fayl boşdur.")
 
