@@ -1,33 +1,56 @@
-name: Build and Run Python Script
+name: Run Python Script with Chrome
 
 on:
   push:
     branches:
-      - main
+      - main  # Əsas branch üzərində işlədikdə işə düşür
   pull_request:
     branches:
-      - main
+      - main  # PR olduqda işə düşür
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Repozitorini klonla
       - name: Repozitorini klonla
         uses: actions/checkout@v3
 
+      # 2. Python-u quraşdır
       - name: Python-u quraşdır
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.9'  # Python versiyasını tələblərinizə uyğun dəyişdirin
 
-      - name: Google Chrome və ChromeDriver quraşdır
+      # 3. Sistem paketlərini yenilə
+      - name: Sistem paketlərini yenilə
+        run: sudo apt update
+
+      # 4. Google Chrome quraşdır
+      - name: Google Chrome quraşdır
         run: |
-          chmod +x install_chrome_chromedriver.sh
-          ./install_chrome_chromedriver.sh
+          sudo apt install -y wget
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt update
+          sudo apt install -y google-chrome-stable
 
+      # 5. ChromeDriver quraşdır
+      - name: ChromeDriver quraşdır
+        run: |
+          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d'.' -f1)
+          CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
+          wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/chromedriver
+          sudo chmod +x /usr/local/bin/chromedriver
+          rm chromedriver_linux64.zip
+
+      # 6. Asılılıqları quraşdır
       - name: Asılılıqları quraşdır
         run: pip install -r requirements.txt
 
+      # 7. Skripti işə sal
       - name: Skripti işə sal
-        run: python your_script.py
+        run: python your_script.py  # Skriptinizin adını dəyişdirin
