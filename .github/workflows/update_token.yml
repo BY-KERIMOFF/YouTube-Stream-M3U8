@@ -3,10 +3,10 @@ name: Build and Run Python Script
 on:
   push:
     branches:
-      - main  # Əsas branch üzərində işlədikdə işə düşür
+      - main
   pull_request:
     branches:
-      - main  # PR olduqda işə düşür
+      - main
 
 jobs:
   build:
@@ -19,12 +19,12 @@ jobs:
       - name: Python-u quraşdır
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # Python versiyasını tələblərinizə uyğun dəyişdirin
+          python-version: '3.9'
 
       - name: Sistem paketlərini yenilə
         run: sudo apt update
 
-      - name: Chrome quraşdır
+      - name: Google Chrome quraşdır
         run: |
           sudo apt install -y wget
           wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
@@ -34,7 +34,7 @@ jobs:
 
       - name: ChromeDriver quraşdır
         run: |
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
+          CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}' | cut -d'.' -f1)
           CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION})
           wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip
           unzip chromedriver_linux64.zip
@@ -46,9 +46,4 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Skripti işə sal
-        run: python your_script.py  # Skriptinizin adını dəyişdirin
-
-      - name: Nəticəni yoxla
-        if: ${{ always() }}
-        run: |
-          echo "Skript işlədi!"
+        run: python your_script.py
