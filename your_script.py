@@ -20,12 +20,20 @@ def get_chrome_version():
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER, reg_path) as key:
                 version, _ = winreg.QueryValueEx(key, "version")
                 return version
-        else:
+        elif platform.system() == "Linux":
             import subprocess
             result = subprocess.run(["google-chrome", "--version"], capture_output=True, text=True)
             version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
             return version_match.group(1) if version_match else None
-    except Exception:
+        elif platform.system() == "Darwin":  # macOS
+            import subprocess
+            result = subprocess.run(["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "--version"], capture_output=True, text=True)
+            version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
+            return version_match.group(1) if version_match else None
+        else:
+            return None
+    except Exception as e:
+        print(f"Chrome versiyası tapılmadı: {e}")
         return None
 
 def download_chromedriver():
@@ -35,7 +43,7 @@ def download_chromedriver():
         return
 
     major_version = chrome_version.split(".")[0]
-    os_type = "win64" if platform.system() == "Windows" else "linux64"
+    os_type = "win64" if platform.system() == "Windows" else "linux64" if platform.system() == "Linux" else "mac64"
     chromedriver_url = f"https://storage.googleapis.com/chrome-for-testing-public/{major_version}.0.0.0/{os_type}/chromedriver-{os_type}.zip"
     zip_path = "chromedriver.zip"
     
@@ -48,7 +56,7 @@ def download_chromedriver():
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall("chrome_driver")
         os.remove(zip_path)
-        chromedriver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver")
+        chromedriver_path = os.path.join(os.getcwd(), "chrome_driver", "chromedriver.exe" if platform.system() == "Windows" else "chromedriver")
         os.chmod(chromedriver_path, 0o755)
     else:
         print("ChromeDriver yükləmə xətası! Versiya tapılmadı.")
@@ -75,7 +83,8 @@ def get_m3u8_from_network():
     
     try:
         m3u8_link = driver.execute_script("return document.querySelector('video').src;")
-    except Exception:
+    except Exception as e:
+        print(f"Video src tapılmadı: {e}")
         m3u8_link = None
     
     if not m3u8_link:
@@ -88,7 +97,8 @@ def get_m3u8_from_network():
                     if "m3u8" in url:
                         m3u8_link = url
                         break
-            except Exception:
+            except Exception as e:
+                print(f"Log analizi xətası: {e}")
                 continue
 
     driver.quit()
