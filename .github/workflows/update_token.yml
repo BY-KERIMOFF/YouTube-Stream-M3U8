@@ -28,26 +28,26 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      # Run scraper.py
+      # Run scraper.py to fetch the new token and create a file
       - name: Run scraper.py
         run: |
           python scraper.py
 
-      # Check if channels.m3u exists, then upload artifact
-      - name: Check if channels.m3u exists
+      # Check if new_token.txt exists
+      - name: Check if new_token.txt exists
         id: check_file
         run: |
-          if [ -f "./channels.m3u" ]; then
-            echo "channels.m3u exists"
+          if [ -f "./new_token.txt" ]; then
+            echo "new_token.txt exists"
           else
-            echo "channels.m3u not found!"
+            echo "new_token.txt not found!"
             exit 1
           fi
 
-      # Upload channels.m3u artifact if it exists
-      - name: Upload channels.m3u artifact
+      # Upload new_token.txt as an artifact
+      - name: Upload new_token.txt artifact
         if: ${{ steps.check_file.outputs.exists == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: channels-m3u
-          path: channels.m3u
+          name: new-token-file
+          path: new_token.txt
