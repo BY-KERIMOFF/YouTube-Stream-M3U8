@@ -27,11 +27,18 @@ jobs:
         CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
         MAJOR_MINOR_CHROME_VERSION=$(echo $CHROME_VERSION | cut -d. -f1-2)
         echo "Chrome version: $CHROME_VERSION"
-        CHROMEDRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$MAJOR_MINOR_CHROME_VERSION)
+        
+        # Get the appropriate ChromeDriver version
+        CHROMEDRIVER_VERSION=$(curl -sS "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$MAJOR_MINOR_CHROME_VERSION")
+        
         if [ -z "$CHROMEDRIVER_VERSION" ]; then
           echo "Error: Unable to find ChromeDriver version for Chrome $CHROME_VERSION"
           exit 1
         fi
+        
+        echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
+        
+        # Download and install ChromeDriver
         wget -N "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
         unzip chromedriver_linux64.zip -d /usr/local/bin/
         rm chromedriver_linux64.zip
