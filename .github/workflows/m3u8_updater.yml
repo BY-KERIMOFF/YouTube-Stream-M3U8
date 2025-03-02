@@ -1,4 +1,4 @@
-name: M3U8 Links Updater
+name: Yoda Channels M3U8 Updater
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:  # Manüel işə salmaq üçün
 
 jobs:
-  update-m3u8-links:
+  update-yoda-channels:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,19 +33,11 @@ jobs:
           pip install selenium webdriver-manager
 
       # Skripti işə salın
-      - name: Run M3U8 Links Updater Script
+      - name: Run Yoda M3U8 Links Updater Script
         run: |
-          python m3u8_updater.py
+          python yoda_m3u8_updater.py
 
       # Faylları güncəlləyin və commit edin
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          if git diff --quiet; then
-            echo "No changes to commit."
-          else
-            git add m3u8_links.txt
-            git commit -m "Update M3U8 links" || echo "No changes to commit"
-            git push
-          fi
