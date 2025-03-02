@@ -14,6 +14,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Chrome və ChromeDriver-ı yükləyin
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
       # Python və Selenium quraşdırın
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,12 +31,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install selenium webdriver-manager
-
-      # ChromeDriver-ı yükləyin
-      - name: Install ChromeDriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-chromedriver
 
       # Skripti işə salın
       - name: Run M3U8 Links Updater Script
