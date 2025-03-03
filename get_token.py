@@ -1,5 +1,4 @@
 import requests
-import json
 
 # AJAX sorğusunu göndərmək
 ajax_url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"  # Tokeni əldə etməli olduğumuz URL
@@ -13,15 +12,21 @@ try:
     response = requests.get(ajax_url, headers=headers)
     if response.status_code == 200:
         print("AJAX sorğusu uğurla alındı.")
-        json_response = response.json()  # JSON cavabını alırıq
-        print(json.dumps(json_response, indent=4))  # JSON cavabını gözəl şəkildə yazdırırıq
-        
-        # JSON içində tokeni tapmaq
-        if "token" in json_response:
-            token = json_response["token"]
-            print(f"Yeni token tapıldı: {token}")
-        else:
-            print("Token JSON içində tapılmadı.")
+        print("Cavab məzmunu:")
+        print(response.text)  # Tam məzmunu çap edirik
+
+        # JSON cavabına çevirməyi sınamaq
+        try:
+            json_response = response.json()
+            print(json_response)
+            if "token" in json_response:
+                token = json_response["token"]
+                print(f"Yeni token tapıldı: {token}")
+            else:
+                print("Token JSON içində tapılmadı.")
+        except ValueError as e:
+            print(f"Cavab JSON formatında deyil: {e}")
+
     else:
         print(f"AJAX sorğusu uğursuz oldu. Status code: {response.status_code}")
 except requests.exceptions.RequestException as e:
