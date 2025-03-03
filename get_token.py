@@ -11,10 +11,16 @@ if token_match:
     print(f"Token tapıldı: {token}")
 else:
     print("Token tapılmadı!")
+    exit()
 
 # Tokeni istifadə edərək sorğu göndərmək
 response = requests.get(url)
 if response.status_code == 200:
     print("Sorğu uğurla yerinə yetirildi!")
+    
+    # M3U8 məlumatını .txt faylına yazmaq
+    with open("stream_link.txt", "w") as file:
+        file.write(response.text)
+    print("M3U8 linki 'stream_link.txt' faylına yazıldı.")
 else:
     print(f"Error: {response.status_code}")
