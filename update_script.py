@@ -9,11 +9,15 @@ response = requests.get(url)
 soup = BeautifulSoup(response.text, 'html.parser')
 
 # Linki tapmaq
-script_tag = soup.find('script', text=lambda t: t and 'tkn=' in t)
+script_tag = soup.find('script', string=lambda t: t and 'tkn=' in t)  # 'text' əvəzinə 'string' istifadə edin
 
 if script_tag:
     # Tokeni çıxar
-    token = script_tag.string.split('tkn=')[1].split('"')[0]
+    script_content = script_tag.string
+    token_start = script_content.find('tkn=') + 4  # 'tkn=' ifadəsindən sonra başlayır
+    token_end = script_content.find('&', token_start)  # '&' simvoluna qədər davam edir
+    token = script_content[token_start:token_end]  # Tokeni çıxar
+
     with open('token.txt', 'w') as file:
         file.write(token)
     print("✅ Token tapıldı.")
