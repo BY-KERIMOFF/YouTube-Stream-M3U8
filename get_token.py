@@ -1,34 +1,39 @@
 import requests
 from bs4 import BeautifulSoup
 
-# Hedef URL
-url = 'https://www.ecanlitvizle.app/xezer-tv-canli-izle/'
+# Yeni URL
+url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
 
-# Request göndəririk
+# URL'yi əldə et
 response = requests.get(url)
+
+# Əgər səhv cavab almışıqsa, dayandırırıq
 if response.status_code != 200:
-    print("❌ Səhifə tapılmadı!")
+    print("❌ Saytın məzmunu alınmadı!")
     exit(1)
 
-# BeautifulSoup ilə səhifəni parse edirik
-soup = BeautifulSoup(response.content, 'html.parser')
+# HTML məzmununu BeautifulSoup ilə parse edirik
+soup = BeautifulSoup(response.text, 'html.parser')
 
-# Tokeni tapmaq üçün script içərisindəki məlumatı axtarırıq
-script_tag = soup.find('script', string=lambda t: t and 'tkn=' in t)
+# Script tagi içində 'tkn=' olan bir yazını tapmağa çalışırıq
+script_tag = soup.find('script', text=lambda t: t and 'tkn=' in t)
 
+# Token tapılmasa belə, çıxarmağa çalışacağıq
 if script_tag:
-    # Tokeni tapmaq
-    token = script_tag.string.split('tkn=')[1].split('&')[0]
-    print(f"✅ Token tapıldı: {token}")
+    try:
+        token = script_tag.string.split('tkn=')[1].split('"')[0]
+        print(f"✅ Yeni token tapıldı: {token}")
+    except IndexError:
+        print("❌ Tokeni tapmaq mümkün olmadı.")
 else:
-    print("❌ Token tapılmadı, yeni link ilə yeniləyirik.")
-    token = 'new_token_placeholder'  # Token tapılmadısa, buraya yer saxlayırıq
+    print("❌ Token tapılmadı.")
 
-# stream.m3u8 faylını yeniləyirik
-new_m3u8_url = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740969806"
+# İndi, yeni stream.m3u8 linkini yaratmağa çalışırıq
+# Əgər token tapılıbsa, istifadə edirik, əks halda default token əlavə edirik.
+if 'token' in locals():
+    new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740969806"
+else:
+    new_link = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=default_token&tms=1740969806"
 
-# stream.m3u8 faylını yeniləyirik
-with open("stream.m3u8", "w") as file:
-    file.write(new_m3u8_url)
-
-print("✅ stream.m3u8 yeniləndi.")
+# Linki çap edirik
+print(f"✅ Stream linki: {new_link}")
