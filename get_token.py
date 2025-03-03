@@ -9,6 +9,7 @@ def get_token():
         print("❌ Səhifə açıla bilmədi!")
         return None
     
+    # Tokeni tapmaq
     match = re.search(r'tkn=([a-zA-Z0-9_-]+)', response.text)
     if match:
         return match.group(1)
