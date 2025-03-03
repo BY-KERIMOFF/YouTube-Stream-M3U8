@@ -1,26 +1,34 @@
 import requests
 from bs4 import BeautifulSoup
-import re
 
-# Sayt URL-si
-url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
+# Hedef URL
+url = 'https://www.ecanlitvizle.app/xezer-tv-canli-izle/'
 
-# Saytı əldə edirik
+# Request göndəririk
 response = requests.get(url)
+if response.status_code != 200:
+    print("❌ Səhifə tapılmadı!")
+    exit(1)
 
-# Saytın HTML məzmununu parse edirik
-soup = BeautifulSoup(response.text, 'html.parser')
+# BeautifulSoup ilə səhifəni parse edirik
+soup = BeautifulSoup(response.content, 'html.parser')
 
-# Saytdan tokeni tapmağa çalışırıq
-match = re.search(r'tkn=([A-Za-z0-9_-]+)', soup.text)
+# Tokeni tapmaq üçün script içərisindəki məlumatı axtarırıq
+script_tag = soup.find('script', text=lambda t: t and 'tkn=' in t)
 
-if match:
-    token = match.group(1)
-    print(f"✅ Yeni token: {token}")
-    with open("token.txt", "w") as f:
-        f.write(token)
+if script_tag:
+    # Tokeni tapmaq
+    token = script_tag.text.split('tkn=')[1].split('&')[0]
+    print(f"✅ Token tapıldı: {token}")
 else:
-    print("❌ Token tapılmadı!")
-    # Token tapılmadıqda yeni bir link əlavə edirik
-    with open("token.txt", "w") as f:
-        f.write("new_token_placeholder")  # Yeni linkin tokenini buraya əlavə edə bilərsiniz
+    print("❌ Token tapılmadı, yeni link ilə yeniləyirik.")
+    token = 'new_token_placeholder'  # Token tapılmadısa, buraya yer saxlayırıq
+
+# stream.m3u8 faylını yeniləyirik
+new_m3u8_url = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740969806"
+
+# stream.m3u8 faylını yeniləyirik
+with open("stream.m3u8", "w") as file:
+    file.write(new_m3u8_url)
+
+print("✅ stream.m3u8 yeniləndi.")
