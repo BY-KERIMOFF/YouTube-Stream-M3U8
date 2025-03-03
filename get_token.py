@@ -24,10 +24,13 @@ def update_stream_link(new_token):
         # Köhnə tokeni tapıb onu yenisi ilə əvəz edirik
         updated_content = re.sub(r'tkn=[a-zA-Z0-9_-]+', f'tkn={new_token}', content)
         
-        with open("stream_link.txt", "w") as file:
-            file.write(updated_content)
-        
-        print("✅ Token yeniləndi və stream_link.txt faylı güncəlləndi.")
+        if content != updated_content:  # Əgər dəyişiklik olubsa
+            with open("stream_link.txt", "w") as file:
+                file.write(updated_content)
+            print("✅ Token yeniləndi və stream_link.txt faylı güncəlləndi.")
+        else:
+            print("❌ Token dəyişməyib.")
+    
     except FileNotFoundError:
         print("❌ stream_link.txt faylı tapılmadı!")
         return
