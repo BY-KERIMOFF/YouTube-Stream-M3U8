@@ -54,7 +54,7 @@ jobs:
     - name: Update stream.m3u8 with new token
       run: |
         OLD_M3U8=$(cat stream.m3u8)
-        NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
+        NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=RKvbmDXc_RCj_CLnlm2N_w&tms=1740974293"
         echo "$NEW_M3U8" > stream.m3u8
         echo "✅ stream.m3u8 yeniləndi."
         # Nəticəni görə bilmək üçün stream.m3u8 faylını çap edirik
