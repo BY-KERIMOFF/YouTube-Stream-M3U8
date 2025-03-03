@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Headless rejimi (brauzersiz)
 
+# ChromeDriver ilə başlatmaq, yalnız options parametri istifadə edilir
 driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
 
 # Linki açın
