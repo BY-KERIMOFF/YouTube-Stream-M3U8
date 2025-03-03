@@ -1,42 +1,37 @@
-import requests
-import re
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 def get_token():
-    url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
-    response = requests.get(url)
-    
-    if response.status_code != 200:
-        print("❌ Səhifə açıla bilmədi!")
-        return None
-    
-    # Tokeni tapmaq
-    match = re.search(r'tkn=([a-zA-Z0-9_-]+)', response.text)
-    if match:
-        return match.group(1)
-    
-    print("❌ Token tapılmadı!")
-    return None
+    # Set up the WebDriver
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')  # Başsız rejimdə işləyir
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-def update_stream_link(new_token):
-    try:
-        with open("stream_link.txt", "r") as file:
-            content = file.read()
-        
-        # Köhnə tokeni tapıb onu yenisi ilə əvəz edirik
-        updated_content = re.sub(r'tkn=[a-zA-Z0-9_-]+', f'tkn={new_token}', content)
-        
-        if content != updated_content:  # Əgər dəyişiklik olubsa
-            with open("stream_link.txt", "w") as file:
-                file.write(updated_content)
-            print("✅ Token yeniləndi və stream_link.txt faylı güncəlləndi.")
-        else:
-            print("❌ Token dəyişməyib.")
+    # Open the page
+    url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
+    driver.get(url)
     
-    except FileNotFoundError:
-        print("❌ stream_link.txt faylı tapılmadı!")
-        return
+    # Wait for page to load and find the token
+    time.sleep(5)  # Wait 5 seconds to ensure page is loaded, adjust if needed
+    
+    try:
+        # Searching for the token in the page source
+        token = driver.find_element(By.XPATH, "//script[contains(text(),'tkn=')]").get_attribute("innerHTML")
+        token = token.split("tkn=")[1].split("'")[0]
+        driver.quit()
+        return token
+    except Exception as e:
+        print(f"❌ Token tapılmadı! {e}")
+        driver.quit()
+        return None
 
 if __name__ == "__main__":
     token = get_token()
     if token:
-        update_stream_link(token)
+        print(f"Token: {token}")
+    else:
+        print("❌ Token tapılmadı!")
