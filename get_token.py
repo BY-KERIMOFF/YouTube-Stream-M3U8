@@ -1,11 +1,22 @@
 import requests
+from bs4 import BeautifulSoup
+import re
 
-# Yeni token URL-ni təyin edirik (Sadəcə nümunə olaraq)
-NEW_TOKEN = "newTokenValue"  # Burada yeni tokeni və ya digər parametrləri əlavə edin
-NEW_M3U8 = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={NEW_TOKEN}&tms=1740969806"
+# Sayt URL-si
+url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
 
-# stream.m3u8 faylını yeni link ilə yeniləyirik
-with open("stream.m3u8", "w") as f:
-    f.write(NEW_M3U8)
+# Saytı əldə edirik
+response = requests.get(url)
 
-print("✅ stream.m3u8 faylı yeni link ilə yeniləndi.")
+# Saytın HTML məzmununu parse edirik
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Saytdan tokeni tapmağa çalışırıq
+# HTML-də tkn= dəyərini tapmağa çalışırıq
+match = re.search(r'tkn=([A-Za-z0-9_-]+)', soup.text)
+
+if match:
+    token = match.group(1)
+    print(f"Yeni token: {token}")
+else:
+    print("Token tapılmadı!")
