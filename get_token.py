@@ -8,7 +8,7 @@ chrome_options = Options()
 chrome_options.add_argument("--headless")  # Başsız rejim (GUI olmadan çalışır)
 
 # Webdriver-i yükləyirik
-driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
 
 # Hedef URL
 url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
