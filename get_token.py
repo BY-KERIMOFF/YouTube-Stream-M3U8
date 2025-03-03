@@ -14,11 +14,11 @@ if response.status_code != 200:
 soup = BeautifulSoup(response.content, 'html.parser')
 
 # Tokeni tapmaq üçün script içərisindəki məlumatı axtarırıq
-script_tag = soup.find('script', text=lambda t: t and 'tkn=' in t)
+script_tag = soup.find('script', string=lambda t: t and 'tkn=' in t)
 
 if script_tag:
     # Tokeni tapmaq
-    token = script_tag.text.split('tkn=')[1].split('&')[0]
+    token = script_tag.string.split('tkn=')[1].split('&')[0]
     print(f"✅ Token tapıldı: {token}")
 else:
     print("❌ Token tapılmadı, yeni link ilə yeniləyirik.")
