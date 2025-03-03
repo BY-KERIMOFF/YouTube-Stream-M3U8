@@ -26,6 +26,11 @@ jobs:
     - name: Run get_token.py to fetch token
       run: python get_token.py
 
+    - name: Set Git configuration for GitHub Actions
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@users.noreply.github.com"
+
     - name: Check Git status
       run: git status
 
@@ -34,9 +39,6 @@ jobs:
         git add .
         git commit -m "Yeni token ilə stream.m3u8 yeniləndi"
         git push origin main
-
-    - name: Git config to allow push
-      run: git config --global user.name "github-actions"
 
     - name: Push changes to GitHub
       run: git push origin main
