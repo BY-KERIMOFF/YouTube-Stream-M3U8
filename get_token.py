@@ -34,33 +34,14 @@ def get_token_from_page(url):
         driver.quit()
         return None
 
-def update_token_in_file(new_token, filename="stream_link.txt"):
-    """stream_link.txt faylında tokeni yeniləyir və ya yeni link əlavə edir"""
+def save_token_to_file(token, filename="token.txt"):
+    """Tokeni fayla yazır"""
     try:
-        # Faylı oxuyuruq
-        try:
-            with open(filename, "r") as file:
-                content = file.read()
-            
-            # Köhnə token varsa, yenilə
-            if 'tkn=' in content:
-                old_token = content.split('tkn=')[1].split('&')[0]
-                new_content = content.replace(old_token, new_token)
-            else:
-                new_content = content
-        except FileNotFoundError:
-            new_content = ""
-
-        # Faylın sonuna yeni link əlavə edirik
-        new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={new_token}&tms={int(time.time())}\n"
-        new_content += new_link
-
-        # Faylı yenidən yazırıq
         with open(filename, "w") as file:
-            file.write(new_content)
-        print(f"✅ Token müvəffəqiyyətlə yeniləndi və ya yeni link əlavə olundu.")
+            file.write(token)
+        print(f"✅ Yeni token {filename} faylına yazıldı.")
     except Exception as e:
-        print(f"❌ Tokeni faylda yeniləməkdə səhv: {e}")
+        print(f"❌ Token fayla yazılarkən xəta baş verdi: {e}")
 
 if __name__ == "__main__":
     # URL-dən tokeni alırıq
@@ -70,7 +51,7 @@ if __name__ == "__main__":
     token = get_token_from_page(url)
     
     if token:
-        # Fayldakı tokeni yeniləyirik və ya yeni link əlavə edirik
-        update_token_in_file(token)
+        # Tokeni faylda saxlayırıq
+        save_token_to_file(token)
     else:
         print("❌ Token tapılmadı!")
