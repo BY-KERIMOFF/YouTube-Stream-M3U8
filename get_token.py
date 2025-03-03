@@ -1,36 +1,30 @@
 import requests
 from bs4 import BeautifulSoup
 
-# Yeni URL
+# Yeni linki tapmaq üçün sayt
 url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
 
-# URL'yi əldə edirik
+# Saytı açırıq
 response = requests.get(url)
-
-# Əgər səhv cavab almışıqsa, dayandırırıq
-if response.status_code != 200:
-    print("❌ Saytın məzmunu alınmadı!")
-    exit(1)
-
-# HTML məzmununu BeautifulSoup ilə parse edirik
 soup = BeautifulSoup(response.text, 'html.parser')
 
-# Linki axtarırıq
-link = None
-
-# Web səhifəsindən stream.m3u8 linkini tapmaq
-for script in soup.find_all('script'):
-    if 'tkn=' in str(script):
-        # 'tkn=' olan hissəni tapıb linki çıxardırıq
-        try:
-            link = str(script).split('tkn=')[1].split('"')[0]
-            break
-        except IndexError:
-            print("❌ Token tapılmadı, amma linki yeniləyirik.")
-
-# Əgər tapmadıqsa, yəni tkn tapılmadısa, linki əvəz edirik
-if not link:
-    # Bura default olaraq stream.m3u8 linki verirəm
-    link = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=default_token&tms=1740969806"
-
-print(f"✅ Yenilənmiş stream.m3u8 linki: {link}")
+# Tokeni tapmaq üçün scriptdən məlumatı çəkirik
+try:
+    script_tag = soup.find('script', text=lambda t: t and 'tkn=' in t)
+    token = script_tag.string.split('tkn=')[1].split("'")[0]  # Tokeni çıxarırıq
+    print(f"✅ Token tapıldı: {token}")
+    
+    # stream.m3u8 faylını yeniləyirik
+    new_m3u8 = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740969806"
+    
+    with open("stream.m3u8", "w") as file:
+        file.write(new_m3u8)
+    print("✅ stream.m3u8 faylı yeniləndi.")
+except Exception as e:
+    print("❌ Token tapılmadı, yeni link ilə yeniləyirik.")
+    # Token tapılmadıqda yeni linki qeyd edirik
+    fallback_m3u8 = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=fallback_token&tms=1740969806"
+    
+    with open("stream.m3u8", "w") as file:
+        file.write(fallback_m3u8)
+    print("✅ stream.m3u8 faylı yeniləndi (fallback).")
