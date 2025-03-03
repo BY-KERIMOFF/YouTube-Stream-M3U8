@@ -22,7 +22,7 @@ jobs:
         git config --global user.email "github-actions@github.com"
 
     - name: Run Python script
-      run: python3 your_script_name.py
+      run: python3 update_script.py
 
     - name: Check for changes and commit if necessary
       run: |
