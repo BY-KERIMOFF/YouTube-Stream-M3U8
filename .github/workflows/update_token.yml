@@ -78,11 +78,8 @@ jobs:
       run: |
         # stream.m3u8 faylını yeniləyirik
         OLD_M3U8=$(cat stream.m3u8)
-        if [ -z "$NEW_TOKEN" ]; then
-          echo "❌ Token tapılmadı, stream.m3u8 faylı yenilənmədi."
-          exit 1
-        fi
         NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
+
         echo "$NEW_M3U8" > stream.m3u8
         echo "✅ stream.m3u8 yeniləndi."
 
