@@ -52,10 +52,19 @@ jobs:
     - name: Run Token Script
       run: python get_token.py
 
+    - name: Check if stream.m3u8 exists
+      run: |
+        if [ -f "stream.m3u8" ]; then
+          echo "✅ stream.m3u8 faylı mövcuddur."
+        else
+          echo "❌ stream.m3u8 faylı tapılmadı!"
+          exit 1
+        fi
+
     - name: Commit and Push Updated M3U8 File
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git add stream.m3u8
         git commit -m "Yeni token ilə M3U8 faylı yeniləndi"
-        git push
+        git push origin main
