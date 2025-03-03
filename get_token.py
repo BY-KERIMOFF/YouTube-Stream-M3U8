@@ -9,10 +9,6 @@ def get_token():
         print("❌ Səhifə açıla bilmədi!")
         return None
     
-    # Saytın HTML mətnini çap et, problemi görməyə kömək edəcək
-    print(response.text)
-    
-    # Tokeni tapmaq üçün regex istifadə edirik
     match = re.search(r'tkn=([a-zA-Z0-9_-]+)', response.text)
     if match:
         return match.group(1)
@@ -20,9 +16,23 @@ def get_token():
     print("❌ Token tapılmadı!")
     return None
 
+def update_stream_link(new_token):
+    try:
+        with open("stream_link.txt", "r") as file:
+            content = file.read()
+        
+        # Köhnə tokeni tapıb onu yenisi ilə əvəz edirik
+        updated_content = re.sub(r'tkn=[a-zA-Z0-9_-]+', f'tkn={new_token}', content)
+        
+        with open("stream_link.txt", "w") as file:
+            file.write(updated_content)
+        
+        print("✅ Token yeniləndi və stream_link.txt faylı güncəlləndi.")
+    except FileNotFoundError:
+        print("❌ stream_link.txt faylı tapılmadı!")
+        return
+
 if __name__ == "__main__":
     token = get_token()
     if token:
-        print(f"Token tapıldı: {token}")
-    else:
-        print("Token tapılmadı.")
+        update_stream_link(token)
