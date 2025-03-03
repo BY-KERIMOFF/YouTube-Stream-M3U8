@@ -26,45 +26,13 @@ jobs:
         sudo apt-get install -y wget unzip python3-pip curl
         pip install requests selenium beautifulsoup4
 
-    - name: Download and Install Chromedriver
-      run: |
-        CHROME_VERSION="133.0.6943.141"  
-        CHROMEDRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
-        wget "$CHROMEDRIVER_URL" -O chromedriver-linux64.zip
-        unzip chromedriver-linux64.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
-        sudo chmod +x /usr/local/bin/chromedriver
-
-    - name: Verify Chromedriver Installation
-      run: chromedriver --version
-
-    - name: Download and Install Google Chrome
-      run: |
-        CHROME_URL="https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip"
-        wget "$CHROME_URL" -O chrome-linux64.zip
-        unzip chrome-linux64.zip
-        sudo mv chrome-linux64 /opt/google/chrome
-        sudo ln -s /opt/google/chrome/chrome /usr/local/bin/google-chrome
-
-    - name: Verify Chrome Installation
-      run: google-chrome --version
-
     - name: Run Token Script
       run: python get_token.py
 
-    - name: Check if stream.m3u8 exists
-      run: |
-        if [ -f "stream.m3u8" ]; then
-          echo "✅ stream.m3u8 faylı mövcuddur."
-        else
-          echo "❌ stream.m3u8 faylı tapılmadı!"
-          exit 1
-        fi
-
-    - name: Commit and Push Updated M3U8 File
+    - name: Commit and Push Updated stream_link.txt
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
-        git add stream.m3u8
-        git commit -m "Yeni token ilə M3U8 faylı yeniləndi"
+        git add stream_link.txt
+        git commit -m "Yeni token ilə stream_link.txt faylı yeniləndi"
         git push origin main
