@@ -24,7 +24,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y wget unzip python3-pip curl
-        pip install requests selenium beautifulsoup4
+        pip install requests selenium beautifulsoup4 webdriver-manager
 
     - name: Download and Install Chromedriver
       run: |
@@ -52,16 +52,16 @@ jobs:
     - name: Run Token Script
       run: python get_token.py
 
-    - name: Check if stream_link.txt exists
+    - name: Check if stream.m3u8 exists
       run: |
-        if [ -f "stream_link.txt" ]; then
-          echo "✅ stream_link.txt faylı mövcuddur."
+        if [ -f "stream.m3u8" ]; then
+          echo "✅ stream.m3u8 faylı mövcuddur."
         else
-          echo "❌ stream_link.txt faylı tapılmadı!"
+          echo "❌ stream.m3u8 faylı tapılmadı!"
           exit 1
         fi
 
-    - name: Check if stream_link.txt was modified
+    - name: Check if stream.m3u8 file was modified
       run: |
         git status
         if [ -n "$(git status --porcelain)" ]; then
@@ -71,10 +71,10 @@ jobs:
           exit 0
         fi
 
-    - name: Commit and Push Updated Stream Link File
+    - name: Commit and Push Updated M3U8 File
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
-        git add stream_link.txt
-        git commit -m "Yeni token ilə stream_link.txt faylı yeniləndi" || echo "No changes to commit"
+        git add stream.m3u8
+        git commit -m "Yeni token ilə M3U8 faylı yeniləndi" || echo "No changes to commit"
         git push origin main
