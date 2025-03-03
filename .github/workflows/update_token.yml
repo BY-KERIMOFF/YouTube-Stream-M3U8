@@ -29,10 +29,13 @@ jobs:
     - name: Run Token Script
       run: python get_token.py
 
+    - name: Check git status (to verify changes)
+      run: git status
+
     - name: Commit and Push Updated stream_link.txt
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git add stream_link.txt
-        git commit -m "Yeni token ilə stream_link.txt faylı yeniləndi"
+        git commit -m "Yeni token ilə stream_link.txt faylı yeniləndi" || echo "No changes to commit"
         git push origin main
