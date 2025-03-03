@@ -19,14 +19,14 @@ if script_tag:
     print("✅ Token tapıldı.")
 
     # Yeni link yarat
-    new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}"
+    new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740980455"
     with open("stream.m3u8", "w") as file:
         file.write(new_link)
     print("✅ stream.m3u8 yeniləndi.")
 else:
     print("❌ Token tapılmadı.")
     
-    # Əgər token tapılmasa, yeni link əlavə et
+    # Əgər token tapılmasa, sabit link əlavə et
     with open("stream.m3u8", "w") as file:
-        file.write("https://new-link.example.com/stream.m3u8")
-    print("✅ stream.m3u8 yeniləndi.")
+        file.write("https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=w3nxqj5RKo4JLfvPLv9oxA&tms=1740980455")
+    print("✅ stream.m3u8 sabit link ilə yeniləndi.")
