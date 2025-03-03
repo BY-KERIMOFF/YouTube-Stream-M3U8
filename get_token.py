@@ -1,82 +1,45 @@
-import time
 import requests
-import re
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
-# Chrome üçün Selenium konfiqurasiyası
-chrome_driver_path = "/usr/local/bin/chromedriver"  # GitHub Actions üçün düzgün yol
+# Tokeni olan URL
+token_url = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=b4zwWRWXY_x8qGQWPP7lWw&tms=1740967578"
 
-options = Options()
-options.add_argument("--headless=new")  
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
+# Token alınacaq səhifə
+page_url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
 
-service = Service(executable_path=chrome_driver_path)
-driver = webdriver.Chrome(service=service, options=options)
+# Başlıqlar
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+}
 
-# Sayta daxil ol
-url = "https://www.ecanlitvizle.app/kucukcekmece-mobese-canli-izle/"
-driver.get(url)
-time.sleep(5)  # Saytın tam yüklənməsini gözlə
+# AJAX sorğusunu edirik
+try:
+    # İlk olaraq səhifəni alırıq
+    page_response = requests.get(page_url, headers=headers)
+    if page_response.status_code == 200:
+        print("Səhifə uğurla alındı.")
 
-# Saytın HTML kodunu al
-page_source = driver.page_source
-soup = BeautifulSoup(page_source, "html.parser")
+        # BeautifulSoup ilə səhifə məzmununu təhlil edirik
+        soup = BeautifulSoup(page_response.content, 'html.parser')
 
-# Tokeni HTML kodundan çıxar
-token_pattern = r'tkn=([a-zA-Z0-9]+)'
-token_match = re.search(token_pattern, page_source)
-
-if token_match:
-    token = token_match.group(1)
-    print(f"🔹 Token tapıldı: {token}")
-
-else:
-    print("❌ Token HTML-də tapılmadı, AJAX sorğusu yoxlanılır...")
-
-    # AJAX sorğusu ilə tokeni əldə etməyə cəhd et
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
-    }
-    
-    try:
-        ajax_url = "https://www.ecanlitvizle.app/api/get_token"  # Developer Tools ilə yoxla
-        response = requests.get(ajax_url, headers=headers)
-
-        if response.status_code == 200:
-            token_match = re.search(token_pattern, response.text)
-            if token_match:
-                token = token_match.group(1)
-                print(f"🔹 AJAX Token tapıldı: {token}")
-            else:
-                print("❌ AJAX sorğusunda da token tapılmadı.")
-                token = None
-        else:
-            print(f"❌ AJAX sorğusu uğursuz oldu! Kod: {response.status_code}")
-            token = None
-
-    except Exception as e:
-        print(f"⚠️ AJAX sorğusu zamanı xəta baş verdi: {e}")
+        # Buradan JavaScript kodlarını və ya AJAX sorğusunu tapmalıyıq
+        # Misal olaraq, tokeni tapmaq üçün birbaşa HTML daxilində axtarış edirik.
         token = None
+        for script in soup.find_all('script'):
+            if 'token' in script.text:
+                # JavaScript içindəki tokeni çıxartmaq
+                start_index = script.text.find('token=') + len('token=')
+                end_index = script.text.find('"', start_index)
+                token = script.text[start_index:end_index]
+                break
 
-# Brauzeri bağla
-driver.quit()
-
-# Token tapılıbsa, işlək M3U8 linkini qur
-if token:
-    m3u8_url = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740960002"
-    
-    # Linki fayla yaz
-    with open("tv.txt", "w") as file:
-        file.write(m3u8_url)
-    
-    print(f"✅ Yeni M3U8 Linki: {m3u8_url}")
-    print("✅ Link tv.txt faylına yazıldı!")
-
-else:
-    print("❌ Token tapılmadı, link yenilənmədi.")
+        if token:
+            print("Yeni Token tapıldı:", token)
+        else:
+            print("Token tapılmadı, səhifə içində JavaScript kodunu araşdırın.")
+    else:
+        print(f"Səhifə alınmadı. HTTP Status Code: {page_response.status_code}")
+except requests.exceptions.RequestException as e:
+    print(f"Şəbəkə problemi oldu: {e}")
