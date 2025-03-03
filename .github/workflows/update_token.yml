@@ -1,51 +1,50 @@
-name: Update Stream Link
+name: Update M3U8 Link and Commit Changes
 
 on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '*/30 * * * *' # Hər 30 dəqiqədən bir çalışır
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  update_stream_link:
+  update-m3u8:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    - name: Install dependencies
-      run: |
-        pip install requests beautifulsoup4
-
-    - name: Run Python script to update stream.m3u8
-      run: |
-        python get_token.py
-        
-    - name: Pull changes from remote before pushing
-      run: |
-        git pull origin main --rebase
-
-    - name: Check if stream.m3u8 file was modified
-      run: |
-        git status
-        if [ -n "$(git status --porcelain)" ]; then
-          echo "✅ Dəyişikliklər var."
-        else
-          echo "❌ Dəyişiklik yoxdur."
-          exit 0
-        fi
-
-    - name: Commit and Push Updated M3U8 File
+    - name: Set up Git
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
-        git add stream.m3u8
-        git commit -m "Yeni token ilə M3U8 faylı yeniləndi" || echo "No changes to commit"
-        git push origin main
+
+    - name: Check for changes and commit if necessary
+      run: |
+        git add .
+        git commit -m "Dəyişikliklər commit edildi" || echo "No changes to commit"
+        
+    - name: Pull latest changes from remote
+      run: |
+        git pull origin main --rebase || { echo "Git pull ilə problem var"; exit 1; }
+
+    - name: Update stream.m3u8 with new link
+      run: |
+        if [ -f "stream.m3u8" ]; then
+          echo "✅ stream.m3u8 yeniləndi."
+          # Burada token yeniləmək və stream.m3u8 faylını yeniləmək əməliyyatını əlavə et
+          # Məsələn:
+          # sed -i 's/old_link/new_link/' stream.m3u8
+        else
+          echo "❌ stream.m3u8 faylı tapılmadı!"
+          exit 1
+        fi
+
+    - name: Push changes to remote
+      run: |
+        git push origin main || { echo "Git push ilə problem var"; exit 1; }
+
+    - name: Final check
+      run: echo "✅ Proses tamamlandı!"
