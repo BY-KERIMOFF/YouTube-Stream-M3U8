@@ -59,11 +59,27 @@ jobs:
           exit 1
         fi
 
-    - name: Ensure stream.m3u8 exists or create it
+    - name: Update stream.m3u8 with new token
       run: |
-        if [ ! -f "stream.m3u8" ]; then
-          echo "stream.m3u8 faylı mövcud deyil, yeni fayl yaradılır."
-          echo "Yeni stream linki və token ilə stream.m3u8 faylı yaradılır." > stream.m3u8
+        # Tokeni fayldan oxuyuruq
+        NEW_TOKEN=$(cat token.txt)
+        OLD_M3U8=$(cat stream.m3u8)
+        
+        # Yeni m3u8 linki yaratmaq
+        NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
+        
+        # stream.m3u8 faylını yeniləyirik
+        echo "$NEW_M3U8" > stream.m3u8
+        echo "✅ stream.m3u8 yeniləndi."
+
+    - name: Check if stream.m3u8 file was modified
+      run: |
+        git status
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "✅ Dəyişikliklər var."
+        else
+          echo "❌ Dəyişiklik yoxdur."
+          exit 0
         fi
 
     - name: Commit and Push Updated M3U8 File
