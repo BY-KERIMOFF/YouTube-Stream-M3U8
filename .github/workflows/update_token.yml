@@ -27,7 +27,7 @@ jobs:
     - name: Download and Install Chromedriver
       run: |
         # Google Chrome-un uyğun versiyasını təyin et
-        CHROME_VERSION="135.0.7023.0"  
+        CHROME_VERSION="133.0.6943.141"  
         CHROMEDRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
         echo "Downloading Chromedriver for version $CHROME_VERSION from: $CHROMEDRIVER_URL"
         wget "$CHROMEDRIVER_URL" -O chromedriver-linux64.zip
@@ -41,7 +41,7 @@ jobs:
     - name: Download and Install Google Chrome
       run: |
         # Google Chrome-un uyğun versiyasını təyin et
-        CHROME_URL="https://storage.googleapis.com/chrome-for-testing-public/135.0.7023.0/linux64/chrome-linux64.zip"
+        CHROME_URL="https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip"
         echo "Downloading Google Chrome for version $CHROME_VERSION from: $CHROME_URL"
         wget "$CHROME_URL" -O chrome-linux64.zip
         unzip chrome-linux64.zip
