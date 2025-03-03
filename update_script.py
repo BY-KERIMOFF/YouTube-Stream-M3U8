@@ -1,25 +1,29 @@
 import requests
+from bs4 import BeautifulSoup
 
-# URL tərtib et
-url = 'https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=XdBMwsPAdMN_l8EqNmVx5A&tms=1740980749'
+# URL'yi daxil edirik
+url = "https://www.ecanlitvizle.app/embed.php?kanal=xezer-tv-canli-izle"
 
-# Sorğu başlıqları
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
-    'Referer': 'https://www.ecanlitvizle.app/',
-    'Origin': 'https://www.ecanlitvizle.app'
-}
+# GET sorğusu göndəririk
+response = requests.get(url)
 
-# GET sorğusu göndər
-response = requests.get(url, headers=headers)
-
-# Cavabı yoxla
+# Sorğu uğurlu oldusa
 if response.status_code == 200:
-    print("✅ Sorğu uğurlu oldu.")
-    
-    # Cavab məzmununu fayla yaz
-    with open("stream.m3u8", "w") as file:
-        file.write(response.text)
-    print("✅ stream.m3u8 faylı yeniləndi.")
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # HTML-də 'tkn=' olan script tagini tapırıq
+    script_tag = soup.find('script', text=lambda t: t and 'tkn=' in t)
+    if script_tag:
+        # Tokeni çıxarırıq
+        script_content = script_tag.string
+        # Tokeni çəkmək üçün regex istifadə edə bilərik
+        import re
+        token = re.search(r'tkn=([^"]+)', script_content)
+        if token:
+            print(f"Token tapıldı: {token.group(1)}")
+        else:
+            print("Token tapılmadı")
+    else:
+        print("Token içeren script tapılmadı")
 else:
-    print(f"❌ Sorğu uğursuz oldu. Status kodu: {response.status_code}")
+    print("Sorğu uğursuz oldu")
