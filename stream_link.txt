@@ -1,16 +1,1 @@
-#EXTM3U
-#EXT-X-VERSION:3
-#EXT-X-MEDIA-SEQUENCE:53287
-#EXT-X-TARGETDURATION:9
-#EXTINF:6.720,
-xazartv-53287.ts?tkn=JCm4CeptUoCkaoqwLPifNQ&tms=1740967951
-#EXTINF:5.720,
-xazartv-53288.ts?tkn=JCm4CeptUoCkaoqwLPifNQ&tms=1740967951
-#EXTINF:6.840,
-xazartv-53289.ts?tkn=JCm4CeptUoCkaoqwLPifNQ&tms=1740967951
-#EXTINF:6.840,
-xazartv-53290.ts?tkn=JCm4CeptUoCkaoqwLPifNQ&tms=1740967951
-#EXTINF:9.040,
-xazartv-53291.ts?tkn=JCm4CeptUoCkaoqwLPifNQ&tms=1740967951
-#EXTINF:5.000,
-xazartv-53292.ts?tkn=JCm4CeptUoCkaoqwLPifNQ&tms=1740967951
+
