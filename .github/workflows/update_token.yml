@@ -50,16 +50,12 @@ jobs:
       run: google-chrome --version
 
     - name: Run Token Script
-      run: python get_token.py
-
-    - name: Check if token.txt exists and has new token
       run: |
+        python get_token.py
         if [ -f "token.txt" ]; then
-          echo "✅ token.txt faylı mövcuddur."
-          NEW_TOKEN=$(cat token.txt)
-          echo "Yeni token: $NEW_TOKEN"
+          echo "✅ Token tapıldı."
         else
-          echo "❌ token.txt faylı tapılmadı!"
+          echo "❌ Token tapılmadı!"
           exit 1
         fi
 
