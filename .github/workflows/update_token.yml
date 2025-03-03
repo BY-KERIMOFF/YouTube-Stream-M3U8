@@ -21,26 +21,17 @@ jobs:
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
 
+    - name: Run Python script
+      run: python3 your_script_name.py
+
     - name: Check for changes and commit if necessary
       run: |
         git add .
-        git commit -m "Dəyişikliklər commit edildi" || echo "No changes to commit"
-        
+        git commit -m "Dəyişikliklər commit edildi" || exit 1
+
     - name: Pull latest changes from remote
       run: |
         git pull origin main --rebase || { echo "Git pull ilə problem var"; exit 1; }
-
-    - name: Update stream.m3u8 with new link
-      run: |
-        if [ -f "stream.m3u8" ]; then
-          echo "✅ stream.m3u8 yeniləndi."
-          # Burada token yeniləmək və stream.m3u8 faylını yeniləmək əməliyyatını əlavə et
-          # Məsələn:
-          # sed -i 's/old_link/new_link/' stream.m3u8
-        else
-          echo "❌ stream.m3u8 faylı tapılmadı!"
-          exit 1
-        fi
 
     - name: Push changes to remote
       run: |
