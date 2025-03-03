@@ -4,6 +4,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def get_token():
     # Set up the WebDriver
@@ -15,12 +17,15 @@ def get_token():
     url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
     driver.get(url)
     
-    # Wait for page to load and find the token
-    time.sleep(5)  # Wait 5 seconds to ensure page is loaded, adjust if needed
-    
     try:
-        # Searching for the token in the page source
-        token = driver.find_element(By.XPATH, "//script[contains(text(),'tkn=')]").get_attribute("innerHTML")
+        # Gözləmə tətbiq et, səhifənin tam yüklənməsini təmin et
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//script[contains(text(),'tkn=')]"))
+        )
+        
+        # Token-in olduğu script elementini tap
+        script = driver.find_element(By.XPATH, "//script[contains(text(),'tkn=')]")
+        token = script.get_attribute("innerHTML")
         token = token.split("tkn=")[1].split("'")[0]
         driver.quit()
         return token
