@@ -13,39 +13,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Repository-ni checkout et
     - name: Checkout code
       uses: actions/checkout@v2
 
+    # 2. Git konfiqurasiyasını təyin et
     - name: Set up Git
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
 
+    # 3. Python quraşdır
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'  # İstədiyiniz Python versiyasını qeyd edin
 
+    # 4. Python paketlərini quraşdır
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip install requests beautifulsoup4
 
+    # 5. Python skriptini işlə
     - name: Run Python script
       run: python3 update_script.py
 
+    # 6. Dəyişiklikləri yoxla və commit et
     - name: Check for changes and commit if necessary
       run: |
         git add .
         git diff --cached --quiet || git commit -m "Dəyişikliklər commit edildi"
 
+    # 7. Remote-dan ən son dəyişiklikləri çək
     - name: Pull latest changes from remote
       run: |
         git pull origin main --rebase || { echo "Git pull ilə problem var"; exit 1; }
 
+    # 8. Dəyişiklikləri remote-a push et
     - name: Push changes to remote
       run: |
         git push origin main || { echo "Git push ilə problem var"; exit 1; }
 
+    # 9. Prosesin uğurla tamamlandığını yoxla
     - name: Final check
       run: echo "✅ Proses tamamlandı!"
