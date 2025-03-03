@@ -19,7 +19,7 @@ if script_tag:
     print("✅ Token tapıldı.")
 
     # Yeni link yarat
-    new_link = f"https://example.com/stream.m3u8?tkn={token}"
+    new_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}"
     with open("stream.m3u8", "w") as file:
         file.write(new_link)
     print("✅ stream.m3u8 yeniləndi.")
