@@ -1,13 +1,13 @@
-name: Update stream.m3u8
+name: Update M3U8 File with Token
 
 on:
   push:
     branches:
       - main
   schedule:
-    - cron: '*/30 * * * *'  # Hər 30 dəqiqədən bir çalışır
+    - cron: '*/30 * * * *' # Hər 30 dəqiqədən bir çalışır
 
-jobs:
+jobs:     
   setup:
     runs-on: ubuntu-latest
 
@@ -23,13 +23,39 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3-pip curl
-        pip install requests
+        sudo apt-get install -y wget unzip python3-pip curl
+        pip install requests beautifulsoup4
 
-    - name: Run Token Script
+    - name: Get token from website
       run: |
         python get_token.py
-        echo "✅ Yeni link ilə stream.m3u8 faylı yeniləndi."
+        if [ -f "token.txt" ]; then
+          echo "✅ Token tapıldı."
+        else
+          echo "❌ Token tapılmadı!"
+          exit 1
+        fi
+
+    - name: Read token from file
+      run: |
+        if [ ! -f "token.txt" ]; then
+          echo "❌ token.txt faylı tapılmadı!"
+          exit 1
+        fi
+        NEW_TOKEN=$(cat token.txt)
+        if [ -z "$NEW_TOKEN" ]; then
+          echo "❌ Yeni token tapılmadı!"
+          exit 1
+        else
+          echo "✅ Yeni token: $NEW_TOKEN"
+        fi
+
+    - name: Update stream.m3u8 with new token
+      run: |
+        OLD_M3U8=$(cat stream.m3u8)
+        NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
+        echo "$NEW_M3U8" > stream.m3u8
+        echo "✅ stream.m3u8 yeniləndi."
 
     - name: Check if stream.m3u8 file was modified
       run: |
@@ -41,14 +67,10 @@ jobs:
           exit 0
         fi
 
-    - name: Pull changes from remote
-      run: |
-        git pull origin main || echo "No changes to pull"
-
     - name: Commit and Push Updated M3U8 File
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git add stream.m3u8
-        git commit -m "stream.m3u8 faylı yeni linklə yeniləndi" || echo "No changes to commit"
+        git commit -m "Yeni token ilə M3U8 faylı yeniləndi" || echo "No changes to commit"
         git push origin main
