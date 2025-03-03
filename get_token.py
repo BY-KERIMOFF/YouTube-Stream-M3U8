@@ -1,51 +1,31 @@
-import re
-import requests
+import time
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
-# Chrome başlatma opsiyaları
-options = Options()
-options.add_argument("--headless")  # Chrome'u görünməz olaraq işlətmək
+# ChromeDriver və Chrome'u başlatmaq
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Headless rejimi (brauzersiz)
 
-# Webdriver'ı qururuq
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
 
-# Verilən URL (sizin istədiyiniz link)
+# Linki açın
 url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
-
-# URL-ə gedirik
 driver.get(url)
 
-# Tokeni tapmaq üçün səhifənin tam yüklənməsini gözləyirik
-driver.implicitly_wait(10)
+# Sayfanın tam yüklənməsini gözləyirik
+time.sleep(5)
 
-# Səhifədəki scripti tapırıq və tokeni çıxarırıq
+# Tokeni tapmağa çalışırıq
 try:
-    # Scripti tapırıq və tokeni çıxarırıq
-    page_source = driver.page_source
-    match = re.search(r'tkn=([A-Za-z0-9_-]+)', page_source)
-    
-    if match:
-        old_token = match.group(1)
-        print(f"Eski Token tapıldı: {old_token}")
-        
-        # Yeni tokeni buraya daxil edin (bu misaldır, əslində yenisini bir şəkildə əldə etməlisiniz)
-        new_token = "YeniToken_1234567890"
-        
-        # URL-dəki tokeni yeniləyirik
-        new_url = re.sub(r'tkn=[A-Za-z0-9_-]+', f'tkn={new_token}', url)
-        print(f"Yeni URL: {new_url}")
-        
-        # Yeni URL-ni stream_link.txt faylına yazırıq
-        with open("stream_link.txt", "w") as file:
-            file.write(new_url)
-            print("Yeni URL stream_link.txt faylına yazıldı.")
-    else:
-        print("Token tapılmadı!")
+    # Tokeni script tagı içərisindən çıxarmaq
+    script_content = driver.find_element(By.XPATH, "//script[contains(text(),'tkn=')]").get_attribute("innerHTML")
+    token = script_content.split('tkn=')[1].split('&')[0]  # Tokeni alırıq
+    with open("token.txt", "w") as token_file:
+        token_file.write(token)  # Tokeni fayla yazırıq
+    print("✅ Token tapıldı və 'token.txt' faylına yazıldı.")
 except Exception as e:
-    print(f"Xəta baş verdi: {e}")
+    print(f"❌ Token tapılmadı! Hata: {str(e)}")
 finally:
     driver.quit()
