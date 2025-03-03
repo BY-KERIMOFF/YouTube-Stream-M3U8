@@ -37,7 +37,7 @@ jobs:
     - name: Check for changes and commit if necessary
       run: |
         git add .
-        git commit -m "Dəyişikliklər commit edildi" || exit 1
+        git diff --cached --quiet || git commit -m "Dəyişikliklər commit edildi"
 
     - name: Pull latest changes from remote
       run: |
