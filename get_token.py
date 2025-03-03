@@ -1,57 +1,51 @@
+import re
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
+from selenium.webdriver.chrome.options import Options
 
-def get_token_from_page(url):
-    """URL-ə gedir və tokeni alır"""
-    options = Options()
-    options.add_argument('--headless')  # Başsız rejimdə işləyir
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+# Chrome başlatma opsiyaları
+options = Options()
+options.add_argument("--headless")  # Chrome'u görünməz olaraq işlətmək
 
-    # URL-i açır
-    driver.get(url)
+# Webdriver'ı qururuq
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+# Verilən URL (sizin istədiyiniz link)
+url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
+
+# URL-ə gedirik
+driver.get(url)
+
+# Tokeni tapmaq üçün səhifənin tam yüklənməsini gözləyirik
+driver.implicitly_wait(10)
+
+# Səhifədəki scripti tapırıq və tokeni çıxarırıq
+try:
+    # Scripti tapırıq və tokeni çıxarırıq
+    page_source = driver.page_source
+    match = re.search(r'tkn=([A-Za-z0-9_-]+)', page_source)
     
-    try:
-        # Sayfa tam yükləndikdən sonra tokeni tapmaq
-        WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.XPATH, "//script[contains(text(),'tkn=')]"))
-        )
-
-        # Tokenin olduğu script elementini tapırıq
-        script = driver.find_element(By.XPATH, "//script[contains(text(),'tkn=')]")
-        token = script.get_attribute("innerHTML")
-        token = token.split("tkn=")[1].split("'")[0]
-        driver.quit()
-        return token
-    except Exception as e:
-        print(f"❌ Token tapılmadı! Error: {e}")
-        driver.quit()
-        return None
-
-def save_token_to_file(token, filename="token.txt"):
-    """Tokeni fayla yazır"""
-    try:
-        with open(filename, "w") as file:
-            file.write(token)
-        print(f"✅ Yeni token {filename} faylına yazıldı.")
-    except Exception as e:
-        print(f"❌ Token fayla yazılarkən xəta baş verdi: {e}")
-
-if __name__ == "__main__":
-    # URL-dən tokeni alırıq
-    url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"  # Hedef URL
-
-    print(f"✅ {url} üçün token alınıb:")
-    token = get_token_from_page(url)
-    
-    if token:
-        # Tokeni faylda saxlayırıq
-        save_token_to_file(token)
+    if match:
+        old_token = match.group(1)
+        print(f"Eski Token tapıldı: {old_token}")
+        
+        # Yeni tokeni buraya daxil edin (bu misaldır, əslində yenisini bir şəkildə əldə etməlisiniz)
+        new_token = "YeniToken_1234567890"
+        
+        # URL-dəki tokeni yeniləyirik
+        new_url = re.sub(r'tkn=[A-Za-z0-9_-]+', f'tkn={new_token}', url)
+        print(f"Yeni URL: {new_url}")
+        
+        # Yeni URL-ni stream_link.txt faylına yazırıq
+        with open("stream_link.txt", "w") as file:
+            file.write(new_url)
+            print("Yeni URL stream_link.txt faylına yazıldı.")
     else:
-        print("❌ Token tapılmadı!")
+        print("Token tapılmadı!")
+except Exception as e:
+    print(f"Xəta baş verdi: {e}")
+finally:
+    driver.quit()
