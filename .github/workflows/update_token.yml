@@ -61,7 +61,6 @@ jobs:
 
     - name: Read token from file
       run: |
-        # Fayldan tokeni oxuyuruq
         if [ ! -f "token.txt" ]; then
           echo "❌ token.txt faylı tapılmadı!"
           exit 1
@@ -76,10 +75,8 @@ jobs:
 
     - name: Update stream.m3u8 with new token
       run: |
-        # stream.m3u8 faylını yeniləyirik
         OLD_M3U8=$(cat stream.m3u8)
         NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
-
         echo "$NEW_M3U8" > stream.m3u8
         echo "✅ stream.m3u8 yeniləndi."
 
