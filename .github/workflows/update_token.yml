@@ -72,6 +72,10 @@ jobs:
         echo "$NEW_M3U8" > stream.m3u8
         echo "✅ stream.m3u8 yeniləndi."
 
+    - name: Pull changes from remote
+      run: |
+        git pull origin main || echo "No changes to pull"
+
     - name: Check if stream.m3u8 file was modified
       run: |
         git status
