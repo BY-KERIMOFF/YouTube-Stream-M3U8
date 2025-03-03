@@ -1,62 +1,44 @@
-import os
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
-# Chrome options
+# Chrome sürücüsünü qururuq
 chrome_options = Options()
-chrome_options.add_argument("--headless")  # Başsız rejim (GUI olmadan çalışır)
+chrome_options.add_argument("--headless")  # Başsız rejim
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
 
-# WebDriver üçün Service yaratmaq
-service = Service(ChromeDriverManager().install())
+# WebDriver və səhifə açılır
+driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+driver.get("https://ecanlitv3.etvserver.com/xazartv.m3u8")
 
-# WebDriver-i başlatmaq
-driver = webdriver.Chrome(service=service, options=chrome_options)
-
-# Hedef URL
-url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
-
-# Saytı açırıq
-driver.get(url)
-
-# Sayta tam yüklənməsini gözləyirik
-time.sleep(5)
-
-# Tokeni tapmağa çalışırıq
-token_element = None
-token = None
 try:
-    token_element = driver.find_element("xpath", "//script[contains(text(),'tkn=')]")  # Yeni metod istifadə edilir
-    token_script = token_element.get_attribute('innerHTML')
-    start_index = token_script.find("tkn=") + 4
-    end_index = token_script.find("&", start_index)
+    # Sayfa tam yükləndikdən sonra tokeni tapmaq üçün gözləyirik
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//script[contains(text(),'tkn=')]"))
+    )
+
+    # XPath ilə tokeni tapırıq
+    token_script = driver.find_element(By.XPATH, "//script[contains(text(),'tkn=')]").get_attribute("innerHTML")
+    
+    # Tokeni çıxarırıq
+    start_index = token_script.find('tkn=') + 4
+    end_index = token_script.find('&', start_index)
     token = token_script[start_index:end_index] if end_index != -1 else token_script[start_index:]
-    print(f"Token tapıldı: {token}")
+    
+    # Token tapılıbsa, fayla yazırıq
+    if token:
+        with open("token.txt", "w") as file:
+            file.write(token)
+        print("✅ Token tapıldı.")
+    else:
+        print("❌ Token tapılmadı!")
 
-    # Tokeni faylda saxlamaq
-    with open("token.txt", "w") as f:
-        f.write(token)
-    print("✅ Token fayla yazıldı.")
 except Exception as e:
-    print(f"❌ Token tapılmadı! Error: {e}")
-
-# Əgər token tapılmadısa, köhnə stream.m3u8 faylını sil və yeni link əlavə et
-if not token:
-    if os.path.exists("stream.m3u8"):
-        os.remove("stream.m3u8")  # Köhnə faylı silirik
-    # Yeni linki əlavə edirik
-    new_link = "https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=new_token&tms=1740969806"
-    with open("stream.m3u8", "w") as f:
-        f.write(new_link)
-    print("✅ Köhnə token tapılmadı. Yeni tokenlə stream.m3u8 faylı yeniləndi.")
-else:
-    # Token tapılarsa stream.m3u8 faylını yeniləyirik
-    new_m3u8_link = f"https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn={token}&tms=1740969806"
-    with open("stream.m3u8", "w") as f:
-        f.write(new_m3u8_link)
-    print("✅ stream.m3u8 faylı yeniləndi.")
-
-# Driver-i bağlayırıq
-driver.quit()
+    print(f"❌ Hata baş verdi: {e}")
+finally:
+    driver.quit()
