@@ -1,11 +1,11 @@
-name: Set Up Chromedriver and Fetch Token
+name: Set Up Chromedriver and Get Token
 
 on:
   push:
     branches:
       - main
   schedule:
-    - cron: "0 * * * *"  # Hər saatda bir dəfə çalışacaq
+    - cron: '*/30 * * * *' # Hər 30 dəqiqədən bir çalışır
 
 jobs:     
   setup:
@@ -30,7 +30,6 @@ jobs:
       run: |
         CHROME_VERSION="133.0.6943.141"  
         CHROMEDRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
-        echo "Downloading Chromedriver for version $CHROME_VERSION from: $CHROMEDRIVER_URL"
         wget "$CHROMEDRIVER_URL" -O chromedriver-linux64.zip
         unzip chromedriver-linux64.zip
         sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
@@ -42,7 +41,6 @@ jobs:
     - name: Download and Install Google Chrome
       run: |
         CHROME_URL="https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip"
-        echo "Downloading Google Chrome for version $CHROME_VERSION from: $CHROME_URL"
         wget "$CHROME_URL" -O chrome-linux64.zip
         unzip chrome-linux64.zip
         sudo mv chrome-linux64 /opt/google/chrome
@@ -54,10 +52,10 @@ jobs:
     - name: Run Token Script
       run: python get_token.py
 
-    - name: Commit and Push Updated Stream Link
+    - name: Commit and Push Updated M3U8 File
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
-        git add stream_link.txt
-        git commit -m "Update stream link"
+        git add stream.m3u8
+        git commit -m "Yeni token ilə M3U8 faylı yeniləndi"
         git push
