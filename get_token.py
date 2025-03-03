@@ -8,8 +8,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Headless rejimi (brauzersiz)
 
-# ChromeDriver ilə başlatmaq, yalnız options parametri istifadə edilir
-driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+# ChromeDriver ilə başlatmaq, yalnız options parametri istifadə edirik
+driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
 
 # Linki açın
 url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
