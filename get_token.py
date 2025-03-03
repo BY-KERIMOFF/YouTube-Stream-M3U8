@@ -1,14 +1,18 @@
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 import time
 
 # Chrome options
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Başsız rejim (GUI olmadan çalışır)
 
-# Webdriver-i yükləyirik
-driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
+# WebDriver üçün Service yaratmaq
+service = Service(ChromeDriverManager().install())
+
+# WebDriver-i başlatmaq
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # Hedef URL
 url = "https://www.ecanlitvizle.app/xezer-tv-canli-izle/"
