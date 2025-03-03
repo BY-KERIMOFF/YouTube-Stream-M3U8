@@ -1,13 +1,13 @@
-name: Set Up Chromedriver and Get Token
+name: Update stream.m3u8
 
 on:
   push:
     branches:
       - main
   schedule:
-    - cron: '*/30 * * * *' # Hər 30 dəqiqədən bir çalışır
+    - cron: '*/30 * * * *'  # Hər 30 dəqiqədən bir çalışır
 
-jobs:     
+jobs:
   setup:
     runs-on: ubuntu-latest
 
@@ -23,62 +23,13 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y wget unzip python3-pip curl
-        pip install requests selenium beautifulsoup4 webdriver-manager
-
-    - name: Download and Install Chromedriver
-      run: |
-        CHROME_VERSION="133.0.6943.141"  
-        CHROMEDRIVER_URL="https://storage.googleapis.com/chrome-for-testing-public/$CHROME_VERSION/linux64/chromedriver-linux64.zip"
-        wget "$CHROMEDRIVER_URL" -O chromedriver-linux64.zip
-        unzip chromedriver-linux64.zip
-        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
-        sudo chmod +x /usr/local/bin/chromedriver
-
-    - name: Verify Chromedriver Installation
-      run: chromedriver --version
-
-    - name: Download and Install Google Chrome
-      run: |
-        CHROME_URL="https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.141/linux64/chrome-linux64.zip"
-        wget "$CHROME_URL" -O chrome-linux64.zip
-        unzip chrome-linux64.zip
-        sudo mv chrome-linux64 /opt/google/chrome
-        sudo ln -s /opt/google/chrome/chrome /usr/local/bin/google-chrome
-
-    - name: Verify Chrome Installation
-      run: google-chrome --version
+        sudo apt-get install -y python3-pip curl
+        pip install requests
 
     - name: Run Token Script
       run: |
         python get_token.py
-        if [ -f "token.txt" ]; then
-          echo "✅ Token tapıldı."
-        else
-          echo "❌ Token tapılmadı!"
-          exit 1
-        fi
-
-    - name: Read token from file
-      run: |
-        if [ ! -f "token.txt" ]; then
-          echo "❌ token.txt faylı tapılmadı!"
-          exit 1
-        fi
-        NEW_TOKEN=$(cat token.txt)
-        if [ -z "$NEW_TOKEN" ]; then
-          echo "❌ Yeni token tapılmadı!"
-          exit 1
-        else
-          echo "✅ Yeni token: $NEW_TOKEN"
-        fi
-
-    - name: Update stream.m3u8 with new token
-      run: |
-        OLD_M3U8=$(cat stream.m3u8)
-        NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
-        echo "$NEW_M3U8" > stream.m3u8
-        echo "✅ stream.m3u8 yeniləndi."
+        echo "✅ Yeni link ilə stream.m3u8 faylı yeniləndi."
 
     - name: Check if stream.m3u8 file was modified
       run: |
@@ -99,5 +50,5 @@ jobs:
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git add stream.m3u8
-        git commit -m "Yeni token ilə M3U8 faylı yeniləndi" || echo "No changes to commit"
+        git commit -m "stream.m3u8 faylı yeni linklə yeniləndi" || echo "No changes to commit"
         git push origin main
