@@ -1,4 +1,4 @@
-name: Update M3U8 File with Token
+name: Update Stream Link
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
     - cron: '*/30 * * * *' # Hər 30 dəqiqədən bir çalışır
 
 jobs:
-  setup:
+  update_stream_link:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,24 +22,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-pip curl
         pip install requests beautifulsoup4
 
-    - name: Get token and update stream.m3u8
+    - name: Run Python script to update stream.m3u8
       run: |
         python get_token.py
-        if [ -f "stream.m3u8" ]; then
-          echo "✅ stream.m3u8 faylı yeniləndi."
-        else
-          echo "❌ stream.m3u8 faylı tapılmadı!"
-          exit 1
-        fi
-
-    - name: Pull changes from remote to resolve any conflicts
-      run: |
-        git pull origin main || echo "No changes to pull"
-
+        
     - name: Check if stream.m3u8 file was modified
       run: |
         git status
