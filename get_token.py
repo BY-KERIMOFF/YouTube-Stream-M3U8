@@ -36,7 +36,7 @@ def commit_and_push():
     os.system("git config --global user.name 'github-actions'")
     os.system("git config --global user.email 'github-actions@github.com'")
     os.system("git add stream.m3u8")
-    os.system("git commit -m 'Update stream.m3u8 file'")
+    os.system("git commit -m 'Yeni token ilə M3U8 faylı yeniləndi'")
     os.system("git push")
 
 if __name__ == "__main__":
