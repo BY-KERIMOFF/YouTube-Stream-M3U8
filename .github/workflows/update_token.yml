@@ -63,18 +63,20 @@ jobs:
       run: |
         # Tokeni fayldan oxuyuruq
         NEW_TOKEN=$(cat token.txt)
+        if [ -z "$NEW_TOKEN" ]; then
+          echo "❌ Yeni token tapılmadı!"
+          exit 1
+        fi
+
+        # stream.m3u8 faylını oxuyuruq
         OLD_M3U8=$(cat stream.m3u8)
-        
+
         # Yeni m3u8 linki yaratmaq
         NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
         
         # stream.m3u8 faylını yeniləyirik
         echo "$NEW_M3U8" > stream.m3u8
         echo "✅ stream.m3u8 yeniləndi."
-
-    - name: Pull changes from remote
-      run: |
-        git pull origin main || echo "No changes to pull"
 
     - name: Check if stream.m3u8 file was modified
       run: |
@@ -85,6 +87,10 @@ jobs:
           echo "❌ Dəyişiklik yoxdur."
           exit 0
         fi
+
+    - name: Pull changes from remote
+      run: |
+        git pull origin main || echo "No changes to pull"
 
     - name: Commit and Push Updated M3U8 File
       run: |
