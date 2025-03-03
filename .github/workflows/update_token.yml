@@ -59,22 +59,27 @@ jobs:
           exit 1
         fi
 
-    - name: Update stream.m3u8 with new token
+    - name: Read token from file
       run: |
-        # Tokeni fayldan oxuyuruq
+        # Fayldan tokeni oxuyuruq
+        if [ ! -f "token.txt" ]; then
+          echo "❌ token.txt faylı tapılmadı!"
+          exit 1
+        fi
         NEW_TOKEN=$(cat token.txt)
         if [ -z "$NEW_TOKEN" ]; then
           echo "❌ Yeni token tapılmadı!"
           exit 1
+        else
+          echo "✅ Yeni token: $NEW_TOKEN"
         fi
 
-        # stream.m3u8 faylını oxuyuruq
-        OLD_M3U8=$(cat stream.m3u8)
-
-        # Yeni m3u8 linki yaratmaq
-        NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
-        
+    - name: Update stream.m3u8 with new token
+      run: |
         # stream.m3u8 faylını yeniləyirik
+        OLD_M3U8=$(cat stream.m3u8)
+        NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=$NEW_TOKEN&tms=1740969806"
+
         echo "$NEW_M3U8" > stream.m3u8
         echo "✅ stream.m3u8 yeniləndi."
 
