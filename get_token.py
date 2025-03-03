@@ -17,6 +17,12 @@ if script_tag:
     with open('token.txt', 'w') as file:
         file.write(token)
     print("✅ Token tapıldı.")
+
+    # Yeni link yarat
+    new_link = f"https://example.com/stream.m3u8?tkn={token}"
+    with open("stream.m3u8", "w") as file:
+        file.write(new_link)
+    print("✅ stream.m3u8 yeniləndi.")
 else:
     print("❌ Token tapılmadı.")
     
