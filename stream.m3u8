@@ -1,1 +1,16 @@
-https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=w3nxqj5RKo4JLfvPLv9oxA&tms=1740980455
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-MEDIA-SEQUENCE:54819
+#EXT-X-TARGETDURATION:9
+#EXTINF:9.000,
+xazartv-54819.ts?tkn=XdBMwsPAdMN_l8EqNmVx5A&tms=1740980749
+#EXTINF:9.200,
+xazartv-54820.ts?tkn=XdBMwsPAdMN_l8EqNmVx5A&tms=1740980749
+#EXTINF:6.800,
+xazartv-54821.ts?tkn=XdBMwsPAdMN_l8EqNmVx5A&tms=1740980749
+#EXTINF:5.800,
+xazartv-54822.ts?tkn=XdBMwsPAdMN_l8EqNmVx5A&tms=1740980749
+#EXTINF:5.000,
+xazartv-54823.ts?tkn=XdBMwsPAdMN_l8EqNmVx5A&tms=1740980749
+#EXTINF:5.280,
+xazartv-54824.ts?tkn=XdBMwsPAdMN_l8EqNmVx5A&tms=1740980749
