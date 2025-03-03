@@ -7,7 +7,7 @@ on:
   schedule:
     - cron: '*/30 * * * *' # Hər 30 dəqiqədən bir çalışır
 
-jobs:     
+jobs:
   setup:
     runs-on: ubuntu-latest
 
@@ -23,42 +23,17 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y wget unzip python3-pip curl
+        sudo apt-get install -y python3-pip curl
         pip install requests beautifulsoup4
 
-    - name: Get token from website
+    - name: Get token and update stream.m3u8
       run: |
         python get_token.py
-        if [ -f "token.txt" ]; then
-          echo "✅ Token tapıldı."
+        if [ -f "stream.m3u8" ]; then
+          echo "✅ stream.m3u8 faylı yeniləndi."
         else
-          echo "❌ Token tapılmadı!"
+          echo "❌ stream.m3u8 faylı tapılmadı!"
           exit 1
-        fi
-
-    - name: Read token from file
-      run: |
-        if [ ! -f "token.txt" ]; then
-          echo "❌ token.txt faylı tapılmadı!"
-          exit 1
-        fi
-        NEW_TOKEN=$(cat token.txt)
-        if [ -z "$NEW_TOKEN" ] || [ "$NEW_TOKEN" == "new_token_placeholder" ]; then
-          echo "❌ Yeni token tapılmadı, yeni link ilə yeniləyirik."
-          # Yeni token tapılmadısa yeni bir link əlavə edirik
-          NEW_TOKEN="new_token_placeholder"  # Buraya yeni token əlavə edin
-        else
-          echo "✅ Yeni token: $NEW_TOKEN"
-        fi
-
-    - name: Update stream.m3u8 with new token
-      run: |
-        OLD_M3U8=$(cat stream.m3u8)
-        NEW_M3U8="https://ecanlitv3.etvserver.com/xazartv.m3u8?tkn=RKvbmDXc_RCj_CLnlm2N_w&tms=1740974293"
-        echo "$NEW_M3U8" > stream.m3u8
-        echo "✅ stream.m3u8 yeniləndi."
-        # Nəticəni görə bilmək üçün stream.m3u8 faylını çap edirik
-        cat stream.m3u8
 
     - name: Check if stream.m3u8 file was modified
       run: |
@@ -68,7 +43,6 @@ jobs:
         else
           echo "❌ Dəyişiklik yoxdur."
           exit 0
-        fi
 
     - name: Commit and Push Updated M3U8 File
       run: |
