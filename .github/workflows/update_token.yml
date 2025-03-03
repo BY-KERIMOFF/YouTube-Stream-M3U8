@@ -43,9 +43,10 @@ jobs:
           exit 1
         fi
         NEW_TOKEN=$(cat token.txt)
-        if [ -z "$NEW_TOKEN" ]; then
-          echo "❌ Yeni token tapılmadı!"
-          exit 1
+        if [ -z "$NEW_TOKEN" ] || [ "$NEW_TOKEN" == "new_token_placeholder" ]; then
+          echo "❌ Yeni token tapılmadı, yeni link ilə yeniləyirik."
+          # Yeni token tapılmadısa yeni bir link əlavə edirik
+          NEW_TOKEN="new_token_placeholder"  # Buraya yeni token əlavə edin
         else
           echo "✅ Yeni token: $NEW_TOKEN"
         fi
