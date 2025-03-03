@@ -26,7 +26,7 @@ time.sleep(5)
 # Tokeni tapmağa çalışırıq
 token_element = None
 try:
-    token_element = driver.find_element_by_xpath("//script[contains(text(),'tkn=')]")
+    token_element = driver.find_element("xpath", "//script[contains(text(),'tkn=')]")  # Yeni metod istifadə edilir
     token_script = token_element.get_attribute('innerHTML')
     start_index = token_script.find("tkn=") + 4
     end_index = token_script.find("&", start_index)
