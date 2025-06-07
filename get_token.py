@@ -1,29 +1,31 @@
-import requests
-from bs4 import BeautifulSoup
+import json
+import subprocess
+from pathlib import Path
 
-# URL'yi daxil edirik
-url = "https://www.ecanlitvizle.app/embed.php?kanal=xezer-tv-canli-izle"
+with open("channels.json", "r", encoding="utf-8") as f:
+    channels = json.load(f)
 
-# GET sorğusu göndəririk
-response = requests.get(url)
+lines = ["#EXTM3U"]
 
-# Sorğu uğurlu oldusa
-if response.status_code == 200:
-    soup = BeautifulSoup(response.text, 'html.parser')
+for ch in channels:
+    name = ch["name"]
+    url = ch["url"]
+    print(f"[+] Yoxlanır: {name}")
+    try:
+        result = subprocess.run([
+            "yt-dlp", "-g", "--cookies", "cookies.txt", url
+        ], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
 
-    # HTML-də 'tkn=' olan script tagini tapırıq
-    script_tag = soup.find('script', text=lambda t: t and 'tkn=' in t)
-    if script_tag:
-        # Tokeni çıxarırıq
-        script_content = script_tag.string
-        # Tokeni çəkmək üçün regex istifadə edə bilərik
-        import re
-        token = re.search(r'tkn=([^"]+)', script_content)
-        if token:
-            print(f"Token tapıldı: {token.group(1)}")
+        m3u8 = result.stdout.strip()
+        if m3u8.startswith("http"):
+            lines.append(f"#EXTINF:-1,{name}\n{m3u8}")
+            print(f"    ✅ {name} əlavə olundu.")
         else:
-            print("Token tapılmadı")
-    else:
-        print("Token içeren script tapılmadı")
-else:
-    print("Sorğu uğursuz oldu")
+            print(f"    ❌ Stream tapılmadı.")
+    except Exception as e:
+        print(f"    ❌ Xəta: {e}")
+
+with open("playlist.m3u", "w", encoding="utf-8") as f:
+    f.write("\n".join(lines))
+
+print("\n🎉 Hazırlandı: playlist.m3u")
