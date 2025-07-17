@@ -1,0 +1,14 @@
+{
+  "channels": [
+    {
+      "name": "Kanal D",
+      "url": "https://www.youtube.com/watch?v=Fr0Dku2UZmI",
+      "slug": "kanald"
+    },
+    {
+      "name": "Show TV",
+      "url": "https://www.youtube.com/watch?v=SOME_ID",
+      "slug": "showtv"
+    }
+  ]
+}
