@@ -9,18 +9,24 @@ import re
 import json
 import time
 import os
+import subprocess
+import sys
 from datetime import datetime
 from urllib.parse import quote
+
+print("🚀 YouTube Auto Discover başladı...")
 
 class YouTubeAutoDiscover:
     def __init__(self):
         self.data_dir = "data"
+        self.public_dir = "public"
         self.setup_directories()
         
     def setup_directories(self):
         """Qovluqları yaradır"""
         os.makedirs(self.data_dir, exist_ok=True)
-        os.makedirs("public", exist_ok=True)
+        os.makedirs(self.public_dir, exist_ok=True)
+        print("✅ Qovluqlar yaradıldı")
     
     def get_trending_keywords(self):
         """Trend olan açar sözləri alır"""
@@ -35,28 +41,29 @@ class YouTubeAutoDiscover:
     def search_youtube_live(self, query):
         """YouTube-da canlı yayın axtarır"""
         try:
+            print(f"🔍 Axtarılır: '{query}'")
             search_url = f"https://www.youtube.com/results?search_query={quote(query)}"
             
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7'
             }
             
-            response = requests.get(search_url, headers=headers, timeout=10)
+            response = requests.get(search_url, headers=headers, timeout=15)
             response.raise_for_status()
             
             # Video ID-ləri tap
             video_ids = re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', response.text)
-            unique_ids = list(dict.fromkeys(video_ids))[:10]  # İlk 10 unikal ID
+            unique_ids = list(dict.fromkeys(video_ids))[:8]
             
             live_streams = []
             for video_id in unique_ids:
+                print(f"📺 Video yoxlanılır: {video_id}")
                 stream_info = self.get_stream_info(video_id)
-                if stream_info and stream_info.get('is_live'):
+                if stream_info:
                     live_streams.append(stream_info)
-                    print(f"✅ Canlı yayın tapıldı: {stream_info['title']}")
+                    print(f"✅ Tapıldı: {stream_info['title'][:50]}...")
                 
-                # 1 saniyə gözlə ki, YouTube bloklamasın
                 time.sleep(1)
             
             return live_streams
@@ -71,7 +78,6 @@ class YouTubeAutoDiscover:
             url = f"https://www.youtube.com/watch?v={video_id}"
             
             # yt-dlp ilə məlumat al
-            import subprocess
             cmd = [
                 'yt-dlp',
                 '--dump-json',
@@ -80,7 +86,7 @@ class YouTubeAutoDiscover:
                 url
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
             
             if result.returncode == 0:
                 data = json.loads(result.stdout)
@@ -114,7 +120,7 @@ class YouTubeAutoDiscover:
                 url
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
             
             if result.returncode == 0:
                 stream_url = result.stdout.strip()
@@ -134,11 +140,8 @@ class YouTubeAutoDiscover:
         keywords = self.get_trending_keywords()
         
         for keyword in keywords:
-            print(f"🔎 Axtarılır: '{keyword}'")
             streams = self.search_youtube_live(keyword)
             all_live_streams.extend(streams)
-            
-            # 2 saniyə gözlə ki, YouTube bloklamasın
             time.sleep(2)
         
         # Təkrar elementləri sil
@@ -174,6 +177,7 @@ def main():
     discover = YouTubeAutoDiscover()
     streams = discover.discover_live_streams()
     print(f"✅ Kəşfiyyat tamamlandı: {len(streams)} canlı yayın")
+    return streams
 
 if __name__ == "__main__":
     main()
