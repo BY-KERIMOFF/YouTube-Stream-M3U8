@@ -8,6 +8,8 @@ import json
 import os
 from datetime import datetime
 
+print("🚀 M3U Generator başladı...")
+
 class M3UGenerator:
     def __init__(self):
         self.data_dir = "data"
@@ -19,7 +21,8 @@ class M3UGenerator:
             with open(f"{self.data_dir}/discovered_channels.json", 'r', encoding='utf-8') as f:
                 data = json.load(f)
             return data.get('streams', [])
-        except:
+        except Exception as e:
+            print(f"❌ Fayl oxuma xətası: {e}")
             return []
     
     def generate_m3u_playlist(self):
@@ -50,8 +53,8 @@ class M3UGenerator:
             
             if stream_url:
                 # Xüsusi simvolları təmizlə
-                title = stream['title']
-                channel = stream['channel']
+                title = stream.get('title', 'Bilinməyən')
+                channel = stream.get('channel', 'Bilinməyən')
                 
                 clean_title = title.replace(',', '').replace('#', '').strip()
                 clean_channel = channel.replace(',', '').replace('#', '').strip()
