@@ -32,7 +32,7 @@ class SuperYouTubeDiscover:
         """Qovluqları yaradır"""
         os.makedirs(self.data_dir, exist_ok=True)
         os.makedirs(self.public_dir, exist_ok=True)
-        print("✅ Qovluqlar yaradıldı")
+        print("✅ Qovluqlar yaradıldı: data/, public/")
     
     def setup_session(self):
         """Session konfiqurasiyası"""
@@ -53,8 +53,7 @@ class SuperYouTubeDiscover:
             "televizyon canlı", "canlı yayın şimdi", "canlı yayın şu an",
             "canlı yayın türk", "türk kanalları canlı", "türk tv canlı",
             "canlı maç", "canlı spor", "canlı haber", "canlı müzik",
-            "canlı dizi", "canlı film", "canlı belgesel", "canlı talk show",
-            "canlı yayın 2024", "canlı yayın bugün", "canlı yayın şimdi izle"
+            "canlı dizi", "canlı film", "canlı belgesel", "canlı talk show"
         ]
         return keywords
     
@@ -75,14 +74,11 @@ class SuperYouTubeDiscover:
             {"id": "k4t1t7Vq8h8", "name": "TRT SPOR", "type": "tv"},
             {"id": "7T7tW7X7T7T", "name": "TGRT HABER", "type": "tv"},
             {"id": "1lAioknauhw", "name": "A HABER", "type": "tv"},
-            {"id": "PHW642GehkQ", "name": "A PARA", "type": "tv"},
-            {"id": "yQkLfluhRdA", "name": "A NEWS", "type": "tv"},
             
             # SPOR KANALLARI
             {"id": "28eiBwCxoHQ", "name": "BEIN SPORTS 1", "type": "sport"},
             {"id": "cRKsSEdI9ek", "name": "BEIN SPORTS 2", "type": "sport"},
             {"id": "hmISETvFSq0", "name": "BEIN SPORTS 3", "type": "sport"},
-            {"id": "T4zN_5hlsq8", "name": "BEIN SPORTS 4", "type": "sport"},
             
             # HABER KANALLARI
             {"id": "HvG3K_vCoek", "name": "NTV HABER", "type": "news"},
@@ -92,30 +88,23 @@ class SuperYouTubeDiscover:
             # MÜZİK KANALLARI
             {"id": "b-bK2Vn3D38", "name": "POWER TÜRK", "type": "music"},
             {"id": "jfKfPfyJRdk", "name": "KRAL POP", "type": "music"},
-            {"id": "3MIB1lqi55I", "name": "NUMBER ONE TV", "type": "music"},
         ]
         return channels
     
-    def search_youtube_with_retry(self, query, max_retries=3):
+    def search_youtube_with_retry(self, query, max_retries=2):
         """YouTube axtarışı - retry ilə"""
         for attempt in range(max_retries):
             try:
                 print(f"🔍 Axtarış: '{query}' (cəhd {attempt + 1})")
                 
-                # Təsadüfi axtarış URL-i
-                search_urls = [
-                    f"https://www.youtube.com/results?search_query={quote(query)}&sp=EgJAAQ%253D%253D",
-                    f"https://www.youtube.com/results?search_query={quote(query)}&sp=EgIIAQ%253D%253D",
-                    f"https://www.youtube.com/results?search_query={quote(query)}"
-                ]
+                search_url = f"https://www.youtube.com/results?search_query={quote(query)}"
                 
-                search_url = random.choice(search_urls)
-                response = self.session.get(search_url, timeout=30)
+                response = self.session.get(search_url, timeout=25)
                 response.raise_for_status()
                 
                 # HTML-dən video ID-ləri çıxar
                 video_ids = re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', response.text)
-                unique_ids = list(dict.fromkeys(video_ids))[:10]
+                unique_ids = list(dict.fromkeys(video_ids))[:8]
                 
                 print(f"📹 Tapılan video ID-ləri: {len(unique_ids)}")
                 return unique_ids
@@ -131,13 +120,12 @@ class SuperYouTubeDiscover:
         methods = [
             self.get_info_yt_dlp_simple,
             self.get_info_yt_dlp_json,
-            self.get_info_direct_check
         ]
         
         for method in methods:
             try:
                 result = method(video_id)
-                if result and result.get('is_live'):
+                if result:
                     return result
             except Exception as e:
                 continue
@@ -151,13 +139,13 @@ class SuperYouTubeDiscover:
             
             cmd = [
                 'yt-dlp',
-                '--print', '%(title)s|||%(uploader)s|||%(is_live)s|||%(duration)s',
+                '--print', '%(title)s|||%(uploader)s|||%(is_live)s',
                 '--no-warnings',
-                '--socket-timeout', '25',
+                '--socket-timeout', '20',
                 url
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
             
             if result.returncode == 0 and result.stdout.strip():
                 parts = result.stdout.strip().split('|||')
@@ -165,11 +153,6 @@ class SuperYouTubeDiscover:
                     title = parts[0]
                     uploader = parts[1]
                     is_live = parts[2].lower() == 'true'
-                    duration = parts[3] if len(parts) > 3 else ''
-                    
-                    # Əgər duration yoxdursa və ya çox böyükdürsə, canlıdır
-                    if not is_live and (not duration or duration == 'None' or int(duration or 0) > 36000):
-                        is_live = True
                     
                     if is_live:
                         return {
@@ -197,21 +180,16 @@ class SuperYouTubeDiscover:
                 'yt-dlp',
                 '--dump-json',
                 '--no-warnings',
-                '--socket-timeout', '25',
+                '--socket-timeout', '20',
                 url
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
             
             if result.returncode == 0 and result.stdout.strip():
                 data = json.loads(result.stdout)
                 
                 is_live = data.get('is_live', False)
-                if not is_live:
-                    # Əlavə canlı yoxlaması
-                    duration = data.get('duration', 0)
-                    if duration is None or duration > 36000:  # 10 saatdan çox
-                        is_live = True
                 
                 if is_live:
                     return {
@@ -226,34 +204,6 @@ class SuperYouTubeDiscover:
                         'method': 'json'
                     }
                     
-        except Exception as e:
-            pass
-        
-        return None
-    
-    def get_info_direct_check(self, video_id):
-        """Birbaşa yoxlama üsulu"""
-        try:
-            url = f"https://www.youtube.com/watch?v={video_id}"
-            response = self.session.get(url, timeout=20)
-            
-            # HTML-dən canlı olduğunu yoxla
-            if 'LIVE' in response.text.upper() or 'CANLI' in response.text.upper():
-                # Başlıq və kanal adını çıxar
-                title_match = re.search(r'<title>(.*?)</title>', response.text)
-                title = title_match.group(1).replace(' - YouTube', '') if title_match else 'Canlı Yayın'
-                
-                return {
-                    'video_id': video_id,
-                    'title': title,
-                    'channel': 'YouTube Canlı',
-                    'is_live': True,
-                    'view_count': 0,
-                    'url': url,
-                    'discovered_at': datetime.now().isoformat(),
-                    'method': 'direct'
-                }
-                
         except Exception as e:
             pass
         
@@ -287,13 +237,13 @@ class SuperYouTubeDiscover:
         all_live_streams = []
         keywords = self.get_turkish_keywords()
         
-        for i, keyword in enumerate(keywords, 1):
-            print(f"\n[{i}/{len(keywords)}] 🔎 '{keyword}'")
+        for i, keyword in enumerate(keywords[:10], 1):  # İlk 10 keyword
+            print(f"\n[{i}/{len(keywords[:10])}] 🔎 '{keyword}'")
             
             video_ids = self.search_youtube_with_retry(keyword)
             keyword_streams = []
             
-            for video_id in video_ids[:6]:  # İlk 6
+            for video_id in video_ids[:5]:  # İlk 5
                 print(f"  📺 Yoxlanılır: {video_id}")
                 
                 info = self.get_video_info_best_method(video_id)
@@ -303,12 +253,12 @@ class SuperYouTubeDiscover:
                 else:
                     print(f"  ❌ Canlı deyil: {video_id}")
                 
-                time.sleep(1.5)
+                time.sleep(1)
             
             all_live_streams.extend(keyword_streams)
             
-            if i < len(keywords):
-                wait_time = random.randint(2, 4)
+            if i < len(keywords[:10]):
+                wait_time = random.randint(2, 3)
                 print(f"⏳ {wait_time} saniyə gözlənir...")
                 time.sleep(wait_time)
         
@@ -319,11 +269,9 @@ class SuperYouTubeDiscover:
         print(f"  🌐 Stream URL alınır: {video_id}")
         
         formats_to_try = [
-            'best[height<=720][fps<=30]',
+            'best[height<=720]',
             'best[height<=480]',
-            'best[height<=360]',
             'best',
-            'worst'
         ]
         
         for fmt in formats_to_try:
@@ -335,16 +283,16 @@ class SuperYouTubeDiscover:
                     '-g',
                     '--format', fmt,
                     '--no-warnings',
-                    '--socket-timeout', '20',
+                    '--socket-timeout', '15',
                     url
                 ]
                 
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
                 
                 if result.returncode == 0:
                     stream_url = result.stdout.strip()
                     if stream_url and stream_url.startswith('http'):
-                        print(f"  ✅ Stream URL alındı: {fmt}")
+                        print(f"  ✅ Stream URL alındı")
                         return stream_url
                         
             except Exception as e:
@@ -393,7 +341,7 @@ class SuperYouTubeDiscover:
         print(f"\n📊 İŞLƏYƏN STREAM-LƏR: {len(final_streams)}/{len(unique_streams)}")
         
         # Əgər az streams varsa, backup əlavə et
-        if len(final_streams) < 5:
+        if len(final_streams) < 3:
             print("⚠️ Az stream var, backup əlavə edilir...")
             final_streams.extend(self.get_backup_streams())
         
