@@ -1,31 +1,48 @@
-name: M3U8 Generator
+name: 🎥 YouTube M3U Auto-Update
 
 on:
+  schedule:
+    # Hər 6 saatda bir yenilə
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Manual trigger
   push:
-    paths:
-      - 'channels.json'
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
-  build:
+  update-m3u:
     runs-on: ubuntu-latest
+    
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
+    - name: 🛎️ Checkout repo
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Python quraşdır
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
-
-    - name: Install yt-dlp
-      run: pip install yt-dlp
-
-    - name: Run script
-      run: python main.py
-
-    - name: Commit result
+        python-version: '3.10'
+        
+    - name: 📦 Kitabxanaları yüklə
       run: |
-        git config user.name "github-actions"
-        git config user.email "github-actions@users.noreply.github.com"
-        git add output.json
-        git commit -m "Update m3u8 links"
+        pip install -r requirements.txt
+        pip install yt-dlp requests flask
+        
+    - name: 🔑 Tokenləri təyin et
+      run: |
+        echo "${{ secrets.YOUTUBE_TOKENS }}" > data/tokens.txt
+        echo "${{ secrets.CHANNELS_JSON }}" > data/channels.json
+        
+    - name: 🎥 M3U faylını yarat
+      run: python scripts/youtube_scraper.py
+      
+    - name: 📁 M3U faylını köçür
+      run: |
+        cp output/playlist.m3u public/
+        ls -la public/
+        
+    - name: 🚀 GitHub Pages üçün commit
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add public/playlist.m3u
+        git commit -m "🤖 M3U avtomatik yeniləndi: $(date)" || exit 0
         git push
