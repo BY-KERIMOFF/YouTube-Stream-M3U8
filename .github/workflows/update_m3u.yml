@@ -1,15 +1,15 @@
-name: 🎥 AVTOMATİK YouTube M3U Update
+name: 🚀 SUPER YouTube M3U Update
 
 on:
   schedule:
-    # Hər 6 saatda bir yenilə
-    - cron: '0 */6 * * *'
+    # Hər 4 saatda bir yenilə
+    - cron: '0 */4 * * *'
   workflow_dispatch: # Manual trigger
   push:
     branches: [ main ]
 
 jobs:
-  auto-update:
+  super-update:
     runs-on: ubuntu-latest
     
     steps:
@@ -25,46 +25,40 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install yt-dlp requests
-        echo "✅ Kitabxanalar yükləndi: yt-dlp, requests"
+        echo "✅ Super kitabxanalar yükləndi"
         
-    - name: 🔍 Canlı yayınları kəşf et
+    - name: 🎥 Canlı yayınları kəşf et
       run: |
-        echo "🔍 AUTO DISCOVER BAŞLAYIR..."
-        python auto_discover.py
-        echo "✅ AUTO DISCOVER TAMAMLANDI"
+        echo "🚀 SUPER DISCOVER BAŞLAYIR..."
+        python super_discover.py
+        echo "✅ SUPER DISCOVER TAMAMLANDI"
         
     - name: 📝 M3U playlist yarat
       run: |
-        echo "📝 M3U GENERATOR BAŞLAYIR..."
+        echo "📝 SUPER M3U GENERATOR BAŞLAYIR..."
         python m3u_generator.py
-        echo "✅ M3U GENERATOR TAMAMLANDI"
+        echo "✅ SUPER M3U GENERATOR TAMAMLANDI"
         
-    - name: 📊 Nəticəni yoxla
+    - name: 📊 Nəticə
       run: |
-        echo "📊 FAYLLAR YOXLANILIR..."
-        echo "=== DATA QOVLUĞU ==="
-        ls -la data/ || echo "data/ qovluğu yoxdur"
-        echo "=== PUBLIC QOVLUĞU ==="
-        ls -la public/ || echo "public/ qovluğu yoxdur"
-        
+        echo "📊 SİSTEM NƏTİCƏSİ:"
+        echo "=== FAYLLAR ==="
+        ls -la public/
+        echo "=== M3U STATISTIKA ==="
         if [ -f "public/playlist.m3u" ]; then
-          echo "✅ M3U FAYLI MÖVCUDDUR"
-          CHANNEL_COUNT=$(grep -c "EXTINF" public/playlist.m3u || true)
-          echo "📺 KANALLARIN SAYI: $CHANNEL_COUNT"
-          echo "=== M3U İÇERİĞİ ==="
-          head -15 public/playlist.m3u
+          CHANNEL_COUNT=$(grep -c "EXTINF" public/playlist.m3u | head -1 || true)
+          echo "🎯 KANAL SAYISI: $CHANNEL_COUNT"
+          echo "=== İLK 10 KANAL ==="
+          grep "EXTINF" public/playlist.m3u | head -10
         else
-          echo "❌ M3U FAYLI TAPILMADI"
-          # Yenidən cəhd et
-          python m3u_generator.py
+          echo "❌ M3U FAYLI YOXDUR"
           exit 1
         fi
         
-    - name: 🚀 Dəyişiklikləri commit et
+    - name: 🚀 Commit et
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
-        git status
-        git commit -m "🤖 AVTOMATİK YENİLƏMƏ: $(date +'%Y-%m-%d %H:%M')" || echo "⚠️ Yeni dəyişiklik yoxdur"
+        git commit -m "🚀 SUPER YENİLƏMƏ: $(date +'%Y-%m-%d %H:%M') - $(grep -c 'EXTINF' public/playlist.m3u || echo 0) kanal" || echo "⚠️ Yeni dəyişiklik yoxdur"
         git push
