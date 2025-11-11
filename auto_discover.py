@@ -14,7 +14,9 @@ import sys
 from datetime import datetime
 from urllib.parse import quote
 
-print("🚀 YouTube Auto Discover başladı...")
+print("=" * 60)
+print("🚀 YOUTUBE AUTO DISCOVER BAŞLADI...")
+print("=" * 60)
 
 class YouTubeAutoDiscover:
     def __init__(self):
@@ -26,7 +28,7 @@ class YouTubeAutoDiscover:
         """Qovluqları yaradır"""
         os.makedirs(self.data_dir, exist_ok=True)
         os.makedirs(self.public_dir, exist_ok=True)
-        print("✅ Qovluqlar yaradıldı")
+        print("✅ Qovluqlar yaradıldı: data/, public/")
     
     def get_trending_keywords(self):
         """Trend olan açar sözləri alır"""
@@ -34,38 +36,44 @@ class YouTubeAutoDiscover:
             "canlı yayın", "live stream", "tv canlı", "canlı tv",
             "spor canlı", "haber canlı", "müzik canlı", "film canlı",
             "belgesel canlı", "dizi canlı", "news live", "sports live",
-            "music live", "türk kanalları", "türk tv", "turkey live"
+            "music live", "türk kanalları", "türk tv", "turkey live",
+            "canlı", "live", "stream", "yayın"
         ]
         return trends
     
     def search_youtube_live(self, query):
         """YouTube-da canlı yayın axtarır"""
         try:
-            print(f"🔍 Axtarılır: '{query}'")
+            print(f"🎯 Axtarılır: '{query}'")
             search_url = f"https://www.youtube.com/results?search_query={quote(query)}"
             
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7'
             }
             
-            response = requests.get(search_url, headers=headers, timeout=15)
+            response = requests.get(search_url, headers=headers, timeout=20)
             response.raise_for_status()
             
             # Video ID-ləri tap
             video_ids = re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', response.text)
-            unique_ids = list(dict.fromkeys(video_ids))[:8]
+            unique_ids = list(dict.fromkeys(video_ids))[:6]  # İlk 6 unikal ID
+            
+            print(f"📹 Tapılan video ID-ləri: {len(unique_ids)}")
             
             live_streams = []
             for video_id in unique_ids:
-                print(f"📺 Video yoxlanılır: {video_id}")
+                print(f"  🔍 Yoxlanılır: {video_id}")
                 stream_info = self.get_stream_info(video_id)
-                if stream_info:
+                if stream_info and stream_info.get('is_live'):
                     live_streams.append(stream_info)
-                    print(f"✅ Tapıldı: {stream_info['title'][:50]}...")
+                    print(f"  ✅ CANLI: {stream_info['title'][:40]}...")
+                elif stream_info:
+                    print(f"  ❌ Canlı deyil: {stream_info['title'][:40]}...")
                 
-                time.sleep(1)
-            
+                time.sleep(1)  # YouTube bloklamasın deyə
+                
+            print(f"🎉 '{query}' üçün {len(live_streams)} canlı yayın tapıldı")
             return live_streams
             
         except Exception as e:
@@ -83,33 +91,42 @@ class YouTubeAutoDiscover:
                 '--dump-json',
                 '--no-warnings',
                 '--skip-download',
+                '--socket-timeout', '15',
                 url
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
             
-            if result.returncode == 0:
+            if result.returncode == 0 and result.stdout.strip():
                 data = json.loads(result.stdout)
                 
-                return {
+                stream_info = {
                     'video_id': video_id,
-                    'title': data.get('title', 'Bilinməyən'),
-                    'channel': data.get('uploader', 'Bilinməyən'),
+                    'title': data.get('title', 'Bilinməyən Başlıq'),
+                    'channel': data.get('uploader', 'Bilinməyən Kanal'),
                     'is_live': data.get('is_live', False),
                     'view_count': data.get('concurrent_view_count', 0),
                     'url': f"https://www.youtube.com/watch?v={video_id}",
                     'thumbnail': data.get('thumbnail', ''),
                     'discovered_at': datetime.now().isoformat()
                 }
+                return stream_info
+            else:
+                print(f"  ⚠️ JSON alınmadı: {video_id}")
                 
+        except subprocess.TimeoutExpired:
+            print(f"  ⏰ Timeout: {video_id}")
+        except json.JSONDecodeError:
+            print(f"  📄 JSON xətası: {video_id}")
         except Exception as e:
-            print(f"⚠️ Video məlumatı alınmadı {video_id}: {str(e)}")
+            print(f"  ❌ Xəta {video_id}: {str(e)}")
         
         return None
     
     def get_stream_url(self, video_id):
         """Canlı yayın URL-ni alır"""
         try:
+            print(f"  🌐 Stream URL alınır: {video_id}")
             url = f"https://www.youtube.com/watch?v={video_id}"
             
             cmd = [
@@ -117,6 +134,7 @@ class YouTubeAutoDiscover:
                 '-g',
                 '--format', 'best[height<=720]',
                 '--no-warnings',
+                '--socket-timeout', '15',
                 url
             ]
             
@@ -125,24 +143,36 @@ class YouTubeAutoDiscover:
             if result.returncode == 0:
                 stream_url = result.stdout.strip()
                 if stream_url and stream_url.startswith('http'):
+                    print(f"  ✅ Stream URL alındı: {video_id}")
                     return stream_url
+                else:
+                    print(f"  ❌ Stream URL boş: {video_id}")
+            else:
+                print(f"  ❌ Stream URL alınmadı: {video_id}")
                     
         except Exception as e:
-            print(f"❌ Stream URL alınmadı {video_id}: {str(e)}")
+            print(f"  ❌ Stream URL xətası {video_id}: {str(e)}")
         
         return None
     
     def discover_live_streams(self):
         """Bütün canlı yayınları kəşf et"""
-        print("🔍 YouTube-da canlı yayınlar kəşf edilir...")
+        print("\n🔍 YOUTUBE-DA CANLI YAYINLAR AXTARILIR...")
         
         all_live_streams = []
         keywords = self.get_trending_keywords()
         
-        for keyword in keywords:
+        print(f"📋 Axtarış sözləri: {len(keywords)}")
+        
+        for i, keyword in enumerate(keywords, 1):
+            print(f"\n[{i}/{len(keywords)}] 🔎 '{keyword}' axtarılır...")
             streams = self.search_youtube_live(keyword)
             all_live_streams.extend(streams)
-            time.sleep(2)
+            
+            # 3 saniyə gözlə ki, YouTube bloklamasın
+            if i < len(keywords):
+                print("⏳ 3 saniyə gözlənir...")
+                time.sleep(3)
         
         # Təkrar elementləri sil
         unique_streams = []
@@ -153,7 +183,7 @@ class YouTubeAutoDiscover:
                 unique_streams.append(stream)
                 seen_ids.add(stream['video_id'])
         
-        print(f"🎯 Ümumi tapılan canlı yayınlar: {len(unique_streams)}")
+        print(f"\n🎯 ÜMUMİ TAPILAN CANLI YAYINLAR: {len(unique_streams)}")
         
         # Fayla yaz
         self.save_discovered_streams(unique_streams)
@@ -170,13 +200,26 @@ class YouTubeAutoDiscover:
         with open(f"{self.data_dir}/discovered_channels.json", 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         
-        print(f"💾 {len(streams)} canlı yayın qeydə alındı")
+        print(f"💾 {len(streams)} canlı yayın 'data/discovered_channels.json' faylına yazıldı")
 
 def main():
     print("🚀 YouTube Auto Discover başladı...")
     discover = YouTubeAutoDiscover()
     streams = discover.discover_live_streams()
-    print(f"✅ Kəşfiyyat tamamlandı: {len(streams)} canlı yayın")
+    
+    print("\n" + "=" * 60)
+    print(f"✅ KƏŞFİYYAT TAMAMLANDI: {len(streams)} CANLI YAYIN")
+    print("=" * 60)
+    
+    # Stream URL-ləri yoxla
+    working_streams = 0
+    for stream in streams:
+        stream_url = discover.get_stream_url(stream['video_id'])
+        if stream_url:
+            working_streams += 1
+    
+    print(f"📊 İŞLƏYƏN STREAM-LƏR: {working_streams}/{len(streams)}")
+    
     return streams
 
 if __name__ == "__main__":
