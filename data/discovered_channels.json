@@ -1,33 +1,5 @@
 {
-  "last_update": "2025-11-11T19:49:43.073320",
-  "total_streams": 3,
-  "streams": [
-    {
-      "video_id": "KpA64R5Jg-4",
-      "title": "SHOW TV Canlı Yayın",
-      "channel": "SHOW TV",
-      "is_live": true,
-      "view_count": 0,
-      "url": "https://www.youtube.com/watch?v=KpA64R5Jg-4",
-      "discovered_at": "2025-11-11T19:49:43.073307"
-    },
-    {
-      "video_id": "qEQu1Z4Xl_4",
-      "title": "HABERTÜRK TV Canlı Yayın",
-      "channel": "HABERTÜRK TV",
-      "is_live": true,
-      "view_count": 0,
-      "url": "https://www.youtube.com/watch?v=qEQu1Z4Xl_4",
-      "discovered_at": "2025-11-11T19:49:43.073317"
-    },
-    {
-      "video_id": "0TQZLK4kKcI",
-      "title": "CNN TÜRK Canlı Yayın",
-      "channel": "CNN TÜRK",
-      "is_live": true,
-      "view_count": 0,
-      "url": "https://www.youtube.com/watch?v=0TQZLK4kKcI",
-      "discovered_at": "2025-11-11T19:49:43.073318"
-    }
-  ]
+  "last_update": "2025-11-11T20:26:32.511938",
+  "total_streams": 0,
+  "streams": []
 }
