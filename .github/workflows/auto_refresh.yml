@@ -4,8 +4,8 @@ on:
   push:
     branches: [ main ]
   schedule:
-    # Hər 2 saatda bir işlə (avtomatik token yeniləmə)
-    - cron: '0 */2 * * *'
+    # Hər 4 saatda bir işlə (avtomatik token yeniləmə)
+    - cron: '0 */4 * * *'
   workflow_dispatch: # Manual işləmə üçün
 
 jobs:
@@ -25,22 +25,15 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install yt-dlp
         
     - name: 🚀 M3U Playlist yarat
       run: |
         python youtube_auto.py
         
-    - name: 📊 Nəticə faylı yarat
-      run: |
-        echo "# 📊 Son Yeniləmə Nəticəsi" > docs/status.md
-        echo "Son yeniləmə: $(date)" >> docs/status.md
-        echo "Fayl: [playlist.m3u](playlist.m3u)" >> docs/status.md
-        
     - name: 📤 Dəyişiklikləri yüklə
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add docs/playlist.m3u docs/status.md
-        git commit -m "🤖 Avtomatik M3U yeniləmə - $(date)" || exit 0
+        git add docs/
+        git commit -m "🤖 Avtomatik M3U yeniləmə - $(date +'%Y-%m-%d %H:%M:%S')" || exit 0
         git push
