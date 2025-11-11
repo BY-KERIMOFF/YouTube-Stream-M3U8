@@ -12,6 +12,7 @@ import subprocess
 import sqlite3
 from datetime import datetime
 import time
+import sys
 
 class GitHubAutoM3U:
     def __init__(self):
@@ -29,15 +30,11 @@ class GitHubAutoM3U:
             {"ad": "TRT SPOR", "id": "k4t1t7Vq8h8", "ulke": "TR"},
             
             # BEYNELXALQ KANALLAR
-            {"ad": "BBC NEWS", "id": "wNz2lJN4YB8", "ulke": "INT"},
+            {"ad": "BBC NEWS", "id": "9Auq9mYxFEE", "ulke": "INT"},
             {"ad": "CNN INTERNATIONAL", "id": "9Auq9mYxFEE", "ulke": "INT"},
             {"ad": "AL JAZEERA", "id": "-n2VfP4o_X0", "ulke": "INT"},
             {"ad": "FRANCE 24", "id": "HeTWKNBNAas", "ulke": "INT"},
             {"ad": "SKY NEWS", "id": "9Auq9mYxFEE", "ulke": "INT"},
-            
-            # MUSIQI KANALLARI
-            {"ad": "NRJ MUSIC", "id": "KpA64R5Jg-4", "ulke": "MUSIC"},
-            {"ad": "MTV LIVE", "id": "qEQu1Z4Xl_4", "ulke": "MUSIC"},
         ]
         
         self.m3u_dosyasi = "docs/playlist.m3u"
@@ -80,8 +77,11 @@ class GitHubAutoM3U:
             if result.returncode == 0:
                 m3u_url = result.stdout.strip()
                 if m3u_url and m3u_url.startswith('http'):
+                    print(f"✅ M3U URL alındı: {video_id}")
                     return m3u_url
                     
+        except subprocess.TimeoutExpired:
+            print(f"⏰ Timeout: {video_id}")
         except Exception as e:
             print(f"❌ M3U alma xətası ({video_id}): {str(e)}")
         
@@ -100,8 +100,8 @@ class GitHubAutoM3U:
         
         if result:
             m3u_url, son_yenileme = result
-            # 2 saatdan azsa köhnə URL'i istifadə et
-            if son_yenileme and (datetime.now() - datetime.fromisoformat(son_yenileme)).total_seconds() < 7200:
+            # 4 saatdan azsa köhnə URL'i istifadə et
+            if son_yenileme and (datetime.now() - datetime.fromisoformat(son_yenileme)).total_seconds() < 14400:
                 if m3u_url and self.url_kontrol_et(m3u_url):
                     print(f"✅ Köhnə URL işləyir: {kanal_adi}")
                     return m3u_url
@@ -149,7 +149,7 @@ class GitHubAutoM3U:
                     "url": m3u_url,
                     "ulke": kanal["ulke"]
                 })
-            time.sleep(2)  # YouTube limiti üçün
+            time.sleep(1)  # YouTube limiti üçün
         
         return aktif_kanallar
     
@@ -159,11 +159,17 @@ class GitHubAutoM3U:
         m3u_icerik.append('#PLAYLIST:YouTube Canlı Yayınlar - By_Kerimoff')
         m3u_icerik.append(f'#GENERATED:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         m3u_icerik.append(f'#TOTAL:{len(kanallar)}')
-        m3u_icerik.append('#AUTO_REFRESH:2hours')
+        m3u_icerik.append('#AUTO_REFRESH:4hours')
         m3u_icerik.append('#GITHUB_ACTIONS:ENABLED')
         
         for kanal in kanallar:
-            grup = f"TR 🇹🇷" if kanal["ulke"] == "TR" else f"INT 🌍" if kanal["ulke"] == "INT" else "MUSIC 🎵"
+            if kanal["ulke"] == "TR":
+                grup = "TÜRKİYE 🇹🇷"
+            elif kanal["ulke"] == "INT":
+                grup = "BEYNƏLXALQ 🌍"
+            else:
+                grup = "DİGƏR 📺"
+                
             m3u_icerik.append(f'#EXTINF:-1 group-title="{grup}",{kanal["kanal"]}')
             m3u_icerik.append(kanal["url"])
         
@@ -178,6 +184,26 @@ class GitHubAutoM3U:
             f.write(icerik)
         
         print(f"✅ M3U faylı yaradıldı: {self.m3u_dosyasi}")
+        
+        # Status faylı da yarat
+        status_icerik = f"""# 📊 YouTube M3U Status
+**Son yeniləmə:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+**Aktiv kanallar:** {len(self.kanallari_getir())}
+**Növbəti yeniləmə:** 4 saat sonra
+
+## 📺 Kanallar:
+"""
+        
+        for kanal in self.kanallari_getir():
+            status_icerik += f"- {kanal[1]}\n"
+        
+        with open("docs/status.md", "w", encoding="utf-8") as f:
+            f.write(status_icerik)
+    
+    def kanallari_getir(self):
+        """Veritabanındakı kanalları getir"""
+        self.cursor.execute("SELECT video_id, kanal_adi, durum FROM kanallar")
+        return self.cursor.fetchall()
     
     def calistir(self):
         """Əsas işləmə funksiyası"""
@@ -195,7 +221,12 @@ class GitHubAutoM3U:
             self.m3u_dosyasi_yaz(m3u_icerik)
             
             print(f"\n🎉 TAMAMLANDI! {len(aktif_kanallar)} kanal əlavə edildi!")
-            print(f"🌐 M3U Linki: https://kerimoff.github.io/youtube-live-m3u/playlist.m3u")
+            print("🌐 M3U Linki: https://kerimoff.github.io/youtube-live-m3u/playlist.m3u")
+            
+            # Kanalları göstər
+            print("\n📊 Aktiv Kanallar:")
+            for kanal in aktif_kanallar:
+                print(f"  ✅ {kanal['kanal']}")
         else:
             print("❌ Heç bir kanal tapılmadı!")
         
