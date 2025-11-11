@@ -51,10 +51,12 @@ jobs:
           echo "✅ M3U FAYLI MÖVCUDDUR"
           CHANNEL_COUNT=$(grep -c "EXTINF" public/playlist.m3u || true)
           echo "📺 KANALLARIN SAYI: $CHANNEL_COUNT"
-          echo "📄 M3U FAYLININ İLK SƏTRLƏRİ:"
-          head -10 public/playlist.m3u
+          echo "=== M3U İÇERİĞİ ==="
+          head -15 public/playlist.m3u
         else
           echo "❌ M3U FAYLI TAPILMADI"
+          # Yenidən cəhd et
+          python m3u_generator.py
           exit 1
         fi
         
