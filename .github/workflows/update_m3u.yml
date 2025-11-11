@@ -25,32 +25,36 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install yt-dlp requests
-        echo "✅ Kitabxanalar yükləndi"
+        echo "✅ Kitabxanalar yükləndi: yt-dlp, requests"
         
     - name: 🔍 Canlı yayınları kəşf et
       run: |
-        echo "🔍 Auto Discover başlayır..."
-        cd scripts
+        echo "🔍 AUTO DISCOVER BAŞLAYIR..."
         python auto_discover.py
-        echo "✅ Auto Discover tamamlandı"
+        echo "✅ AUTO DISCOVER TAMAMLANDI"
         
     - name: 📝 M3U playlist yarat
       run: |
-        echo "📝 M3U Generator başlayır..."
-        cd scripts
+        echo "📝 M3U GENERATOR BAŞLAYIR..."
         python m3u_generator.py
-        echo "✅ M3U Generator tamamlandı"
+        echo "✅ M3U GENERATOR TAMAMLANDI"
         
     - name: 📊 Nəticəni yoxla
       run: |
-        echo "📊 Fayllar yoxlanılır..."
-        ls -la public/
+        echo "📊 FAYLLAR YOXLANILIR..."
+        echo "=== DATA QOVLUĞU ==="
+        ls -la data/ || echo "data/ qovluğu yoxdur"
+        echo "=== PUBLIC QOVLUĞU ==="
+        ls -la public/ || echo "public/ qovluğu yoxdur"
+        
         if [ -f "public/playlist.m3u" ]; then
-          echo "✅ M3U faylı mövcuddur"
+          echo "✅ M3U FAYLI MÖVCUDDUR"
           CHANNEL_COUNT=$(grep -c "EXTINF" public/playlist.m3u || true)
-          echo "📺 Kanalların sayı: $CHANNEL_COUNT"
+          echo "📺 KANALLARIN SAYI: $CHANNEL_COUNT"
+          echo "📄 M3U FAYLININ İLK SƏTRLƏRİ:"
+          head -10 public/playlist.m3u
         else
-          echo "❌ M3U faylı tapılmadı"
+          echo "❌ M3U FAYLI TAPILMADI"
           exit 1
         fi
         
@@ -59,5 +63,6 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
+        git status
         git commit -m "🤖 AVTOMATİK YENİLƏMƏ: $(date +'%Y-%m-%d %H:%M')" || echo "⚠️ Yeni dəyişiklik yoxdur"
         git push
