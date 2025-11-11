@@ -50,55 +50,22 @@ class SuperM3UGenerator:
         m3u_content.append('#BY:Kerimoff')
         m3u_content.append('#QUALITY:HD/SD')
         
-        # Kanal kateqoriyaları
-        categories = {
-            'tv': '📺 TV KANALLARI',
-            'sport': '⚽ SPOR KANALLARI', 
-            'news': '📰 HABER KANALLARI',
-            'music': '🎵 MÜZİK KANALLARI'
-        }
-        
-        # Kateqoriyalara görə qrupla
-        categorized = {cat: [] for cat in categories}
-        categorized['other'] = []
-        
-        for stream in streams:
-            stream_type = 'other'
-            channel_name = stream.get('channel', '').lower()
-            
-            if any(word in channel_name for word in ['spor', 'sport', 'bein']):
-                stream_type = 'sport'
-            elif any(word in channel_name for word in ['haber', 'news', 'cnn', 'ntv']):
-                stream_type = 'news' 
-            elif any(word in channel_name for word in ['müzik', 'music', 'pop', 'power']):
-                stream_type = 'music'
-            elif any(word in channel_name for word in ['tv', 'televizyon', 'kanal', 'show']):
-                stream_type = 'tv'
-            
-            categorized[stream_type].append(stream)
-        
-        # M3U-ya əlavə et
         active_count = 0
         
-        for cat_type, cat_streams in categorized.items():
-            if cat_streams:
-                cat_name = categories.get(cat_type, '📡 DİĞER KANALLAR')
-                m3u_content.append(f'#EXTINF:-1 group-title="{cat_name}",-={cat_name}=-')
-                m3u_content.append('#EXTVLCOPT:network-caching=1000')
+        for stream in streams:
+            if stream.get('stream_url'):
+                title = stream.get('title', 'Canlı Yayın')
+                channel = stream.get('channel', 'Bilinməyən')
                 
-                for stream in cat_streams:
-                    if stream.get('stream_url'):
-                        title = stream.get('title', 'Canlı Yayın')
-                        channel = stream.get('channel', 'Bilinməyən')
-                        
-                        # Təmizlə
-                        clean_title = self.clean_text(title)
-                        clean_channel = self.clean_text(channel)
-                        
-                        # M3U entry
-                        m3u_content.append(f'#EXTINF:-1 tvg-id="{stream["video_id"]}" tvg-name="{clean_channel}" tvg-logo="https://i.ytimg.com/vi/{stream["video_id"]}/hqdefault.jpg",{clean_channel} - {clean_title}')
-                        m3u_content.append(stream['stream_url'])
-                        active_count += 1
+                # Təmizlə
+                clean_title = self.clean_text(title)
+                clean_channel = self.clean_text(channel)
+                
+                # M3U entry
+                m3u_content.append(f'#EXTINF:-1 tvg-id="{stream["video_id"]}" tvg-name="{clean_channel}",{clean_channel} - {clean_title}')
+                m3u_content.append(stream['stream_url'])
+                active_count += 1
+                print(f"  ✅ {clean_channel}")
         
         # Playlisti yaz
         output_path = f"{self.public_dir}/playlist.m3u"
@@ -121,10 +88,9 @@ class SuperM3UGenerator:
         clean = text.replace(',', '')
         clean = clean.replace('#', '')
         clean = clean.replace('"', '')
-        clean = clean.replace('|', '')
         clean = clean.strip()
         
-        return clean[:100]  # 100 karakterle sınırla
+        return clean[:100]
     
     def create_emergency_playlist(self):
         """Ehtiyat playlist"""
@@ -183,7 +149,7 @@ class SuperM3UGenerator:
                 'yt-dlp', '-g', '--format', 'best', '--no-warnings', url
             ]
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
             
             if result.returncode == 0:
                 return result.stdout.strip()
