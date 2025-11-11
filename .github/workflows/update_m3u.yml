@@ -25,19 +25,19 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install yt-dlp requests
-        echo "✅ Super kitabxanalar yükləndi"
+        echo "✅ Kitabxanalar yükləndi"
         
     - name: 🎥 Canlı yayınları kəşf et
       run: |
-        echo "🚀 SUPER DISCOVER BAŞLAYIR..."
-        python super_discover.py
-        echo "✅ SUPER DISCOVER TAMAMLANDI"
+        echo "🚀 AUTO DISCOVER BAŞLAYIR..."
+        python auto_discover.py
+        echo "✅ AUTO DISCOVER TAMAMLANDI"
         
     - name: 📝 M3U playlist yarat
       run: |
-        echo "📝 SUPER M3U GENERATOR BAŞLAYIR..."
+        echo "📝 M3U GENERATOR BAŞLAYIR..."
         python m3u_generator.py
-        echo "✅ SUPER M3U GENERATOR TAMAMLANDI"
+        echo "✅ M3U GENERATOR TAMAMLANDI"
         
     - name: 📊 Nəticə
       run: |
@@ -46,7 +46,7 @@ jobs:
         ls -la public/
         echo "=== M3U STATISTIKA ==="
         if [ -f "public/playlist.m3u" ]; then
-          CHANNEL_COUNT=$(grep -c "EXTINF" public/playlist.m3u | head -1 || true)
+          CHANNEL_COUNT=$(grep -c "EXTINF" public/playlist.m3u || true)
           echo "🎯 KANAL SAYISI: $CHANNEL_COUNT"
           echo "=== İLK 10 KANAL ==="
           grep "EXTINF" public/playlist.m3u | head -10
