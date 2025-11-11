@@ -23,22 +23,34 @@ jobs:
         
     - name: 📦 Kitabxanaları yüklə
       run: |
+        python -m pip install --upgrade pip
         pip install yt-dlp requests
-        sudo apt-get update
+        echo "✅ Kitabxanalar yükləndi"
         
     - name: 🔍 Canlı yayınları kəşf et
-      run: python scripts/auto_discover.py
-      
-    - name: 📝 M3U playlist yarat
-      run: python scripts/m3u_generator.py
-      
-    - name: 📊 Status yoxla
       run: |
+        echo "🔍 Auto Discover başlayır..."
+        cd scripts
+        python auto_discover.py
+        echo "✅ Auto Discover tamamlandı"
+        
+    - name: 📝 M3U playlist yarat
+      run: |
+        echo "📝 M3U Generator başlayır..."
+        cd scripts
+        python m3u_generator.py
+        echo "✅ M3U Generator tamamlandı"
+        
+    - name: 📊 Nəticəni yoxla
+      run: |
+        echo "📊 Fayllar yoxlanılır..."
+        ls -la public/
         if [ -f "public/playlist.m3u" ]; then
-          echo "✅ M3U faylı yaradıldı"
-          echo "📊 Kanalların sayı: $(grep -c "EXTINF" public/playlist.m3u || true)"
+          echo "✅ M3U faylı mövcuddur"
+          CHANNEL_COUNT=$(grep -c "EXTINF" public/playlist.m3u || true)
+          echo "📺 Kanalların sayı: $CHANNEL_COUNT"
         else
-          echo "❌ M3U faylı yaradılmadı"
+          echo "❌ M3U faylı tapılmadı"
           exit 1
         fi
         
@@ -46,7 +58,6 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add public/playlist.m3u
-        git add data/
-        git commit -m "🤖 AVTOMATİK YENİLƏMƏ: $(date +'%Y-%m-%d %H:%M')" || exit 0
+        git add .
+        git commit -m "🤖 AVTOMATİK YENİLƏMƏ: $(date +'%Y-%m-%d %H:%M')" || echo "⚠️ Yeni dəyişiklik yoxdur"
         git push
