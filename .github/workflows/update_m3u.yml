@@ -1,0 +1,52 @@
+name: 🎥 AVTOMATİK YouTube M3U Update
+
+on:
+  schedule:
+    # Hər 6 saatda bir yenilə
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Manual trigger
+  push:
+    branches: [ main ]
+
+jobs:
+  auto-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🛎️ Checkout repo
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Python quraşdır
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: 📦 Kitabxanaları yüklə
+      run: |
+        pip install yt-dlp requests
+        sudo apt-get update
+        
+    - name: 🔍 Canlı yayınları kəşf et
+      run: python scripts/auto_discover.py
+      
+    - name: 📝 M3U playlist yarat
+      run: python scripts/m3u_generator.py
+      
+    - name: 📊 Status yoxla
+      run: |
+        if [ -f "public/playlist.m3u" ]; then
+          echo "✅ M3U faylı yaradıldı"
+          echo "📊 Kanalların sayı: $(grep -c "EXTINF" public/playlist.m3u || true)"
+        else
+          echo "❌ M3U faylı yaradılmadı"
+          exit 1
+        fi
+        
+    - name: 🚀 Dəyişiklikləri commit et
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add public/playlist.m3u
+        git add data/
+        git commit -m "🤖 AVTOMATİK YENİLƏMƏ: $(date +'%Y-%m-%d %H:%M')" || exit 0
+        git push
