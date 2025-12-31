@@ -1,7 +1,9 @@
-{
-  "type": "channel",
-  "name": "Emret Komutanım",
-  "slug": "emret-komutanim",
-  "id": "UCGKPVBUcJcEMvqceX3Pl5Lw",
-  "subfolder": "dizi"
-}
+[
+  {
+    "type": "channel",
+    "name": "Emret Komutanım",
+    "slug": "emret-komutanim",
+    "id": "UCGKPVBUcJcEMvqceX3Pl5Lw",
+    "subfolder": "dizi"
+  }
+]
