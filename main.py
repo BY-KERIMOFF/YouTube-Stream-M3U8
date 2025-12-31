@@ -33,7 +33,7 @@ import requests
 
 # Configuration
 ENDPOINT = os.environ.get('ENDPOINT', 'https://your-endpoint.com')
-FOLDER_NAME = os.environ.get('FOLDER_NAME', 'TR')  # Bu TR qalsın
+FOLDER_NAME = os.environ.get('FOLDER_NAME', 'TR')
 TIMEOUT = 30
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
@@ -482,7 +482,7 @@ def get_output_path(stream_config):
     slug = stream_config['slug']
     subfolder = stream_config.get('subfolder', '')
     
-    # Build output path - TR papkasının içində subfolder yarat
+    # Build output path - TR içində subfolder yarat
     if subfolder:
         output_dir = Path(FOLDER_NAME) / subfolder
     else:
