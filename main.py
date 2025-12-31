@@ -33,7 +33,7 @@ import requests
 
 # Configuration
 ENDPOINT = os.environ.get('ENDPOINT', 'https://your-endpoint.com')
-FOLDER_NAME = os.environ.get('FOLDER_NAME', 'streams')
+FOLDER_NAME = os.environ.get('FOLDER_NAME', 'TR')  # Bu TR qalsın
 TIMEOUT = 30
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
@@ -482,7 +482,7 @@ def get_output_path(stream_config):
     slug = stream_config['slug']
     subfolder = stream_config.get('subfolder', '')
     
-    # Build output path
+    # Build output path - TR papkasının içində subfolder yarat
     if subfolder:
         output_dir = Path(FOLDER_NAME) / subfolder
     else:
@@ -515,7 +515,7 @@ def save_stream(stream_config, m3u8_content):
     output_file = get_output_path(stream_config)
     output_dir = output_file.parent
     
-    # Create directory if it doesn't exist
+    # Create directory if it doesn't exist - TR papkasını və alt qovluqları yarat
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Reverse quality order
@@ -539,10 +539,8 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python update_streams.py config.json
-  python update_streams.py streams/live.json
-  python update_streams.py config1.json config2.json
-  python update_streams.py config.json --retries 5 --timeout 60
+  python main.py turkish.json
+  python main.py config.json --retries 5 --timeout 60
         """
     )
     
@@ -615,10 +613,10 @@ def main():
     VERBOSE = args.verbose
     
     print("=" * 50)
-    print("YouTube Stream Updater (Improved)")
+    print("YouTube Stream Updater - TR Edition")
     print("=" * 50)
     print(f"Endpoint: {ENDPOINT}")
-    print(f"Output folder: {FOLDER_NAME}")
+    print(f"Output folder: {FOLDER_NAME} (will be created automatically)")
     print(f"Config files: {', '.join(args.config_files)}")
     print(f"Timeout: {TIMEOUT}s")
     print(f"Max retries: {MAX_RETRIES}")
@@ -626,6 +624,11 @@ def main():
     print(f"Verbose: {VERBOSE}")
     print(f"Session type: {session_type}")
     print("=" * 50)
+    
+    # TR papkasını yarat (əgər yoxdursa)
+    tr_folder = Path(FOLDER_NAME)
+    tr_folder.mkdir(exist_ok=True)
+    print(f"✓ Created/checked {FOLDER_NAME} folder")
     
     total_success = 0
     total_fail = 0
