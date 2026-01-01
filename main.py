@@ -1,104 +1,153 @@
 #!/usr/bin/env python3
 """
-TR YouTube Stream Updater - Simple & Effective
+TR YouTube Stream Updater with Selenium
+More reliable YouTube stream detection
 """
 
 import json
 import os
 import sys
 import time
-import subprocess
 from pathlib import Path
 from datetime import datetime
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 
 # Config
 OUTPUT_FOLDER = 'TR'
-TIMEOUT = 25
 
-def get_stream_url(source_type, source_id, slug):
-    """Stream URL-ni yt-dlp ilə götür"""
+def setup_selenium():
+    """Setup Selenium WebDriver"""
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')  # GUI olmadan
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--window-size=1920,1080')
+    chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+    
     try:
-        if source_type == 'channel':
-            url = f"https://www.youtube.com/channel/{source_id}/live"
-        else:  # video
-            url = f"https://www.youtube.com/watch?v={source_id}"
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.set_page_load_timeout(30)
+        return driver
+    except Exception as e:
+        print(f"Selenium setup error: {e}")
+        return None
+
+def check_channel_live(driver, channel_id, slug):
+    """Check if YouTube channel is live using Selenium"""
+    try:
+        url = f"https://www.youtube.com/channel/{channel_id}/live"
+        print(f"  Checking: {slug}")
         
-        # 1. Əvvəlcə canlı olub-olmadığını yoxla
-        check_cmd = [
-            'yt-dlp', '-j', '--no-warnings',
-            '--socket-timeout', '10',
-            '--quiet',
-            url
+        driver.get(url)
+        time.sleep(3)  # Saytın yüklənməsi üçün
+        
+        # Saytın yükləndiyini yoxla
+        page_source = driver.page_source
+        
+        # Canlı yayın işarələrini yoxla
+        live_indicators = [
+            'LIVE',
+            'Canlı',
+            '正在直播',
+            'ライブ',
+            'isLive":true',
+            'liveStreamability',
+            'Yayında'
         ]
         
-        check_result = subprocess.run(
-            check_cmd,
-            capture_output=True,
-            text=True,
-            timeout=15
-        )
+        for indicator in live_indicators:
+            if indicator in page_source:
+                print(f"  ✓ Live stream detected")
+                return True
         
-        if check_result.returncode != 0:
-            return None
+        # Daha dəqiq yoxlama - canlı badge axtar
+        try:
+            live_badge = driver.find_elements(By.XPATH, "//*[contains(text(), 'LIVE')]")
+            if live_badge:
+                print(f"  ✓ Live badge found")
+                return True
+        except:
+            pass
         
-        if check_result.stdout:
-            import json as json_module
-            data = json_module.loads(check_result.stdout)
-            
-            # Əgər kanalsa və canlı deyilsə
-            if source_type == 'channel' and data.get('live_status') not in ['is_live', 'was_live']:
-                return None
+        print(f"  ✗ Not live")
+        return False
         
-        # 2. Stream URL-ni götür
-        stream_cmd = [
+    except Exception as e:
+        print(f"  Error checking {slug}: {e}")
+        return False
+
+def get_stream_url_with_selenium(driver, channel_id):
+    """Extract stream URL from page using Selenium"""
+    try:
+        # Sayt mənbəsini al
+        page_source = driver.page_source
+        
+        # m3u8 URL-lərini axtar
+        import re
+        patterns = [
+            r'"hlsManifestUrl":"([^"]+)"',
+            r'https://[^"\s]+\.m3u8[^"\s]*',
+            r'https://manifest\.googlevideo\.com[^"\s]+',
+            r'https://[^"\s]+\.googlevideo\.com[^"\s]+m3u8'
+        ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, page_source)
+            if matches:
+                stream_url = matches[0].replace('\\', '')
+                print(f"  ✓ Stream URL found")
+                return stream_url
+        
+        return None
+        
+    except Exception as e:
+        print(f"  Error extracting stream: {e}")
+        return None
+
+def get_stream_url_fallback(channel_id):
+    """Fallback method using yt-dlp"""
+    try:
+        import subprocess
+        
+        url = f"https://www.youtube.com/channel/{channel_id}/live"
+        cmd = [
             'yt-dlp',
-            '-g',  # Stream URL-lərini götür
-            '-f', 'best[height<=720]',  # 720p və ya aşağı
+            '-g',
+            '-f', 'best',
             '--no-warnings',
             '--quiet',
-            '--socket-timeout', str(TIMEOUT),
             url
         ]
         
-        result = subprocess.run(
-            stream_cmd,
-            capture_output=True,
-            text=True,
-            timeout=TIMEOUT
-        )
-        
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
         if result.returncode == 0 and result.stdout.strip():
-            stream_url = result.stdout.strip()
-            return stream_url
+            return result.stdout.strip()
         
         return None
-        
-    except subprocess.TimeoutExpired:
-        print(f"  [TIMEOUT] Timeout expired")
-        return None
-    except Exception as e:
-        print(f"  [ERROR] {type(e).__name__}")
+    except:
         return None
 
-def create_m3u8_content(stream_url, quality="720p"):
-    """Stream URL-dən m3u8 məzmunu yarat"""
+def create_m3u8_content(stream_url):
+    """Create m3u8 file content"""
     return f"""#EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-STREAM-INF:BANDWIDTH=2000000,RESOLUTION=1280x720,NAME="{quality}"
+#EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720
 {stream_url}
 """
 
-def save_stream(stream_info, content):
-    """Stream-i fayla yaz"""
-    slug = stream_info['slug']
-    subfolder = stream_info.get('subfolder', 'genel')
-    
-    # Qovluğu yarat
+def save_stream_file(slug, subfolder, content):
+    """Save m3u8 content to file"""
+    # Create folder
     output_dir = Path(OUTPUT_FOLDER) / subfolder
     output_dir.mkdir(parents=True, exist_ok=True)
     
+    # Save file
     output_file = output_dir / f"{slug}.m3u8"
-    
     try:
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(content)
@@ -107,125 +156,133 @@ def save_stream(stream_info, content):
         return False, str(e)
 
 def main():
-    """Əsas funksiya"""
+    """Main function"""
     print("=" * 70)
-    print("TR YOUTUBE STREAM UPDATER")
+    print("TR YOUTUBE STREAM UPDATER (Selenium Edition)")
     print("=" * 70)
-    print(f"Start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
     
-    # Config oxu
-    config_file = 'turkish.json'
-    if not os.path.exists(config_file):
-        print(f"[ERROR] {config_file} not found!")
+    # Check config
+    if not os.path.exists('turkish.json'):
+        print("ERROR: turkish.json not found!")
         return
     
+    # Load config
     try:
-        with open(config_file, 'r', encoding='utf-8') as f:
+        with open('turkish.json', 'r', encoding='utf-8') as f:
             streams = json.load(f)
-        print(f"[INFO] Loaded {len(streams)} streams")
+        print(f"Loaded {len(streams)} streams")
     except Exception as e:
-        print(f"[ERROR] Could not read config: {e}")
+        print(f"ERROR loading config: {e}")
         return
     
-    # TR qovluğunu yarat
+    # Setup Selenium
+    print("\n🚀 Setting up Selenium...")
+    driver = setup_selenium()
+    if not driver:
+        print("❌ Failed to setup Selenium")
+        return
+    
+    # Create output folder
     Path(OUTPUT_FOLDER).mkdir(exist_ok=True)
     
+    # Results
     successful = 0
     failed = 0
     skipped = 0
     
-    print(f"\n[PROCESSING] Starting stream processing...")
+    print(f"\n🔍 Checking {len(streams)} streams...\n")
     
-    # Hər stream üçün
-    for i, stream in enumerate(streams, 1):
-        name = stream['name']
-        slug = stream['slug']
-        stream_type = stream.get('type', 'channel')
-        
-        print(f"\n[{i:3d}/{len(streams)}] {name}")
-        print("-" * 50)
-        
-        # Stream URL götür
-        print(f"  [GET] Getting stream URL...")
-        stream_url = get_stream_url(stream_type, stream['id'], slug)
-        
-        if not stream_url:
-            print(f"  [SKIP] No stream available")
+    try:
+        for i, stream in enumerate(streams, 1):
+            name = stream['name']
+            slug = stream['slug']
+            stream_type = stream.get('type', 'channel')
             
-            # Köhnə faylı sil
+            print(f"[{i:3d}/{len(streams)}] {name}")
+            
+            # Video streams skip
+            if stream_type == 'video':
+                print(f"     ⏭️ Video - skipped")
+                skipped += 1
+                continue
+            
+            # Check if channel is live
+            is_live = check_channel_live(driver, stream['id'], slug)
+            
+            if not is_live:
+                print(f"     ⏭️ Not live - skipped")
+                skipped += 1
+                continue
+            
+            # Get stream URL
+            stream_url = None
+            
+            # Try Selenium first
+            stream_url = get_stream_url_with_selenium(driver, stream['id'])
+            
+            # If Selenium fails, try yt-dlp fallback
+            if not stream_url:
+                print(f"     Trying fallback method...")
+                stream_url = get_stream_url_fallback(stream['id'])
+            
+            if not stream_url:
+                print(f"     ❌ Could not get stream URL")
+                failed += 1
+                continue
+            
+            # Create and save m3u8
+            m3u8_content = create_m3u8_content(stream_url)
             subfolder = stream.get('subfolder', 'genel')
-            old_file = Path(OUTPUT_FOLDER) / subfolder / f"{slug}.m3u8"
-            if old_file.exists():
-                try:
-                    old_file.unlink()
-                    print(f"  [CLEAN] Removed old file")
-                except:
-                    pass
+            saved, result = save_stream_file(slug, subfolder, m3u8_content)
             
-            skipped += 1
-            continue
-        
-        print(f"  [OK] Stream URL found")
-        
-        # m3u8 məzmunu yarat
-        m3u8_content = create_m3u8_content(stream_url)
-        
-        # Fayla yaz
-        saved, result = save_stream(stream, m3u8_content)
-        
-        if saved:
-            print(f"  [SAVED] {result}")
-            successful += 1
-        else:
-            print(f"  [ERROR] Save failed: {result}")
-            failed += 1
-        
-        # Rate limit üçün gözlə
-        if i % 5 == 0:
-            time.sleep(1)
+            if saved:
+                print(f"     ✅ Saved: {result}")
+                successful += 1
+            else:
+                print(f"     ❌ Save failed")
+                failed += 1
+            
+            # Small delay
+            if i % 5 == 0:
+                time.sleep(1)
     
-    # Nəticə
+    finally:
+        # Close Selenium driver
+        driver.quit()
+        print("\n✅ Selenium driver closed")
+    
+    # Results
     print("\n" + "=" * 70)
-    print("RESULTS")
+    print("📊 RESULTS")
     print("=" * 70)
-    print(f"✓ Successful: {successful}")
-    print(f"✗ Failed:     {failed}")
+    print(f"✅ Successful: {successful}")
+    print(f"❌ Failed:     {failed}")
     print(f"⏭️ Skipped:    {skipped}")
     print(f"📁 Output:     {OUTPUT_FOLDER}/")
-    print(f"🕒 End time:   {datetime.now().strftime('%H:%M:%S')}")
+    print(f"🕒 Finished:   {datetime.now().strftime('%H:%M:%S')}")
     
-    # Yaradılan faylları göstər
-    print(f"\n📂 Created files in {OUTPUT_FOLDER}/:")
+    # List files
+    print(f"\n📂 Files in {OUTPUT_FOLDER}/:")
     try:
-        created_files = []
+        m3u8_files = []
         for root, dirs, files in os.walk(OUTPUT_FOLDER):
             for file in files:
                 if file.endswith('.m3u8'):
-                    filepath = os.path.join(root, file)
-                    rel_path = os.path.relpath(filepath, OUTPUT_FOLDER)
-                    created_files.append(rel_path)
+                    rel_path = os.path.relpath(os.path.join(root, file), OUTPUT_FOLDER)
+                    m3u8_files.append(rel_path)
         
-        if created_files:
-            for file in sorted(created_files)[:15]:  # İlk 15-i göstər
+        if m3u8_files:
+            for file in sorted(m3u8_files):
                 print(f"  • {file}")
-            
-            if len(created_files) > 15:
-                print(f"  ... and {len(created_files) - 15} more")
+            print(f"\n📊 Total files: {len(m3u8_files)}")
         else:
             print("  No files created")
-            
-        print(f"\n📊 Total files: {len(created_files)}")
-        
     except Exception as e:
         print(f"  Error listing files: {e}")
     
     print("=" * 70)
-    
-    if successful > 0:
-        print("✅ SUCCESS: Streams saved to TR folder")
-    else:
-        print("⚠ WARNING: No streams were saved")
 
 if __name__ == "__main__":
     main()
