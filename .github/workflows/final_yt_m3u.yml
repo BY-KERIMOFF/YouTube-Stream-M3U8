@@ -21,10 +21,10 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: 📦 yt-dlp quraşdır
+      - name: 📦 Lazımlı kitabxanaları quraşdır
         run: |
-          pip install -U yt-dlp
-          yt-dlp --version
+          pip install -U yt-dlp requests
+          pip install --upgrade pip
       
       - name: 🎥 M3U fayllarını yarat
         run: python github_youtube_final.py
