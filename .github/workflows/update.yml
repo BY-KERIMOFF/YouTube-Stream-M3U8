@@ -1,0 +1,97 @@
+name: 🎬 TR YouTube Stream Updater
+
+on:
+  schedule:
+    # Hər saat bir yenilə
+    - cron: '0 * * * *'
+  
+  workflow_dispatch:  # Əl ilə başlatma
+  
+  push:
+    branches: [ main ]
+    paths:
+      - 'turkish.json'
+      - 'main.py'
+      - '.github/workflows/update.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-streams:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Repository-ni götür
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 🐍 Python quraşdır
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: 📦 Lazımlı paketləri yüklə
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+          pip install yt-dlp
+          pip install cloudscraper
+      
+      - name: 🎯 YouTube stream-ləri götür
+        id: get-streams
+        run: |
+          echo "🔍 YouTube canlı yayınları axtarılır..."
+          python main.py
+          
+          # Nəticəni yoxla
+          if find TR -name "*.m3u8" | grep -q .; then
+            echo "✅ Stream-lər tapıldı"
+            echo "has_streams=true" >> $GITHUB_OUTPUT
+            echo "Yaradılan fayllar:"
+            find TR -name "*.m3u8" | head -20
+          else
+            echo "⚠ Heç bir stream tapılmadı"
+            echo "has_streams=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 📊 Dəyişiklikləri yoxla
+        if: steps.get-streams.outputs.has_streams == 'true'
+        id: check-changes
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          git add TR/ || true
+          
+          if git diff --cached --quiet; then
+            echo "📭 Yeni dəyişiklik yoxdur"
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "📬 Yeni dəyişikliklər var"
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 💾 Dəyişiklikləri commit et
+        if: steps.get-streams.outputs.has_streams == 'true' && steps.check-changes.outputs.changes == 'true'
+        run: |
+          git commit -m "🎬 TR Stream-lər yeniləndi - $(date +'%Y-%m-%d %H:%M')"
+      
+      - name: 🚀 Dəyişiklikləri pushla
+        if: steps.get-streams.outputs.has_streams == 'true' && steps.check-changes.outputs.changes == 'true'
+        run: |
+          git push
+      
+      - name: 📋 Nəticə
+        run: |
+          echo "========================================"
+          echo "🎉 TR YouTube Stream Updater Tamamlandı"
+          echo "========================================"
+          echo "Tarix: $(date)"
+          echo "Stream-lər: ${{ steps.get-streams.outputs.has_streams }}"
+          echo "Dəyişikliklər: ${{ steps.check-changes.outputs.changes }}"
+          echo "TR qovluğundakı fayllar:"
+          find TR -name "*.m3u8" 2>/dev/null | wc -l || echo "0"
+          echo "========================================"
