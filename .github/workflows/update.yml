@@ -1,100 +1,133 @@
-name: Update TR YouTube Streams
+name: Update TR Streams
 
 on:
   schedule:
-    # Hər 30 dəqiqədə bir yenilə
+    # Hər 30 dəqiqədə bir işlə
     - cron: '*/30 * * * *'
   
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force update all streams'
+        required: false
+        default: 'false'
   
   push:
     branches: [ main ]
     paths:
-      - '**.json'
-      - '**.py'
-      - '.github/workflows/**.yml'
+      - 'turkish.json'
+      - 'main.py'
+      - '.github/workflows/update.yml'
 
 permissions:
   contents: write
 
 jobs:
-  update:
+  update-streams:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
       
-      - name: Setup Python
+      - name: 🐍 Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
           cache: 'pip'
       
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install yt-dlp
-          pip install requests
       
-      - name: Update streams
-        id: update-streams
+      - name: 🚀 Run stream updater
+        id: update
         run: |
-          echo "Starting TR YouTube Stream Updater..."
+          echo "Starting TR Stream Updater..."
+          echo "=========================================="
           python main.py
+          echo "=========================================="
           
-          # Check result
-          m3u8_count=$(find TR -name "*.m3u8" 2>/dev/null | wc -l || echo "0")
-          echo "m3u8_count=$m3u8_count" >> $GITHUB_OUTPUT
+          # Count how many m3u8 files were created
+          file_count=0
+          if [ -d "TR" ]; then
+            file_count=$(find TR -name "*.m3u8" -type f 2>/dev/null | wc -l || echo 0)
+          fi
           
-          if [ $m3u8_count -gt 0 ]; then
-            echo "Found $m3u8_count streams"
-            echo "has_streams=true" >> $GITHUB_OUTPUT
+          echo "file_count=$file_count" >> $GITHUB_OUTPUT
+          echo "Total m3u8 files created: $file_count"
+          
+          if [ $file_count -gt 0 ]; then
+            echo "has_files=true" >> $GITHUB_OUTPUT
+            echo "✅ Streams found and saved"
           else
-            echo "No streams found"
-            echo "has_streams=false" >> $GITHUB_OUTPUT
+            echo "has_files=false" >> $GITHUB_OUTPUT
+            echo "⚠ No streams saved"
           fi
       
-      - name: Check for changes
-        if: steps.update-streams.outputs.has_streams == 'true'
+      - name: 📊 Check for changes
+        if: steps.update.outputs.has_files == 'true'
         id: check-changes
         run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "GitHub Actions"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           
-          git add TR/ 2>/dev/null || true
+          # Add all TR folder files
+          git add TR/ || true
           
-          if ! git diff --cached --quiet; then
-            echo "New changes detected"
-            echo "changes=true" >> $GITHUB_OUTPUT
-            
-            # Show changed files
-            echo "Changed files:"
-            git diff --cached --name-only
+          # Check if there are changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
           else
-            echo "No new changes"
-            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "Changes detected, preparing to commit..."
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            
+            # Show what changed
+            echo "Changed files:"
+            git diff --cached --name-status
           fi
       
-      - name: Commit changes
-        if: steps.update-streams.outputs.has_streams == 'true' && steps.check-changes.outputs.changes == 'true'
+      - name: 💾 Commit changes
+        if: steps.update.outputs.has_files == 'true' && steps.check-changes.outputs.changes_detected == 'true'
         run: |
-          git commit -m "Update TR streams (${{ steps.update-streams.outputs.m3u8_count }} streams) - $(date +'%Y-%m-%d %H:%M')"
+          # Get current date and time
+          current_time=$(date +"%Y-%m-%d %H:%M")
+          
+          # Create commit message
+          commit_msg="🎬 Update TR streams (${{ steps.update.outputs.file_count }} streams) [$current_time]"
+          
+          # Commit
+          git commit -m "$commit_msg"
+          
+          echo "✅ Committed changes: $commit_msg"
       
-      - name: Push changes
-        if: steps.update-streams.outputs.has_streams == 'true' && steps.check-changes.outputs.changes == 'true'
+      - name: 🚀 Push changes
+        if: steps.update.outputs.has_files == 'true' && steps.check-changes.outputs.changes_detected == 'true'
         run: |
           git push
+          echo "✅ Changes pushed to repository"
       
-      - name: Show result
+      - name: 📋 Summary
         run: |
-          echo "========================================"
-          echo "TR YouTube Stream Updater Completed"
-          echo "========================================"
-          echo "Date: $(date)"
-          echo "Stream count: ${{ steps.update-streams.outputs.m3u8_count }}"
-          echo "Changes: ${{ steps.check-changes.outputs.changes }}"
-          echo "Status: ${{ job.status }}"
-          echo "========================================"
+          echo "=========================================="
+          echo "🏁 TR Stream Update Completed"
+          echo "=========================================="
+          echo "📅 Date: $(date)"
+          echo "📊 Files created: ${{ steps.update.outputs.file_count }}"
+          echo "🔄 Changes detected: ${{ steps.check-changes.outputs.changes_detected || 'false' }}"
+          echo "✅ Final status: ${{ job.status }}"
+          echo "=========================================="
+          
+          # Show created files if any
+          if [ -d "TR" ] && [ "${{ steps.update.outputs.file_count }}" -gt 0 ]; then
+            echo "📁 Created files in TR/:"
+            find TR -name "*.m3u8" -type f | head -10
+            if [ "${{ steps.update.outputs.file_count }}" -gt 10 ]; then
+              echo "... and $(({{ steps.update.outputs.file_count }} - 10)) more"
+            fi
+          fi
+          echo "=========================================="
