@@ -28,36 +28,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+          cache: 'pip'
       
-      - name: 📦 Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
-      
-      - name: 🌐 Download and install Chrome
-        run: |
-          # Download Chrome
-          wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt-get install -y /tmp/chrome.deb
-          rm /tmp/chrome.deb
-          
-          # Download ChromeDriver
-          CHROME_VERSION=$(google-chrome --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
-          echo "Chrome version: $CHROME_VERSION"
-          
-          # Get matching ChromeDriver version
-          DRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*}")
-          echo "ChromeDriver version: $DRIVER_VERSION"
-          
-          wget -q -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/$DRIVER_VERSION/chromedriver_linux64.zip"
-          unzip /tmp/chromedriver.zip -d /tmp/
-          sudo mv /tmp/chromedriver /usr/local/bin/
-          sudo chmod +x /usr/local/bin/chromedriver
-      
-      - name: 🐍 Install Python packages
+      - name: 📦 Install dependencies
         run: |
           pip install --upgrade pip
-          pip install selenium webdriver-manager yt-dlp
+          pip install yt-dlp
       
       - name: 🚀 Run stream updater
         id: update
