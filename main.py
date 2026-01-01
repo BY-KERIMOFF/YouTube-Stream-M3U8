@@ -238,7 +238,6 @@ def main():
     # Show created files
     print(f"\n📂 Files in {OUTPUT_FOLDER}/:")
     try:
-        import os
         file_count = 0
         for root, dirs, files in os.walk(OUTPUT_FOLDER):
             for file in files:
