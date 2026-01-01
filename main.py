@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """
-TR YouTube Live Stream Updater - Enhanced Version
-YouTube canlı yayınlarını avtomatik tapır və TR qovluğuna m3u8 yaradır
+TR YouTube Stream Updater - Simple & Effective
 """
 
 import json
 import os
 import sys
-import re
 import time
 import subprocess
 from pathlib import Path
@@ -15,130 +13,49 @@ from datetime import datetime
 
 # Config
 OUTPUT_FOLDER = 'TR'
-TIMEOUT = 20
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+TIMEOUT = 25
 
-def check_if_live(channel_id):
-    """YouTube kanalının canlı yayında olub-olmadığını yoxla"""
+def get_stream_url(source_type, source_id, slug):
+    """Stream URL-ni yt-dlp ilə götür"""
     try:
-        url = f"https://www.youtube.com/channel/{channel_id}/live"
+        if source_type == 'channel':
+            url = f"https://www.youtube.com/channel/{source_id}/live"
+        else:  # video
+            url = f"https://www.youtube.com/watch?v={source_id}"
         
-        # curl ilə səhifəni götür
-        cmd = [
-            'curl', '-s', '-L', '-A', USER_AGENT,
-            '--compressed', '--max-time', str(TIMEOUT),
-            url
-        ]
-        
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT)
-        
-        if result.returncode != 0:
-            return False
-        
-        html = result.stdout
-        
-        # Canlı yayın işarələrini yoxla
-        live_indicators = [
-            '"isLive":true',
-            '"liveStreamability"',
-            'LIVE NOW',
-            '正在直播',
-            'Canlı Yayın',
-            'liveStreamRenderer',
-            'Yayında'
-        ]
-        
-        for indicator in live_indicators:
-            if indicator in html:
-                return True
-        
-        # Əgər səhifə live səhifə deyilsə
-        if '/live' not in url:
-            return False
-            
-        return False
-        
-    except Exception:
-        return False
-
-def get_stream_with_ytdlp(channel_id, slug):
-    """yt-dlp ilə stream URL-ni götür"""
-    try:
-        url = f"https://www.youtube.com/channel/{channel_id}/live"
-        
-        # Əvvəlcə canlı yayın məlumatını al
-        info_cmd = [
+        # 1. Əvvəlcə canlı olub-olmadığını yoxla
+        check_cmd = [
             'yt-dlp', '-j', '--no-warnings',
-            '--socket-timeout', str(TIMEOUT),
+            '--socket-timeout', '10',
+            '--quiet',
             url
         ]
         
-        info_result = subprocess.run(
-            info_cmd,
+        check_result = subprocess.run(
+            check_cmd,
             capture_output=True,
             text=True,
-            timeout=TIMEOUT + 5
+            timeout=15
         )
         
-        if info_result.stdout:
-            import json as json_module
-            try:
-                video_info = json_module.loads(info_result.stdout)
-                # Video canlıdırsa
-                if video_info.get('live_status') in ['is_live', 'was_live']:
-                    print(f"  [LIVE] {slug} canlı yayında (yt-dlp təsdiqi)")
-                    
-                    # Stream URL-ni götür
-                    stream_cmd = [
-                        'yt-dlp', '-g', '-f', 'best[height<=720]',
-                        '--no-warnings',
-                        '--socket-timeout', str(TIMEOUT),
-                        url
-                    ]
-                    
-                    stream_result = subprocess.run(
-                        stream_cmd,
-                        capture_output=True,
-                        text=True,
-                        timeout=TIMEOUT
-                    )
-                    
-                    if stream_result.stdout:
-                        stream_url = stream_result.stdout.strip()
-                        print(f"  [OK] Stream URL tapıldı")
-                        
-                        # m3u8 formatına çevir
-                        m3u8_content = f"""#EXTM3U
-#EXT-X-VERSION:3
-#EXT-X-STREAM-INF:BANDWIDTH=2000000,RESOLUTION=1280x720
-{stream_url}
-"""
-                        return m3u8_content
-                else:
-                    print(f"  [OFFLINE] {slug} canlı yayında deyil")
-                    return None
-                    
-            except Exception as e:
-                print(f"  [ERROR] yt-dlp info xətası: {e}")
-                return None
-                
-    except subprocess.TimeoutExpired:
-        print(f"  [TIMEOUT] yt-dlp timeout")
-        return None
-    except Exception as e:
-        print(f"  [ERROR] yt-dlp xətası: {type(e).__name__}")
-        return None
-    
-    return None
-
-def get_video_stream(video_id, slug):
-    """Video üçün stream al"""
-    try:
-        url = f"https://www.youtube.com/watch?v={video_id}"
+        if check_result.returncode != 0:
+            return None
         
+        if check_result.stdout:
+            import json as json_module
+            data = json_module.loads(check_result.stdout)
+            
+            # Əgər kanalsa və canlı deyilsə
+            if source_type == 'channel' and data.get('live_status') not in ['is_live', 'was_live']:
+                return None
+        
+        # 2. Stream URL-ni götür
         stream_cmd = [
-            'yt-dlp', '-g', '-f', 'best[height<=720]',
+            'yt-dlp',
+            '-g',  # Stream URL-lərini götür
+            '-f', 'best[height<=720]',  # 720p və ya aşağı
             '--no-warnings',
+            '--quiet',
             '--socket-timeout', str(TIMEOUT),
             url
         ]
@@ -150,24 +67,29 @@ def get_video_stream(video_id, slug):
             timeout=TIMEOUT
         )
         
-        if result.stdout:
+        if result.returncode == 0 and result.stdout.strip():
             stream_url = result.stdout.strip()
-            print(f"  [VIDEO] Stream tapıldı")
-            
-            m3u8_content = f"""#EXTM3U
+            return stream_url
+        
+        return None
+        
+    except subprocess.TimeoutExpired:
+        print(f"  [TIMEOUT] Timeout expired")
+        return None
+    except Exception as e:
+        print(f"  [ERROR] {type(e).__name__}")
+        return None
+
+def create_m3u8_content(stream_url, quality="720p"):
+    """Stream URL-dən m3u8 məzmunu yarat"""
+    return f"""#EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=1280x720
+#EXT-X-STREAM-INF:BANDWIDTH=2000000,RESOLUTION=1280x720,NAME="{quality}"
 {stream_url}
 """
-            return m3u8_content
-            
-    except Exception as e:
-        print(f"  [ERROR] Video stream xətası: {e}")
-    
-    return None
 
-def save_m3u8(stream_info, content):
-    """m3u8 faylını saxla"""
+def save_stream(stream_info, content):
+    """Stream-i fayla yaz"""
     slug = stream_info['slug']
     subfolder = stream_info.get('subfolder', 'genel')
     
@@ -180,54 +102,56 @@ def save_m3u8(stream_info, content):
     try:
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(content)
-        print(f"  [SAVED] {output_file}")
-        
-        # Fayl ölçüsünü göstər
-        file_size = os.path.getsize(output_file)
-        print(f"  [SIZE] {file_size} bayt")
-        return True
-        
+        return True, str(output_file)
     except Exception as e:
-        print(f"  [ERROR] Saxlana bilmədi: {e}")
-        return False
+        return False, str(e)
 
-def check_and_install_ytdlp():
-    """yt-dlp yüklüdür mü yoxla"""
+def main():
+    """Əsas funksiya"""
+    print("=" * 70)
+    print("TR YOUTUBE STREAM UPDATER")
+    print("=" * 70)
+    print(f"Start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 70)
+    
+    # Config oxu
+    config_file = 'turkish.json'
+    if not os.path.exists(config_file):
+        print(f"[ERROR] {config_file} not found!")
+        return
+    
     try:
-        subprocess.run(['yt-dlp', '--version'], 
-                      capture_output=True, check=True)
-        print("[OK] yt-dlp yüklüdür")
-        return True
-    except:
-        print("[INSTALL] yt-dlp yüklənir...")
-        try:
-            subprocess.run(['pip', 'install', '--upgrade', 'yt-dlp'],
-                          capture_output=True, check=True)
-            print("[OK] yt-dlp yükləndi")
-            return True
-        except Exception as e:
-            print(f"[ERROR] yt-dlp yüklənə bilmədi: {e}")
-            return False
-
-def process_stream(stream, index, total):
-    """Tək stream-i işlə"""
-    name = stream['name']
-    slug = stream['slug']
+        with open(config_file, 'r', encoding='utf-8') as f:
+            streams = json.load(f)
+        print(f"[INFO] Loaded {len(streams)} streams")
+    except Exception as e:
+        print(f"[ERROR] Could not read config: {e}")
+        return
     
-    print(f"\n[{index}/{total}] {name}")
-    print("-" * 40)
+    # TR qovluğunu yarat
+    Path(OUTPUT_FOLDER).mkdir(exist_ok=True)
     
-    # Stream tipinə görə işlə
-    if stream.get('type') == 'video':
-        print(f"  [TYPE] Video stream")
-        content = get_video_stream(stream['id'], slug)
-    else:
-        # Əvvəlcə canlı olub-olmadığını yoxla
-        print(f"  [CHECK] Canlı yoxlanılır...")
-        is_live = check_if_live(stream['id'])
+    successful = 0
+    failed = 0
+    skipped = 0
+    
+    print(f"\n[PROCESSING] Starting stream processing...")
+    
+    # Hər stream üçün
+    for i, stream in enumerate(streams, 1):
+        name = stream['name']
+        slug = stream['slug']
+        stream_type = stream.get('type', 'channel')
         
-        if not is_live:
-            print(f"  [OFFLINE] Canlı yayın yoxdur")
+        print(f"\n[{i:3d}/{len(streams)}] {name}")
+        print("-" * 50)
+        
+        # Stream URL götür
+        print(f"  [GET] Getting stream URL...")
+        stream_url = get_stream_url(stream_type, stream['id'], slug)
+        
+        if not stream_url:
+            print(f"  [SKIP] No stream available")
             
             # Köhnə faylı sil
             subfolder = stream.get('subfolder', 'genel')
@@ -235,100 +159,73 @@ def process_stream(stream, index, total):
             if old_file.exists():
                 try:
                     old_file.unlink()
-                    print(f"  [CLEAN] Köhnə fayl silindi: {old_file}")
+                    print(f"  [CLEAN] Removed old file")
                 except:
                     pass
-            return False
+            
+            skipped += 1
+            continue
         
-        # Canlıdırsa, stream götür
-        print(f"  [LIVE] Canlı yayın tapıldı")
-        content = get_stream_with_ytdlp(stream['id'], slug)
-    
-    if content:
-        return save_m3u8(stream, content)
-    else:
-        print(f"  [ERROR] Stream alına bilmədi")
-        return False
-
-def main():
-    """Əsas proqram"""
-    print("=" * 60)
-    print("TR YouTube Stream Updater - Enhanced")
-    print("=" * 60)
-    print(f"Başlama vaxtı: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 60)
-    
-    # yt-dlp yoxla
-    if not check_and_install_ytdlp():
-        print("[ERROR] yt-dlp olmadan davam edilə bilməz!")
-        return
-    
-    # Config faylını yoxla
-    config_file = 'turkish.json'
-    if not os.path.exists(config_file):
-        print(f"[ERROR] {config_file} tapılmadı!")
-        return
-    
-    # Config oxu
-    try:
-        with open(config_file, 'r', encoding='utf-8') as f:
-            streams = json.load(f)
-        print(f"[INFO] {len(streams)} stream tapıldı")
-    except Exception as e:
-        print(f"[ERROR] Config oxuna bilmədi: {e}")
-        return
-    
-    # TR qovluğunu yarat
-    Path(OUTPUT_FOLDER).mkdir(exist_ok=True)
-    
-    successful = 0
-    total = len(streams)
-    
-    print(f"\n[START] Stream-lər işlənir...")
-    
-    # Hər stream-i işlə
-    for i, stream in enumerate(streams, 1):
-        try:
-            if process_stream(stream, i, total):
-                successful += 1
-        except Exception as e:
-            print(f"  [EXCEPTION] Xəta: {type(e).__name__}")
+        print(f"  [OK] Stream URL found")
         
-        # Kiçik fasilə (rate limit üçün)
-        if i % 10 == 0:
+        # m3u8 məzmunu yarat
+        m3u8_content = create_m3u8_content(stream_url)
+        
+        # Fayla yaz
+        saved, result = save_stream(stream, m3u8_content)
+        
+        if saved:
+            print(f"  [SAVED] {result}")
+            successful += 1
+        else:
+            print(f"  [ERROR] Save failed: {result}")
+            failed += 1
+        
+        # Rate limit üçün gözlə
+        if i % 5 == 0:
             time.sleep(1)
     
     # Nəticə
-    print("\n" + "=" * 60)
-    print("NƏTİCƏ")
-    print("=" * 60)
-    print(f"[SUCCESS] Uğurlu: {successful}")
-    print(f"[FAILED] Uğursuz: {total - successful}")
-    print(f"[FOLDER] Çıxış qovluğu: {OUTPUT_FOLDER}/")
-    print(f"[TIME] Bitmə vaxtı: {datetime.now().strftime('%H:%M:%S')}")
+    print("\n" + "=" * 70)
+    print("RESULTS")
+    print("=" * 70)
+    print(f"✓ Successful: {successful}")
+    print(f"✗ Failed:     {failed}")
+    print(f"⏭️ Skipped:    {skipped}")
+    print(f"📁 Output:     {OUTPUT_FOLDER}/")
+    print(f"🕒 End time:   {datetime.now().strftime('%H:%M:%S')}")
     
-    # Faylları göstər
-    print("\n[FILES] Yaradılan fayllar:")
+    # Yaradılan faylları göstər
+    print(f"\n📂 Created files in {OUTPUT_FOLDER}/:")
     try:
-        m3u8_files = list(Path(OUTPUT_FOLDER).rglob('*.m3u8'))
-        if m3u8_files:
-            for file in sorted(m3u8_files)[:20]:  # İlk 20-ni göstər
-                size = file.stat().st_size
-                print(f"  [FILE] {file} ({size} bayt)")
+        created_files = []
+        for root, dirs, files in os.walk(OUTPUT_FOLDER):
+            for file in files:
+                if file.endswith('.m3u8'):
+                    filepath = os.path.join(root, file)
+                    rel_path = os.path.relpath(filepath, OUTPUT_FOLDER)
+                    created_files.append(rel_path)
+        
+        if created_files:
+            for file in sorted(created_files)[:15]:  # İlk 15-i göstər
+                print(f"  • {file}")
             
-            if len(m3u8_files) > 20:
-                print(f"  [INFO] ... və {len(m3u8_files) - 20} daha")
+            if len(created_files) > 15:
+                print(f"  ... and {len(created_files) - 15} more")
         else:
-            print("  [INFO] Heç bir fayl yoxdur")
-    except:
-        print("  [ERROR] Fayllar göstərilə bilmədi")
+            print("  No files created")
+            
+        print(f"\n📊 Total files: {len(created_files)}")
+        
+    except Exception as e:
+        print(f"  Error listing files: {e}")
     
-    print("=" * 60)
+    print("=" * 70)
     
     if successful > 0:
-        print("[SUCCESS] Uğurlu! Stream-lər TR qovluğuna yadda saxlanıldı.")
+        print("✅ SUCCESS: Streams saved to TR folder")
     else:
-        print("[WARNING] Heç bir stream tapılmadı!")
+        print("⚠ WARNING: No streams were saved")
 
 if __name__ == "__main__":
     main()
