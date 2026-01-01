@@ -1,0 +1,58 @@
+name: YouTube M3U Generator
+
+on:
+  schedule:
+    # Hər 4 saatda bir
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['github_ytdlp.py', 'turkish.json']
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🛠️ Repository-ni yüklə
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Python quraşdır
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 Kitabxanaları quraşdır
+        run: |
+          pip install yt-dlp
+          pip install --upgrade pip
+      
+      - name: 🎥 M3U fayllarını yarat
+        run: python github_ytdlp.py
+      
+      - name: 📊 Nəticəni göstər
+        run: |
+          echo "=== TR QOVLUĞU ==="
+          find TR -name "*.m3u8" | head -20
+          echo "=== ÜMUMİ SAY ==="
+          find TR -name "*.m3u8" | wc -l
+      
+      - name: ✅ Dəyişiklikləri yoxla
+        id: check-changes
+        run: |
+          git add TR/ || true
+          if git diff --cached --quiet; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "🔄 Dəyişiklik yoxdur"
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "📝 Dəyişikliklər var"
+          fi
+      
+      - name: 🚀 GitHub-a göndər
+        if: steps.check-changes.outputs.changes == 'true'
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git commit -m "TR: YouTube M3U faylları yeniləndi ($(date +'%Y-%m-%d %H:%M'))"
+          git push
