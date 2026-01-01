@@ -1,12 +1,15 @@
-name: Simple YouTube M3U8
+name: YouTube M3U8 Avtomatik
 
 on:
   schedule:
-    - cron: '0 */3 * * *'
-  workflow_dispatch:
+    # Hər 6 saatda bir
+    - cron: '0 */6 * * *'
+  
+  workflow_dispatch:  # Əl ilə başlatmaq üçün
+  
   push:
     branches: [main]
-    paths: ['simple_main.py', 'turkish.json']
+    paths: ['youtube_direct.py', 'turkish.json']
 
 jobs:
   update:
@@ -24,11 +27,20 @@ jobs:
       - name: Kitabxanaları quraşdır
         run: pip install requests
       
-      - name: Stream-ləri yenilə
-        run: python simple_main.py
+      - name: M3U8 fayllarını yüklə
+        run: python youtube_direct.py
+      
+      - name: Nəticəni yoxla
+        id: check-result
+        run: |
+          echo "TR qovluğunun məzmunu:"
+          ls -la TR/ || echo "TR qovluğu yoxdur"
+          echo ""
+          echo "Git status:"
+          git status
       
       - name: Dəyişiklikləri yoxla
-        id: check-changes
+        id: git-check
         run: |
           git add TR/ || true
           if git diff --cached --quiet; then
@@ -37,10 +49,10 @@ jobs:
             echo "changes=true" >> $GITHUB_OUTPUT
           fi
       
-      - name: Commit et
-        if: steps.check-changes.outputs.changes == 'true'
+      - name: Dəyişiklikləri GitHub-a göndər
+        if: steps.git-check.outputs.changes == 'true'
         run: |
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git commit -m "TR: YouTube stream-ləri yeniləndi"
+          git commit -m "TR: YouTube m3u8 faylları yeniləndi"
           git push
