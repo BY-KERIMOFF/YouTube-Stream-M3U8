@@ -1,199 +1,316 @@
 #!/usr/bin/env python3
 """
-TR YouTube Stream Updater
-YouTube stream URL-lərini gətirir və TR qovluğunda m3u8 faylları yaradır
+TR YouTube Live Stream Updater
+YouTube canlı yayınlarını avtomatik tapır və m3u8 faylları yaradır
 """
 
 import json
 import os
 import sys
-import argparse
-import time
 import re
+import time
 from pathlib import Path
-from urllib.parse import urlencode, urlparse, parse_qs
-
-import cloudscraper
 import requests
+from urllib.parse import urlparse, parse_qs
+import subprocess
 
 # Config
-ENDPOINT = os.environ.get('ENDPOINT', 'https://your-endpoint.com')
-FOLDER_NAME = 'TR'
+OUTPUT_FOLDER = 'TR'
 TIMEOUT = 30
-MAX_RETRIES = 3
-RETRY_DELAY = 2
+MAX_RETRIES = 2
 
-def create_session():
-    """HTTP session yarat"""
-    print("✓ Cloudscraper istifadə olunur")
-    scraper = cloudscraper.create_scraper(
-        browser={
-            'browser': 'chrome',
-            'platform': 'windows',
-            'mobile': False
-        },
-        delay=10
-    )
-    return scraper
-
-session = create_session()
-
-def load_config(config_path):
-    """JSON config faylını yüklə"""
-    try:
-        with open(config_path, 'r') as f:
-            config = json.load(f)
-        print(f"✓ {len(config)} stream yükləndi")
-        return config
-    except Exception as e:
-        print(f"✗ Config faylı oxuna bilmədi: {e}")
-        sys.exit(1)
-
-def fetch_stream_url(stream_config, attempt=1):
-    """YouTube stream m3u8 URL-ni gətir"""
-    stream_type = stream_config.get('type', 'channel')
-    stream_id = stream_config['id']
-    slug = stream_config['slug']
-    
-    # URL qur
-    query_param = 'v' if stream_type == 'video' else 'c'
-    url = f"{ENDPOINT}/yt.php?{query_param}={stream_id}"
-    
-    print(f"  Gətirilir: {slug}")
+def get_youtube_live_stream(channel_id, slug, retry=0):
+    """YouTube kanalından canlı yayını avtomatik tap"""
+    print(f"\n📺 {slug} kanalı yoxlanılır...")
     
     try:
+        # 1. YouTube səhifəsini götür
+        url = f"https://www.youtube.com/channel/{channel_id}/live"
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': '*/*',
-            'Accept-Language': 'en-US,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding': 'gzip, deflate',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
         }
         
-        response = session.get(url, timeout=TIMEOUT, headers=headers)
+        response = requests.get(url, headers=headers, timeout=TIMEOUT)
         
-        print(f"  → Status: {response.status_code}")
-        print(f"  → Ölçü: {len(response.content)} bayt")
+        # 2. Canlı yayın olub-olmadığını yoxla
+        if '"isLive":true' not in response.text and '"liveStreamability"' not in response.text:
+            print(f"  ⚠ {slug} canlı yayında deyil")
+            return None
         
-        response.raise_for_status()
+        print(f"  ✓ {slug} canlı yayında!")
         
-        # m3u8 yoxla
-        content_preview = response.text[:200]
+        # 3. m3u8 linkini tap (müxtəlif pattern-lər)
+        patterns = [
+            r'"hlsManifestUrl":"([^"]+)"',
+            r'"liveStreamabilityRenderer".*?"streamingUrl":"([^"]+)"',
+            r'"streamingUrl":"([^"]+)"',
+            r'm3u8.*?(https://[^"\s]+\.m3u8[^"\s]*)',
+            r'https://[^"\s]+\.googlevideo\.com[^"\s]*m3u8[^"\s]*',
+        ]
         
-        if '#EXTM3U' in content_preview:
-            print(f"  ✓ m3u8 tapıldı")
-            return response.text, None
-        else:
-            print(f"  ✗ m3u8 tapılmadı")
-            return None, 'NoM3U8'
+        m3u8_url = None
+        for pattern in patterns:
+            matches = re.findall(pattern, response.text)
+            if matches:
+                m3u8_url = matches[0].replace('\\', '')
+                print(f"  ✓ m3u8 tapıldı: {m3u8_url[:80]}...")
+                break
+        
+        if not m3u8_url:
+            # 4. yt-dlp ilə cəhd et
+            print(f"  ⚠ Avtomatik tapılmadı, yt-dlp cəhd edir...")
+            try:
+                result = subprocess.run(
+                    ['yt-dlp', '-g', '-f', 'best', f'https://www.youtube.com/channel/{channel_id}/live'],
+                    capture_output=True,
+                    text=True,
+                    timeout=20
+                )
+                if result.stdout:
+                    m3u8_url = result.stdout.strip()
+                    print(f"  ✓ yt-dlp ilə tapıldı: {m3u8_url[:80]}...")
+            except:
+                pass
+        
+        if m3u8_url:
+            # 5. m3u8 məzmununu götür
+            m3u8_response = requests.get(m3u8_url, headers=headers, timeout=TIMEOUT)
+            if '#EXTM3U' in m3u8_response.text:
+                print(f"  ✓ m3u8 yükləndi ({len(m3u8_response.text)} bayt)")
+                return m3u8_response.text
+        
+        return None
         
     except Exception as e:
         print(f"  ✗ Xəta: {type(e).__name__}")
-        return None, type(e).__name__
+        if retry < MAX_RETRIES:
+            print(f"  → Yenidən cəhd... ({retry+1}/{MAX_RETRIES})")
+            time.sleep(2)
+            return get_youtube_live_stream(channel_id, slug, retry + 1)
+        return None
 
-def fetch_with_retry(stream_config):
-    """Yenidən cəhd etmə ilə stream gətir"""
-    for attempt in range(1, MAX_RETRIES + 1):
-        if attempt > 1:
-            delay = RETRY_DELAY * (2 ** (attempt - 2))
-            print(f"  → {attempt}/{MAX_RETRIES} yenidən cəhd {delay}s sonra...")
-            time.sleep(delay)
-        
-        result, error = fetch_stream_url(stream_config, attempt)
-        if result is not None:
-            return result, None
-        
-        print(f"  → Cəhd {attempt} uğursuz oldu")
-    
-    print(f"  ✗ Bütün {MAX_RETRIES} cəhd uğursuz oldu")
-    return None, 'AllFailed'
-
-def get_output_path(stream_config):
-    """Çıxış faylının yolunu al"""
-    slug = stream_config['slug']
-    subfolder = stream_config.get('subfolder', '')
-    
-    # TR içində subfolder yarat
-    if subfolder:
-        output_dir = Path(FOLDER_NAME) / subfolder
-    else:
-        output_dir = Path(FOLDER_NAME)
-    
-    return output_dir / f"{slug}.m3u8"
-
-def save_stream(stream_config, m3u8_content):
-    """m3u8 məzmununu fayla yaz"""
-    slug = stream_config['slug']
-    
-    output_file = get_output_path(stream_config)
-    output_dir = output_file.parent
-    
-    # Qovluğu yarat (əgər yoxdursa)
-    output_dir.mkdir(parents=True, exist_ok=True)
+def get_video_stream(video_id, slug, retry=0):
+    """YouTube video ID-dən stream götür"""
+    print(f"\n🎬 {slug} videosu yoxlanılır...")
     
     try:
-        with open(output_file, 'w') as f:
+        # yt-dlp ilə video stream-i götür
+        try:
+            result = subprocess.run(
+                ['yt-dlp', '-g', '-f', 'best', f'https://www.youtube.com/watch?v={video_id}'],
+                capture_output=True,
+                text=True,
+                timeout=20
+            )
+            if result.stdout:
+                stream_url = result.stdout.strip()
+                print(f"  ✓ Stream tapıldı: {stream_url[:80]}...")
+                
+                # m3u8 formatına çevir
+                m3u8_content = f"""#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720
+{stream_url}
+"""
+                return m3u8_content
+        except Exception as e:
+            print(f"  ⚠ yt-dlp xətası: {e}")
+        
+        return None
+        
+    except Exception as e:
+        print(f"  ✗ Xəta: {type(e).__name__}")
+        if retry < MAX_RETRIES:
+            time.sleep(2)
+            return get_video_stream(video_id, slug, retry + 1)
+        return None
+
+def create_m3u8_file(stream_config, m3u8_content):
+    """m3u8 faylı yarat"""
+    slug = stream_config['slug']
+    subfolder = stream_config.get('subfolder', 'genel')
+    
+    # TR qovluğunu və alt qovluğu yarat
+    output_dir = Path(OUTPUT_FOLDER) / subfolder
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    output_file = output_dir / f"{slug}.m3u8"
+    
+    try:
+        with open(output_file, 'w', encoding='utf-8') as f:
             f.write(m3u8_content)
-        print(f"  ✓ Saxlandı: {output_file}")
+        print(f"  💾 Saxlandı: {output_file}")
         return True
     except Exception as e:
         print(f"  ✗ Saxlana bilmədi: {e}")
         return False
 
-def main():
-    """Əsas funksiya"""
-    parser = argparse.ArgumentParser(description='YouTube stream m3u8 fayllarını yenilə')
-    parser.add_argument('config_files', nargs='+', help='Config fayl(lar)ı')
-    parser.add_argument('--endpoint', default=ENDPOINT, help='API endpoint URL')
-    parser.add_argument('--folder', default=FOLDER_NAME, help='Çıxış qovluğu')
-    parser.add_argument('--timeout', type=int, default=TIMEOUT, help='Timeout saniyə')
-    parser.add_argument('--retries', type=int, default=MAX_RETRIES, help='Maksimum yenidən cəhd')
+def check_ytdlp():
+    """yt-dlp yüklüdür mü?"""
+    try:
+        subprocess.run(['yt-dlp', '--version'], capture_output=True, check=True)
+        print("✓ yt-dlp yüklüdür")
+        return True
+    except:
+        print("⚠ yt-dlp yüklü deyil, yüklənir...")
+        try:
+            subprocess.run(['pip', 'install', 'yt-dlp'], check=True)
+            print("✓ yt-dlp yükləndi")
+            return True
+        except Exception as e:
+            print(f"✗ yt-dlp yüklənə bilmədi: {e}")
+            return False
+
+def process_streams(config_file):
+    """Bütün stream-ləri işlə"""
+    print(f"\n📁 Config faylı oxunur: {config_file}")
     
-    args = parser.parse_args()
+    try:
+        with open(config_file, 'r', encoding='utf-8') as f:
+            streams = json.load(f)
+    except Exception as e:
+        print(f"✗ Config oxuna bilmədi: {e}")
+        return 0, 0
     
-    global ENDPOINT, FOLDER_NAME, TIMEOUT, MAX_RETRIES
-    ENDPOINT = args.endpoint
-    FOLDER_NAME = args.folder
-    TIMEOUT = args.timeout
-    MAX_RETRIES = args.retries
+    print(f"✓ {len(streams)} stream tapıldı")
     
-    print("=" * 50)
-    print("TR YouTube Stream Updater")
-    print("=" * 50)
-    print(f"Endpoint: {ENDPOINT}")
-    print(f"Çıxış qovluğu: {FOLDER_NAME}")
-    print(f"Config faylları: {', '.join(args.config_files)}")
-    print("=" * 50)
+    # yt-dlp yoxla
+    ytdlp_available = check_ytdlp()
+    
+    successful = 0
+    failed = 0
     
     # TR qovluğunu yarat
-    tr_folder = Path(FOLDER_NAME)
-    tr_folder.mkdir(exist_ok=True)
-    print(f"✓ {FOLDER_NAME} qovluğu yaradıldı/yoxlanıldı")
+    Path(OUTPUT_FOLDER).mkdir(exist_ok=True)
     
-    total_success = 0
-    total_fail = 0
-    
-    for config_file in args.config_files:
-        print(f"\n📄 Config işlənir: {config_file}")
-        print("-" * 50)
+    for i, stream in enumerate(streams, 1):
+        stream_type = stream.get('type', 'channel')
+        stream_id = stream['id']
+        slug = stream['slug']
+        name = stream['name']
         
-        streams = load_config(config_file)
+        print(f"\n[{i}/{len(streams)}] 🔄 {name} ({slug})")
+        print("-" * 40)
         
-        for i, stream in enumerate(streams, 1):
-            slug = stream.get('slug', 'unknown')
-            print(f"\n[{i}/{len(streams)}] {slug}")
-            
-            m3u8_content, error = fetch_with_retry(stream)
-            
-            if m3u8_content:
-                if save_stream(stream, m3u8_content):
-                    total_success += 1
-                else:
-                    total_fail += 1
+        m3u8_content = None
+        
+        if stream_type == 'channel':
+            m3u8_content = get_youtube_live_stream(stream_id, slug)
+        elif stream_type == 'video':
+            m3u8_content = get_video_stream(stream_id, slug)
+        
+        if m3u8_content:
+            if create_m3u8_file(stream, m3u8_content):
+                successful += 1
             else:
-                total_fail += 1
+                failed += 1
+        else:
+            print(f"  ✗ Stream tapılmadı")
+            failed += 1
     
-    print("\n" + "=" * 50)
-    print(f"Tamamlandı: {total_success} uğurlu, {total_fail} uğursuz")
-    print("=" * 50)
+    return successful, failed
+
+def main():
+    """Əsas funksiya"""
+    print("=" * 60)
+    print("🎯 TR YouTube Canlı Yayın Toplayıcı")
+    print("=" * 60)
+    print("📺 YouTube canlı yayınları avtomatik tapılır")
+    print("💾 TR qovluğunda m3u8 faylları yaradılır")
+    print("=" * 60)
+    
+    # Lazımlı paketləri yüklə
+    print("\n📦 Lazımlı paketlər yoxlanılır...")
+    try:
+        import requests
+        print("✓ requests yüklüdür")
+    except:
+        print("⚠ requests yoxdur, yüklənir...")
+        subprocess.run([sys.executable, '-m', 'pip', 'install', 'requests'], check=True)
+    
+    # Config faylını yoxla
+    config_file = 'turkish.json'
+    if not Path(config_file).exists():
+        print(f"\n✗ {config_file} tapılmadı!")
+        print(f"ℹ Nümunə config yaradılır...")
+        create_sample_config()
+        config_file = 'turkish.json'
+    
+    # Stream-ləri işlə
+    successful, failed = process_streams(config_file)
+    
+    # Nəticə
+    print("\n" + "=" * 60)
+    print("📊 NƏTİCƏ")
+    print("=" * 60)
+    print(f"✅ Uğurlu: {successful}")
+    print(f"❌ Uğursuz: {failed}")
+    print(f"📁 Çıxış qovluğu: {OUTPUT_FOLDER}/")
+    
+    # TR qovluğunun məzmununu göstər
+    print(f"\n📂 {OUTPUT_FOLDER} qovluğunun məzmunu:")
+    try:
+        for root, dirs, files in os.walk(OUTPUT_FOLDER):
+            level = root.replace(OUTPUT_FOLDER, '').count(os.sep)
+            indent = ' ' * 2 * level
+            print(f"{indent}📁 {os.path.basename(root) or OUTPUT_FOLDER}/")
+            subindent = ' ' * 2 * (level + 1)
+            for file in files:
+                if file.endswith('.m3u8'):
+                    print(f"{subindent}📄 {file}")
+    except:
+        pass
+    
+    print("=" * 60)
+    
+    if successful > 0:
+        print("🎉 Uğurlu! TR qovluğunda m3u8 faylları yaradıldı.")
+    else:
+        print("⚠ Heç bir stream tapılmadı!")
+
+def create_sample_config():
+    """Nümunə config faylı yarat"""
+    sample_config = [
+        {
+            "type": "channel",
+            "name": "24 TV",
+            "slug": "24tv",
+            "id": "UCN7VYCsI4Lx1-J4_BtjoWUA",
+            "subfolder": "haber"
+        },
+        {
+            "type": "channel",
+            "name": "TRT Haber",
+            "slug": "trthaber",
+            "id": "UCBgTP2LOFVPmq15W-RH-WXA",
+            "subfolder": "haber"
+        },
+        {
+            "type": "channel", 
+            "name": "A Spor",
+            "slug": "aspor",
+            "id": "UCJElRTCNEmLemgirqvsW63Q",
+            "subfolder": "spor"
+        },
+        {
+            "type": "video",
+            "name": "Örnek Video",
+            "slug": "ornek-video",
+            "id": "dQw4w9WgXcQ",
+            "subfolder": "diger"
+        }
+    ]
+    
+    with open('turkish.json', 'w', encoding='utf-8') as f:
+        json.dump(sample_config, f, indent=2, ensure_ascii=False)
+    
+    print("✓ Nümunə turkish.json yaradıldı")
 
 if __name__ == "__main__":
     main()
