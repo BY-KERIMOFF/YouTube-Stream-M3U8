@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-TR YouTube Stream Updater - Simple & Effective
-Uses only yt-dlp for maximum reliability
+TR YouTube Stream Updater - Direct Method
+Simple and direct approach using yt-dlp
 """
 
 import json
@@ -14,98 +14,29 @@ from datetime import datetime
 
 # Config
 OUTPUT_FOLDER = 'TR'
-TIMEOUT = 25
+TIMEOUT = 20
 
-def get_stream_info(channel_id, slug):
-    """Get stream information using yt-dlp"""
+def get_stream_direct(channel_id, name):
+    """Get stream URL directly without checking if live"""
     try:
-        url = f"https://www.youtube.com/channel/{channel_id}/live"
+        url = f"https://www.youtube.com/channel/{channel_id}"
         
-        # 1. First get video info to check if live
-        info_cmd = [
+        # Try to get any available stream (live or not)
+        cmd = [
             'yt-dlp',
-            '-j',  # JSON output
+            '-g',  # Get URL only
+            '-f', 'best',  # Best quality
             '--no-warnings',
             '--quiet',
-            '--socket-timeout', '15',
-            url
-        ]
-        
-        info_result = subprocess.run(
-            info_cmd,
-            capture_output=True,
-            text=True,
-            timeout=20
-        )
-        
-        if info_result.returncode != 0:
-            return None, "Channel not accessible"
-        
-        # Parse JSON response
-        import json as json_lib
-        try:
-            video_info = json_lib.loads(info_result.stdout)
-        except:
-            return None, "Invalid response"
-        
-        # Check if live
-        live_status = video_info.get('live_status')
-        if live_status not in ['is_live', 'was_live']:
-            return None, "Not live"
-        
-        # 2. Get stream URL
-        stream_cmd = [
-            'yt-dlp',
-            '-g',  # Get direct URL
-            '-f', 'best[height<=720]/best',  # Prefer 720p
-            '--no-warnings',
-            '--quiet',
+            '--no-check-certificate',
+            '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             '--socket-timeout', str(TIMEOUT),
-            url
-        ]
-        
-        stream_result = subprocess.run(
-            stream_cmd,
-            capture_output=True,
-            text=True,
-            timeout=TIMEOUT
-        )
-        
-        if stream_result.returncode != 0:
-            return None, "No stream URL"
-        
-        if not stream_result.stdout.strip():
-            return None, "Empty response"
-        
-        # Get first URL (usually the stream URL)
-        stream_url = stream_result.stdout.strip().split('\n')[0]
-        
-        # Additional info
-        title = video_info.get('title', 'Unknown')
-        return stream_url, f"Live: {title}"
-        
-    except subprocess.TimeoutExpired:
-        return None, "Timeout"
-    except Exception as e:
-        return None, f"Error: {type(e).__name__}"
-
-def get_video_stream(video_id, slug):
-    """Get stream for a specific video"""
-    try:
-        url = f"https://www.youtube.com/watch?v={video_id}"
-        
-        stream_cmd = [
-            'yt-dlp',
-            '-g',
-            '-f', 'best[height<=720]/best',
-            '--no-warnings',
-            '--quiet',
-            '--socket-timeout', str(TIMEOUT),
+            '--retries', '2',
             url
         ]
         
         result = subprocess.run(
-            stream_cmd,
+            cmd,
             capture_output=True,
             text=True,
             timeout=TIMEOUT
@@ -113,35 +44,52 @@ def get_video_stream(video_id, slug):
         
         if result.returncode == 0 and result.stdout.strip():
             stream_url = result.stdout.strip().split('\n')[0]
-            return stream_url, "Video stream"
+            return stream_url, "Stream found"
         
         return None, "No stream"
         
+    except subprocess.TimeoutExpired:
+        return None, "Timeout"
     except Exception as e:
         return None, f"Error: {e}"
 
-def create_m3u8_content(stream_url, name="Stream"):
-    """Create m3u8 file content"""
+def create_m3u8_content(stream_url, name):
+    """Create m3u8 content"""
     return f"""#EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720,NAME="{name}"
+#EXT-X-STREAM-INF:BANDWIDTH=2000000,RESOLUTION=1280x720,NAME="{name}"
 {stream_url}
 """
 
 def save_m3u8_file(slug, subfolder, content):
-    """Save m3u8 content to file"""
-    # Create folder
+    """Save m3u8 file"""
     output_dir = Path(OUTPUT_FOLDER) / subfolder
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Save file
     output_file = output_dir / f"{slug}.m3u8"
     try:
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(content)
-        return True, str(output_file)
+        
+        # Check if file has content
+        if os.path.getsize(output_file) > 50:
+            return True, str(output_file)
+        else:
+            os.remove(output_file)
+            return False, "Empty file"
+            
     except Exception as e:
         return False, str(e)
+
+def update_ytdlp():
+    """Update yt-dlp to latest version"""
+    print("🔄 Updating yt-dlp...")
+    try:
+        subprocess.run(['pip', 'install', '--upgrade', 'yt-dlp'], 
+                      capture_output=True, timeout=60)
+        print("✅ yt-dlp updated")
+    except:
+        print("⚠ Could not update yt-dlp")
 
 def main():
     """Main function"""
@@ -150,6 +98,9 @@ def main():
     print("=" * 70)
     print(f"Start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
+    
+    # Update yt-dlp first
+    update_ytdlp()
     
     # Check config
     if not os.path.exists('turkish.json'):
@@ -171,39 +122,26 @@ def main():
     # Process streams
     successful = 0
     failed = 0
-    skipped = 0
     
-    print(f"\n🔄 Processing streams...\n")
+    print(f"\n🔄 Processing streams (direct method)...\n")
     
     for i, stream in enumerate(streams, 1):
         name = stream['name']
         slug = stream['slug']
-        stream_type = stream.get('type', 'channel')
         
         print(f"[{i:3d}/{len(streams)}] {name}")
         
-        # Get stream based on type
-        stream_url = None
-        status = ""
+        # Skip video type for now
+        if stream.get('type') == 'video':
+            print(f"     ⏭️ Video - skipped")
+            failed += 1
+            continue
         
-        if stream_type == 'channel':
-            stream_url, status = get_stream_info(stream['id'], slug)
-        else:  # video
-            stream_url, status = get_video_stream(stream['id'], slug)
+        # Get stream directly
+        stream_url, status = get_stream_direct(stream['id'], name)
         
         if not stream_url:
             print(f"     ❌ {status}")
-            
-            # Remove old file if exists
-            subfolder = stream.get('subfolder', 'genel')
-            old_file = Path(OUTPUT_FOLDER) / subfolder / f"{slug}.m3u8"
-            if old_file.exists():
-                try:
-                    old_file.unlink()
-                    print(f"     🗑️ Removed old file")
-                except:
-                    pass
-            
             failed += 1
             continue
         
@@ -215,15 +153,15 @@ def main():
         saved, result = save_m3u8_file(slug, subfolder, m3u8_content)
         
         if saved:
-            print(f"     💾 Saved: {os.path.basename(result)}")
+            print(f"     💾 Saved")
             successful += 1
         else:
             print(f"     ❌ Save failed: {result}")
             failed += 1
         
         # Rate limiting
-        if i % 10 == 0:
-            time.sleep(1)
+        if i % 5 == 0:
+            time.sleep(2)
     
     # Results
     print("\n" + "=" * 70)
@@ -231,7 +169,6 @@ def main():
     print("=" * 70)
     print(f"✅ Successful: {successful}")
     print(f"❌ Failed:     {failed}")
-    print(f"⏭️ Skipped:    {skipped}")
     print(f"📁 Output:     {OUTPUT_FOLDER}/")
     print(f"🕒 End time:   {datetime.now().strftime('%H:%M:%S')}")
     
@@ -242,7 +179,7 @@ def main():
         for root, dirs, files in os.walk(OUTPUT_FOLDER):
             for file in files:
                 if file.endswith('.m3u8'):
-                    if file_count < 20:  # Show first 20
+                    if file_count < 20:
                         rel_path = os.path.relpath(os.path.join(root, file), OUTPUT_FOLDER)
                         print(f"  • {rel_path}")
                     file_count += 1
@@ -253,9 +190,14 @@ def main():
         print(f"\n📊 Total files: {file_count}")
         
     except Exception as e:
-        print(f"  Error listing files: {e}")
+        print(f"  Error: {e}")
     
     print("=" * 70)
+    
+    if successful > 0:
+        print("✅ SUCCESS: Files created in TR folder")
+    else:
+        print("⚠ WARNING: No files were created")
 
 if __name__ == "__main__":
     main()
