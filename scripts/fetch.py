@@ -5,13 +5,12 @@ import os
 CHANNEL_FILES = ["channels/tr.json"]
 OUTPUT_FILE = "output/live.json"
 
-# Proxy URL
+# Proxy URL (istəsən dəyişə bilərsən)
 PROXY = os.environ.get("PROXY", "http://cors.tundracast.com:2000/")
 
 def get_live_m3u8(channel_url):
     """
-    Real canlı varsa m3u8 çıxarır
-    Timeout və proxy ilə stabil işləyir
+    YouTube-dan son canlı yayımın .m3u8 linkini çıxarır.
     """
     try:
         cmd = [
@@ -59,4 +58,4 @@ os.makedirs("output", exist_ok=True)
 with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
     json.dump(all_channels, f, ensure_ascii=False, indent=2)
 
-print("✅ Live JSON updated (Show TV real-time)")
+print("✅ Live JSON updated (Show TV & Kanal 7 real-time)")
