@@ -6,23 +6,28 @@ CHANNEL_FILES = ["channels/tr.json"]
 OUTPUT_FILE = "output/live.json"
 
 def get_live_m3u8(channel_url):
+    """
+    Real canlı varsa m3u8 linkini çıxarır
+    Timeout ilə uzun fırlanma problemi aradan qaldırılır
+    """
     try:
-        # yt-dlp istifadə olunur
         cmd = [
             "yt-dlp",
             "--no-warnings",
             "--skip-download",
-            "-f", "best",
+            "--quiet",
             "--get-url",
+            "--socket-timeout", "15",
             channel_url
         ]
-        result = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
-        # Canlı yayım varsa m3u8 linki çıxacaq
+        result = subprocess.check_output(cmd, stderr=subprocess.DEVNULL, timeout=20).decode().strip()
         if "m3u8" in result:
             return result
-    except:
-        pass
-    return None  # Canlı yoxdursa None dön
+    except subprocess.TimeoutExpired:
+        print(f"⏱ Timeout: {channel_url}")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    return None  # Canlı yoxdursa None
 
 all_channels = []
 
@@ -35,7 +40,6 @@ for file in CHANNEL_FILES:
 
     for ch in channels:
         m3u8 = get_live_m3u8(ch["youtube"])
-        # 100% real canlı olanlar üçün əlavə olunur
         if m3u8:
             all_channels.append({
                 "name": ch["name"],
@@ -44,7 +48,6 @@ for file in CHANNEL_FILES:
                 "status": "live"
             })
 
-# output qovluğu yoxdursa yaradır
 os.makedirs("output", exist_ok=True)
 
 with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
