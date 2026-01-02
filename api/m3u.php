@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: audio/x-mpegurl");
 
-$json_url = "https://raw.githubusercontent.com/by-kerimoff/YouTube-Live-JSON/main/output/live.json";
+$json_url = "https://raw.githubusercontent.com/by-kerimoff/YouTube-Live-JSON/main/channels/tr.json";
 $data = json_decode(file_get_contents($json_url), true);
 
 echo "#EXTM3U\n";
