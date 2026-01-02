@@ -2,7 +2,7 @@ name: Update YouTube Live Streams
 
 on:
   schedule:
-    - cron: "*/5 * * * *" # hər 5 dəqiqədə
+    - cron: "*/5 * * * *"  # hər 5 dəqiqədə
   workflow_dispatch:
 
 jobs:
@@ -18,12 +18,10 @@ jobs:
           python-version: "3.11"
 
       - name: Install yt-dlp
-        run: |
-          pip install --upgrade yt-dlp
+        run: pip install --upgrade yt-dlp
 
       - name: Run fetch script
-        run: |
-          python scripts/fetch.py
+        run: python scripts/fetch.py
 
       - name: Commit & push
         run: |
