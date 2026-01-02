@@ -10,23 +10,25 @@ CHANNEL_FILES = [
 
 OUTPUT_FILE = "output/live.json"
 
-def get_m3u8(url):
+def get_latest_live_m3u8(channel_url):
+    """
+    Kanal linkindən son canlı yayımı tapır və m3u8 linkini çıxarır
+    """
     try:
+        # yt-dlp istifadə edirik
         cmd = [
             "yt-dlp",
+            "--no-warnings",
+            "--skip-download",
             "-f", "best",
-            "--print", "%(url)s",
-            url
+            "--get-url",
+            channel_url
         ]
-        result = subprocess.check_output(
-            cmd, stderr=subprocess.DEVNULL
-        ).decode().strip()
-
+        result = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
         if "m3u8" in result:
             return result
-    except:
+    except Exception as e:
         pass
-
     return None
 
 all_channels = []
@@ -39,7 +41,7 @@ for file in CHANNEL_FILES:
         channels = json.load(f)
 
     for ch in channels:
-        m3u8 = get_m3u8(ch["youtube"])
+        m3u8 = get_latest_live_m3u8(ch["youtube"])
         all_channels.append({
             "name": ch["name"],
             "youtube": ch["youtube"],
@@ -52,4 +54,4 @@ os.makedirs("output", exist_ok=True)
 with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
     json.dump(all_channels, f, ensure_ascii=False, indent=2)
 
-print("DONE")
+print("✅ Live JSON updated")
