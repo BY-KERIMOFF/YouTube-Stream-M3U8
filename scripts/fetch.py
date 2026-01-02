@@ -2,20 +2,12 @@ import json
 import subprocess
 import os
 
-CHANNEL_FILES = [
-    "channels/tr.json",
-    "channels/az.json",
-    "channels/ru.json"
-]
-
+CHANNEL_FILES = ["channels/tr.json"]
 OUTPUT_FILE = "output/live.json"
 
-def get_latest_live_m3u8(channel_url):
-    """
-    Kanal linkindən son canlı yayımı tapır və m3u8 linkini çıxarır
-    """
+def get_live_m3u8(channel_url):
     try:
-        # yt-dlp istifadə edirik
+        # yt-dlp istifadə olunur
         cmd = [
             "yt-dlp",
             "--no-warnings",
@@ -25,11 +17,12 @@ def get_latest_live_m3u8(channel_url):
             channel_url
         ]
         result = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
+        # Canlı yayım varsa m3u8 linki çıxacaq
         if "m3u8" in result:
             return result
-    except Exception as e:
+    except:
         pass
-    return None
+    return None  # Canlı yoxdursa None dön
 
 all_channels = []
 
@@ -41,17 +34,20 @@ for file in CHANNEL_FILES:
         channels = json.load(f)
 
     for ch in channels:
-        m3u8 = get_latest_live_m3u8(ch["youtube"])
-        all_channels.append({
-            "name": ch["name"],
-            "youtube": ch["youtube"],
-            "m3u8": m3u8,
-            "status": "live" if m3u8 else "offline"
-        })
+        m3u8 = get_live_m3u8(ch["youtube"])
+        # 100% real canlı olanlar üçün əlavə olunur
+        if m3u8:
+            all_channels.append({
+                "name": ch["name"],
+                "youtube": ch["youtube"],
+                "m3u8": m3u8,
+                "status": "live"
+            })
 
+# output qovluğu yoxdursa yaradır
 os.makedirs("output", exist_ok=True)
 
 with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
     json.dump(all_channels, f, ensure_ascii=False, indent=2)
 
-print("✅ Live JSON updated")
+print("✅ Live JSON updated (only real live streams)")
