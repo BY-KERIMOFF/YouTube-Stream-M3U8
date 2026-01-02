@@ -31,5 +31,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add output/live.json
-          git commit -m "auto update live streams" || true
+          git commit -m "Auto update live streams" || true
           git push
