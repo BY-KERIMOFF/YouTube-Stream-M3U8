@@ -7,7 +7,7 @@ headers = {
                   "(KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
 }
 
-# Token alma URL-i (browser request-dən çıxardığın URL)
+# Token alma URL-i (canlitv.me live URL)
 token_url = "https://cdn505.canlitv.me/live/bloomberght-hd-live"
 
 # GET sorğu göndər
@@ -15,7 +15,6 @@ r = requests.get(token_url, headers=headers)
 html = r.text
 
 # Tokeni regex ilə çıxar
-# (məsələn: tkn=...)
 match = re.search(r'tkn=([A-Za-z0-9_-]+)', html)
 if match:
     token = match.group(1)
