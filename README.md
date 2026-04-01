@@ -1,15 +1,22 @@
-# YouTube Live → M3U Generator
+# YouTube M3U Converter - By_Kerimoff
 
-📺 YouTube canlı yayımlarını avtomatik olaraq `.m3u` playlist-ə çevirir.
+YouTube canlı yayınlarını M3U formatına çevirib GitHub-a avtomatik yükləyən sistem.
 
-## Necə işləyir?
-- Kanal adlarını `channels.json` faylına yaz
-- GitHub Actions avtomatik işləyir
-- `.m3u` faylı yenilənir
+## 📺 Canlı Kanal Listesi
 
-## Fayllar
-- `channels.json` → Kanal siyahısı
-- `generate.py` → Generator
-- `youtube.m3u` → Hazır playlist
+Kanallar avtomatik olaraq buraya əlavə olunur...
 
-## IPTV / VLC / TV Box üçün uyğundur
+## 🚀 İstifadə
+
+1. GitHub Personal Access Token yaradın
+2. Proqramı işə salın
+3. GitHub ayarlarını edin
+4. Kanal axtarıb əlavə edin
+
+## 📝 Qeydlər
+
+- M3U faylları `m3u_files` qovluğunda saxlanılır
+- Hər kanal üçün ayrıca M3U faylı yaradılır
+- VLC və digər M3U playerlərdə işləyir
+
+✨ **By_Kerimoff**
