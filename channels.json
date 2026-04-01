@@ -1,0 +1,84 @@
+{
+  "channels": [
+    {
+      "name": "Show TV",
+      "search": "Show TV canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "Kanal D",
+      "search": "Kanal D canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "NOW TV",
+      "search": "NOW TV canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "ATV",
+      "search": "ATV canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "Star TV",
+      "search": "Star TV canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "TV8",
+      "search": "TV8 canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "Fox TV",
+      "search": "Fox TV canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "TRT Haber",
+      "search": "TRT Haber canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "CNN Türk",
+      "search": "CNN Türk canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "NTV",
+      "search": "NTV canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "Habertürk",
+      "search": "Habertürk canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "A Haber",
+      "search": "A Haber canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "TGRT Haber",
+      "search": "TGRT Haber canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "Kanal 7",
+      "search": "Kanal 7 canlı yayın",
+      "enabled": true
+    },
+    {
+      "name": "Ülke TV",
+      "search": "Ülke TV canlı yayın",
+      "enabled": true
+    }
+  ],
+  "settings": {
+    "update_interval": "daily",
+    "max_retries": 3,
+    "timeout": 30
+  }
+}
