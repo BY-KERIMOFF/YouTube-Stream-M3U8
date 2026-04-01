@@ -2,7 +2,7 @@ name: YouTube M3U Generator
 
 on:
   schedule:
-    - cron: '0 */3 * * *'  # Hər 3 saatda bir
+    - cron: '0 */6 * * *'  # Hər 6 saatda
   workflow_dispatch:
   push:
     paths:
@@ -13,8 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     
@@ -23,20 +22,9 @@ jobs:
       with:
         python-version: '3.10'
     
-    - name: Install dependencies
+    - name: Install yt-dlp
       run: |
-        pip install --upgrade pip
-        pip install yt-dlp requests
-    
-    - name: Install ffmpeg
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
-    
-    - name: Test yt-dlp
-      run: |
-        yt-dlp --version
-        yt-dlp -F https://www.youtube.com/watch?v=jfKfPfyJRdk --playlist-end 1
+        pip install --upgrade yt-dlp requests
     
     - name: Create directories
       run: mkdir -p m3u_files
@@ -44,13 +32,12 @@ jobs:
     - name: Generate M3U files
       run: |
         python generate_m3u.py
-      env:
-        PYTHONUNBUFFERED: 1
+      continue-on-error: true
     
-    - name: Commit and push changes
+    - name: Commit and push
       run: |
         git config user.name "GitHub Actions Bot"
         git config user.email "actions@github.com"
         git add m3u_files/ channels.json
-        git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update M3U files [$(date +'%Y-%m-%d %H:%M:%S')]"
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update M3U files [$(date +'%Y-%m-%d')]" || true
         git push
