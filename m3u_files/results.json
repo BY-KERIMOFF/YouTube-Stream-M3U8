@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-04-01T20:23:54.105686",
+  "total": 15,
+  "successful": 0,
+  "failed": 15,
+  "results": [
+    {
+      "name": "Show TV",
+      "status": "failed"
+    },
+    {
+      "name": "Kanal D",
+      "status": "failed"
+    },
+    {
+      "name": "NOW TV",
+      "status": "failed"
+    },
+    {
+      "name": "ATV",
+      "status": "failed"
+    },
+    {
+      "name": "Star TV",
+      "status": "failed"
+    },
+    {
+      "name": "TV8",
+      "status": "failed"
+    },
+    {
+      "name": "Fox TV",
+      "status": "failed"
+    },
+    {
+      "name": "TRT Haber",
+      "status": "failed"
+    },
+    {
+      "name": "CNN Türk",
+      "status": "failed"
+    },
+    {
+      "name": "NTV",
+      "status": "failed"
+    },
+    {
+      "name": "Habertürk",
+      "status": "failed"
+    },
+    {
+      "name": "A Haber",
+      "status": "failed"
+    },
+    {
+      "name": "TGRT Haber",
+      "status": "failed"
+    },
+    {
+      "name": "Kanal 7",
+      "status": "failed"
+    },
+    {
+      "name": "Ülke TV",
+      "status": "failed"
+    }
+  ]
+}
